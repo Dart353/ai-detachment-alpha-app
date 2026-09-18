@@ -58,15 +58,16 @@ jobs:
         include:
           - platform: win
             os: windows-latest
+            # top level only: the unpacked tree underneath is full of .exe files
             artifacts: |
-              release/win/**/*.exe
-              release/win/**/*.blockmap
-              release/win/**/latest.yml
+              release/win/version_*/*.exe
+              release/win/version_*/*.blockmap
+              release/win/version_*/latest.yml
           - platform: linux
             os: ubuntu-latest
             artifacts: |
-              release/linux/**/*.AppImage
-              release/linux/**/latest-linux.yml
+              release/linux/version_*/*.AppImage
+              release/linux/version_*/latest-linux.yml
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -111,5 +112,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
+          # one file per line: the installer's name has spaces in it
           find artifacts -type f | tee files.txt
-          xargs -a files.txt gh release upload "$TAG" --clobber
+          xargs -d '\n' -a files.txt gh release upload "$TAG" --clobber
