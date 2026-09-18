@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/Dart353/ai-detachment-alpha/compare/v1.0.0...v1.1.0) (2026-09-18)
+
+
+### Features
+
+* **pane:** show a pane's colour on its border and header ([22cc6ae](https://github.com/Dart353/ai-detachment-alpha/commit/22cc6aee2c389d7df547998db741de07a90b7d7b))
+
+
+### Bug Fixes
+
+* **sidebar:** unfold a workspace when one of its panes is focused ([5bb4dfd](https://github.com/Dart353/ai-detachment-alpha/commit/5bb4dfd16a7a79d908c8a7099370b4db7972d7d9))
+* **terminal:** keep right-click out of the TUI so it no longer pastes ([7979996](https://github.com/Dart353/ai-detachment-alpha/commit/797999681c5fd832dfa9dcfe84a0243cb267f71e))
+* **terminal:** re-measure the cell once the webfont loads ([da153ef](https://github.com/Dart353/ai-detachment-alpha/commit/da153ef124804f1b7c81b06c3bd713fecd2a1d24))
+
 ## 1.0.0 (2026-09-18)
 
 
