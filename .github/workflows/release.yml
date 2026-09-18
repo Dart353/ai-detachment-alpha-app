@@ -1,0 +1,96 @@
+# Releases, driven by conventional commit subjects.
+#
+#   fix: …            → patch        feat: …           → minor
+#   feat!: … / a "BREAKING CHANGE:" footer → major
+#   chore: docs: refactor: test: build: ci: → no release on their own
+#
+# On every push to main, release-please reads the commits since the last tag
+# and keeps ONE pull request open ("chore(main): release x.y.z") that bumps
+# package.json and writes CHANGELOG.md, grouped into Features and Bug Fixes.
+# Merging that PR is the release: release-please tags it and publishes the
+# GitHub Release with the changelog as its notes, and the jobs below build the
+# Windows and Linux packages and attach them.
+#
+# macOS is left out on purpose: an unsigned .dmg is refused by Gatekeeper, so
+# it only makes sense once there is a signing identity to add as a secret.
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release PR / tag
+    runs-on: ubuntu-latest
+    outputs:
+      released: ${{ steps.rp.outputs.release_created }}
+      tag: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: rp
+        with:
+          release-type: node
+
+  build:
+    name: Package ${{ matrix.platform }}
+    needs: release-please
+    if: needs.release-please.outputs.released == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: win
+            os: windows-latest
+            artifacts: |
+              release/win/**/*.exe
+              release/win/**/*.blockmap
+              release/win/**/latest.yml
+          - platform: linux
+            os: ubuntu-latest
+            artifacts: |
+              release/linux/**/*.AppImage
+              release/linux/**/latest-linux.yml
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      # postinstall rebuilds node-pty against Electron; the Windows runner has
+      # the Visual Studio build tools and Python that needs.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck && pnpm test
+      # --publish never: electron-builder must not try to upload on its own when
+      # it sees GH_TOKEN; the attach job below owns that.
+      - run: pnpm package:${{ matrix.platform }} --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}
+          path: ${{ matrix.artifacts }}
+          if-no-files-found: error
+
+  attach:
+    name: Attach installers to ${{ needs.release-please.outputs.tag }}
+    needs: [release-please, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          find artifacts -type f | tee files.txt
+          xargs -a files.txt gh release upload "${{ needs.release-please.outputs.tag }}" --clobber
