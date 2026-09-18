@@ -16,6 +16,7 @@ import { Terminal, type ITheme } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { createUrlLinkProvider } from '../lib/termLinks'
 import { isRealOutput } from '../lib/status'
+import { ROW_RATIO, measureNaturalHeight, xtermLineHeight } from '../lib/termLineHeight'
 import '@xterm/xterm/css/xterm.css'
 
 export interface TerminalPaneConfig {
@@ -87,6 +88,16 @@ function termTheme(focused: boolean): ITheme {
 }
 
 /** The first family in a CSS font stack, unquoted — what `document.fonts` wants. */
+/**
+ * xterm's lineHeight for the spec's 12px/1.6 rows — see termLineHeight.ts. Falls
+ * back to the bare ratio when nothing can be measured (a fallback face that is
+ * exactly its size tall is the neutral guess).
+ */
+function rowLineHeight(fontSize: number, fontFamily: string): number {
+  const natural = measureNaturalHeight(fontStack(fontFamily), fontSize)
+  return natural === null ? ROW_RATIO : xtermLineHeight(fontSize, natural)
+}
+
 function primaryFamily(fontFamily: string): string {
   const first = fontFamily.split(',')[0]?.trim() ?? ''
   return first.replace(/^['"]|['"]$/g, '')
@@ -119,7 +130,7 @@ export function useTerminalPane(config: TerminalPaneConfig): TerminalPaneHandle 
     const term = new Terminal({
       fontSize: cfg.fontSize,
       fontFamily: fontStack(cfg.fontFamily),
-      lineHeight: 1.6,
+      lineHeight: rowLineHeight(cfg.fontSize, cfg.fontFamily),
       cursorBlink: false,
       theme: termTheme(cfg.focused),
       scrollback: 8000,
@@ -260,6 +271,11 @@ export function useTerminalPane(config: TerminalPaneConfig): TerminalPaneHandle 
     let fontDisposed = false
     const refitWhenFontReady = (): void => {
       if (fontDisposed || termRef.current !== term) return
+      // The real face may sit on a different natural line box than the fallback
+      // that was measured at open(); bring the row height back to spec before
+      // the grid is re-fitted against it.
+      const current = cfgRef.current
+      term.options.lineHeight = rowLineHeight(current.fontSize, current.fontFamily)
       safeFit()
     }
     refitWhenFontReadyRef.current = refitWhenFontReady
@@ -418,6 +434,7 @@ export function useTerminalPane(config: TerminalPaneConfig): TerminalPaneHandle 
     const term = termRef.current
     if (!term) return
     term.options.fontSize = fontSize
+    term.options.lineHeight = rowLineHeight(fontSize, cfgRef.current.fontFamily)
     safeFitRef.current()
   }, [fontSize])
 
@@ -428,6 +445,7 @@ export function useTerminalPane(config: TerminalPaneConfig): TerminalPaneHandle 
     const term = termRef.current
     if (!term) return
     term.options.fontFamily = fontStack(fontFamily)
+    term.options.lineHeight = rowLineHeight(fontSize, fontFamily)
     safeFitRef.current()
     if (typeof document !== 'undefined' && document.fonts) {
       void document.fonts

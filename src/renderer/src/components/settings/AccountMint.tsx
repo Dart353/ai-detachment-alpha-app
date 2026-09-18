@@ -3,6 +3,7 @@ import type { Terminal as XTerm } from '@xterm/xterm'
 import { Button, Modal, TextInput } from '../ui'
 import { useApp } from '../../store/app'
 import { useTerminalPane } from '../../hooks/useTerminalPane'
+import { ROW_RATIO } from '../../lib/termLineHeight'
 import type { PendingMint } from '../../../../shared/types'
 import './settings.css'
 
@@ -13,8 +14,6 @@ export interface AccountMintProps {
 
 /** How tall the embedded sign-in terminal is, in rows. */
 const MINT_ROWS = 16
-/** xterm's line height in `useTerminalPane`; the body is sized from it. */
-const LINE_HEIGHT = 1.6
 
 interface MintTerminalProps {
   mint: PendingMint
@@ -57,7 +56,7 @@ function MintTerminal({ mint, fontSize, fontFamily }: MintTerminalProps): JSX.El
     <div
       className="ada-mint-term"
       ref={containerRef}
-      style={{ height: Math.round(fontSize * LINE_HEIGHT * MINT_ROWS) }}
+      style={{ height: Math.round(fontSize * ROW_RATIO * MINT_ROWS) }}
     />
   )
 }
