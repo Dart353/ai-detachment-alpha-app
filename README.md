@@ -44,8 +44,8 @@ pnpm dev
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm test` | vitest over the pure logic in `src/main`, `src/shared` and `src/renderer/src/lib` |
 | `pnpm test:e2e` | build, then drive the real app over CDP (see below) |
-| `pnpm package:dir` | fast unpacked Linux build into `release/linux-unpacked` |
-| `pnpm package:linux` / `:win` / `:mac` | full electron-builder packaging |
+| `pnpm package:dir` | fast unpacked Linux build into `release/linux/version_<x_y_z>/linux-unpacked` |
+| `pnpm package:linux` / `:win` / `:mac` | full electron-builder packaging into `release/<platform>/version_<x_y_z>/` |
 
 ### Packaging for Windows
 
@@ -59,7 +59,7 @@ pnpm install
 pnpm package:win
 ```
 
-The NSIS installer lands in `release\AI Detachment Alpha Setup 0.1.0.exe`
+The NSIS installer lands in `release\win\version_0_1_0\AI Detachment Alpha Setup 0.1.0.exe`
 (per-user, custom install dir). It is unsigned, so SmartScreen will warn on
 first launch; code signing is a later step. `pnpm package:mac` works the same
 way on a Mac (unsigned, unnotarized until certificates are added).
@@ -88,6 +88,7 @@ variable before spawning electron-vite (POSIX `env -u` does not exist in
 PowerShell or cmd), and the PTY manager strips it (along with the
 `CLAUDE_CODE_*` session vars, which would otherwise make a child `claude` adopt
 this app's session) from every process it spawns.
+
 
 ## Where the data lives
 
@@ -125,7 +126,7 @@ needs to know which side it is on.
 ## Packaging
 
 `pnpm package:dir` is the quick check, and it is the one verified here: it
-produces `release/linux-unpacked/ai-detachment-alpha` with node-pty's native
+produces `release/linux/version_0_1_0/linux-unpacked/ai-detachment-alpha` with node-pty's native
 binary under `app.asar.unpacked` (it cannot be loaded from inside an asar).
 `pnpm package:linux` additionally builds an AppImage.
 

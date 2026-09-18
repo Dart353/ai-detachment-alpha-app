@@ -14,10 +14,10 @@
     "test": "vitest run",
     "test:e2e": "pnpm build && node scripts/e2e-smoke.mjs",
     "make:icon": "node scripts/make-icon.mjs",
-    "package:dir": "pnpm build && electron-builder --linux dir",
-    "package:linux": "pnpm build && electron-builder --linux",
-    "package:win": "pnpm build && electron-builder --win",
-    "package:mac": "pnpm build && electron-builder --mac",
+    "package:dir": "pnpm build && node scripts/package.mjs linux dir",
+    "package:linux": "pnpm build && node scripts/package.mjs linux",
+    "package:win": "pnpm build && node scripts/package.mjs win",
+    "package:mac": "pnpm build && node scripts/package.mjs mac",
     "postinstall": "electron-rebuild -f -w node-pty"
   },
   "build": {
