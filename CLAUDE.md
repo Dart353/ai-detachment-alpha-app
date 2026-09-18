@@ -115,3 +115,12 @@ vitest. When a step fails it prints the page state and writes
 `scripts/.smoke-failure.png`.
 
 If a smoke step exposes a bug, fix the app, not the assertion.
+
+## Commits
+
+Commit subjects follow conventional commits, because the release workflow
+derives the version from them: `fix:` is a patch, `feat:` a minor, `feat!:` or
+a `BREAKING CHANGE:` footer a major; `chore:`, `docs:`, `refactor:`, `test:`,
+`build:` and `ci:` release nothing on their own. One change per commit, subject
+written for the CHANGELOG reader. Never edit `version` in `package.json` by
+hand — the release PR does that.

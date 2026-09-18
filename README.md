@@ -135,6 +135,29 @@ runtime and `build/entitlements.mac.plist`, and an NSIS x64 installer that lets
 the user choose the directory. Both have to be built on their own OS — node-pty
 is compiled per platform — so neither has been run.
 
+## Releases
+
+Versions are derived from commit subjects, in the conventional-commits style,
+by `.github/workflows/release.yml`:
+
+| Commit subject | Bump |
+| --- | --- |
+| `fix: usage toast repeated every poll` | patch |
+| `feat: add workspace screen` | minor |
+| `feat!: …` or a `BREAKING CHANGE:` footer | major |
+| `chore:` `docs:` `refactor:` `test:` `build:` `ci:` | none on their own |
+
+On every push to `main`, release-please keeps one pull request open
+("chore(main): release x.y.z") that bumps `package.json` and writes
+`CHANGELOG.md`, grouped into Features and Bug Fixes. Merging that pull request
+is the release: it is tagged `vx.y.z`, a GitHub Release is published with the
+changelog as its notes, and the Windows installer and Linux AppImage are built
+on GitHub's runners and attached. Nothing is released until that PR is merged,
+so several changes can land on `main` and ship together.
+
+Never bump `version` by hand; the release PR owns it. macOS is not built there
+until there is a signing identity to add as a repository secret.
+
 ## Design
 
 `docs/design/README.md` and `docs/design/mockups.html` are the authoritative
