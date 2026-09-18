@@ -276,6 +276,14 @@ export function useTerminalPane(config: TerminalPaneConfig): TerminalPaneHandle 
       // the grid is re-fitted against it.
       const current = cfgRef.current
       term.options.lineHeight = rowLineHeight(current.fontSize, current.fontFamily)
+      // xterm re-measures its cell ONLY when fontFamily or fontSize changes; a
+      // fit on its own would read the fallback face's cell and over-count rows
+      // (the chat box then hangs below the pane until a window resize forces
+      // the re-measure). Nudge the family so the loaded face is what gets
+      // measured, then fit against that.
+      const stack = fontStack(current.fontFamily)
+      term.options.fontFamily = `${stack}, serif`
+      term.options.fontFamily = stack
       safeFit()
     }
     refitWhenFontReadyRef.current = refitWhenFontReady
