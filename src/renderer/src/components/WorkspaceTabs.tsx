@@ -82,10 +82,10 @@ export default function WorkspaceTabs(): JSX.Element {
   ]
 
   return (
-    <div className="ada-ws-tabs ada-nodrag" onDrop={onDrop} onDragEnd={clearDrag}>
+    <div className="ada-ws-tabs" onDrop={onDrop} onDragEnd={clearDrag}>
       {workspaces.map((workspace, index) => {
         const active = workspace.id === activeWorkspaceId
-        const classes = ['ada-ws-tab']
+        const classes = ['ada-ws-tab', 'ada-nodrag']
         if (active) classes.push('ada-ws-tab--active')
         if (dropIndex === index) classes.push('ada-ws-tab--drop-before')
         if (dropIndex === workspaces.length && index === workspaces.length - 1) {
@@ -141,7 +141,7 @@ export default function WorkspaceTabs(): JSX.Element {
 
       <button
         type="button"
-        className="ada-ws-tab ada-ws-tab-add"
+        className="ada-ws-tab ada-ws-tab-add ada-nodrag"
         aria-label="Open a folder as a workspace"
         title="Open a folder as a workspace"
         onClick={async () => {

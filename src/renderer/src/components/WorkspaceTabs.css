@@ -1,4 +1,7 @@
-/* Workspace tabs in the title bar (design README 2a / mockup 1a). */
+/* Workspace tabs in the title bar (design README 2a / mockup 1a).
+   The strip stretches across the bar, so it stays a drag region: only the tabs
+   and the + opt out (`.ada-nodrag`), or the empty space beside them would stop
+   moving the window. */
 
 .ada-ws-tabs {
   flex: 1;
