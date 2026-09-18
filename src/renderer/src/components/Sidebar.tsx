@@ -80,6 +80,7 @@ function SidebarTree(): JSX.Element {
   const activeWorkspaceId = useApp((state) => state.activeWorkspaceId)
   const defaultPaneKind = useApp((state) => state.settings.defaultPaneKind)
   const openWorkspace = useApp((state) => state.openWorkspace)
+  const openAddWorkspace = useApp((state) => state.openAddWorkspace)
   const closeWorkspace = useApp((state) => state.closeWorkspace)
   const renameWorkspace = useApp((state) => state.renameWorkspace)
   const reorderWorkspaces = useApp((state) => state.reorderWorkspaces)
@@ -247,9 +248,9 @@ function SidebarTree(): JSX.Element {
         <Button
           variant="icon"
           size="sm"
-          aria-label="Open a folder as a workspace"
-          title="Open a folder as a workspace"
-          onClick={() => void pickFolder()}
+          aria-label="Add a workspace"
+          title="Add a workspace"
+          onClick={() => openAddWorkspace()}
         >
           <Plus size={ICON} />
         </Button>

@@ -19,8 +19,9 @@ import './Titlebar.css'
  *   full     → the working screen: toggles, workspace tabs, usage, layout, settings
  *   minimal  → first run and the zone editor: the mark and the window controls
  *   settings → the mark, a centred "Settings" label, the window controls
+ *   addWorkspace → the same shell, captioned "Add workspace"
  */
-export type TitlebarVariant = 'full' | 'minimal' | 'settings'
+export type TitlebarVariant = 'full' | 'minimal' | 'settings' | 'addWorkspace'
 
 export interface TitlebarProps {
   variant: TitlebarVariant
@@ -131,6 +132,7 @@ export default function Titlebar({ variant }: TitlebarProps): JSX.Element {
       )}
 
       {variant === 'settings' && <div className="ada-titlebar-label">Settings</div>}
+      {variant === 'addWorkspace' && <div className="ada-titlebar-label">Add workspace</div>}
 
       {variant === 'minimal' && <div className="ada-titlebar-spacer" />}
 

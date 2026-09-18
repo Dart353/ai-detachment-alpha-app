@@ -360,3 +360,53 @@ describe('persistence', () => {
     }
   })
 })
+
+describe('createWorkspace (the Add workspace screen)', () => {
+  it('builds the chosen layout and seeds each zone with its pane', () => {
+    const id = useApp.getState().createWorkspace({
+      rootDir: '/tmp/proj',
+      name: '  Proj  ',
+      presetId: 'cols-2',
+      panes: [{ kind: 'claude' }, null]
+    })
+    const state = useApp.getState()
+    const workspace = state.workspaces.find((candidate) => candidate.id === id)!
+    expect(state.view).toBe('grid')
+    expect(state.activeWorkspaceId).toBe(id)
+    expect(workspace.name).toBe('Proj')
+    expect(workspace.layout.zones).toHaveLength(2)
+    expect(workspace.panes).toHaveLength(1)
+    expect(workspace.panes[0].kind).toBe('claude')
+    // the pane sits in the FIRST zone, the one the screen showed it in
+    expect(workspace.layout.assign[workspace.panes[0].id]).toBe(workspace.layout.zones[0].id)
+    expect(workspace.focusedPaneId).toBe(workspace.panes[0].id)
+    expect(mockApi.saveRecents).toHaveBeenCalled()
+  })
+
+  it('names the workspace after the folder when the name is blank', () => {
+    useApp.getState().createWorkspace({ rootDir: '/tmp/api', name: '', presetId: 'single', panes: [] })
+    expect(useApp.getState().workspaces[0].name).toBe('api')
+    expect(useApp.getState().workspaces[0].panes).toHaveLength(0)
+  })
+
+  it('switches to the open workspace instead of creating a twin', () => {
+    const first = useApp.getState().createWorkspace({ rootDir: '/tmp/x', name: '', presetId: 'single', panes: [] })
+    useApp.getState().openAddWorkspace('/tmp/x')
+    expect(useApp.getState().view).toBe('addWorkspace')
+    expect(useApp.getState().addWorkspaceRoot).toBe('/tmp/x')
+    const second = useApp.getState().createWorkspace({ rootDir: '/tmp/x', name: 'Other', presetId: 'grid-2x2', panes: [] })
+    expect(second).toBe(first)
+    expect(useApp.getState().workspaces).toHaveLength(1)
+    expect(useApp.getState().view).toBe('grid')
+  })
+
+  it('cancel returns to the grid, or to first run when nothing is open', () => {
+    useApp.getState().openAddWorkspace()
+    useApp.getState().cancelAddWorkspace()
+    expect(useApp.getState().view).toBe('firstRun')
+    useApp.getState().createWorkspace({ rootDir: '/tmp/y', name: '', presetId: 'single', panes: [] })
+    useApp.getState().openAddWorkspace()
+    useApp.getState().cancelAddWorkspace()
+    expect(useApp.getState().view).toBe('grid')
+  })
+})

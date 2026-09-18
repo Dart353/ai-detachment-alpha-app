@@ -205,6 +205,7 @@ export default function ExplorerPanel({ workspaceId }: ExplorerPanelProps): JSX.
   )
   const setExplorer = useApp((state) => state.setExplorer)
   const addPane = useApp((state) => state.addPane)
+  const openAddWorkspace = useApp((state) => state.openAddWorkspace)
   const pushToast = useApp((state) => state.pushToast)
 
   const root = workspace?.rootDir ?? ''
@@ -609,7 +610,10 @@ export default function ExplorerPanel({ workspaceId }: ExplorerPanelProps): JSX.
     if (open.isFolder) {
       rows.push(
         { label: 'New file…', onClick: () => startCreate('file', path, true) },
-        { label: 'New folder…', onClick: () => startCreate('dir', path, true) }
+        { label: 'New folder…', onClick: () => startCreate('dir', path, true) },
+        // A folder in the tree is one step from being its own workspace: hand it
+        // to the Add screen with the folder already filled in.
+        { label: 'Open as workspace…', divider: true, onClick: () => openAddWorkspace(path) }
       )
     } else {
       rows.push({ label: 'Open', onClick: () => openFile(path) })
