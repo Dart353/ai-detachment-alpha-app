@@ -17,6 +17,7 @@ import { FitAddon } from '@xterm/addon-fit'
 import { createUrlLinkProvider } from '../lib/termLinks'
 import { isRealOutput } from '../lib/status'
 import { ROW_RATIO, measureNaturalHeight, xtermLineHeight } from '../lib/termLineHeight'
+import { filterMouseReports } from '../lib/mouseReports'
 import '@xterm/xterm/css/xterm.css'
 
 export interface TerminalPaneConfig {
@@ -307,14 +308,15 @@ export function useTerminalPane(config: TerminalPaneConfig): TerminalPaneHandle 
     // hovering an idle pane then writes motion reports to its PTY, the TUI repaints
     // in response, and the activity heuristic lights the pane up as "working" — as
     // if it had been clicked into. Hovering must never disturb an unfocused pane:
-    // strip pure-motion reports (SGR button 35 / legacy X10 'C') unless the terminal
-    // owns focus. Clicks, drags and wheel scrolls still pass through.
+    // strip pure-motion reports unless the terminal owns focus. Left and middle
+    // clicks, drags and wheel scrolls still pass through.
+    //
+    // Right-button reports never go through at all: right-click is the pane
+    // menu, and Claude Code reads a right-button press as "paste the clipboard",
+    // so forwarding it pasted into the prompt behind the menu.
     term.onData((data) => {
-      let out = data
-      if (!el.contains(document.activeElement)) {
-        out = out.replace(/\x1b\[<35;\d+;\d+[Mm]/g, '').replace(/\x1b\[MC[\s\S]{2}/g, '')
-        if (out.length === 0) return
-      }
+      const out = filterMouseReports(data, { dropHover: !el.contains(document.activeElement) })
+      if (out.length === 0) return
       window.api.writePty(id, out)
     })
 
