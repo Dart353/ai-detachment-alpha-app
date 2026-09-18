@@ -1,0 +1,128 @@
+/* The body of a file viewer pane: one scroll box holding whatever the file turned
+   out to be, plus the markdown mode toggle floating over its top-right corner. */
+
+.ada-viewer-body {
+  position: relative;
+  /* the scroll box owns the padding, so a code line can run to the pane's edge */
+  padding: 0;
+}
+
+.ada-viewer-scroll {
+  height: 100%;
+  overflow: auto;
+}
+
+/* === text =================================================================== */
+
+.ada-viewer-text {
+  min-width: min-content;
+  padding: 8px 12px 14px 0;
+}
+
+.ada-viewer-lines {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-family: var(--ada-font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* Fixed-width and right-aligned, so the code column never shifts as the numbers
+   grow a digit. */
+.ada-viewer-gutter {
+  flex: none;
+  min-width: 44px;
+  padding-right: 8px;
+  border-right: 1px solid var(--ada-line-06);
+  color: var(--ada-text-disabled);
+  text-align: right;
+  user-select: none;
+}
+
+.ada-viewer-code {
+  flex: 1;
+  margin: 0;
+  color: var(--ada-text-secondary);
+  font: inherit;
+  white-space: pre;
+  user-select: text;
+}
+
+/* The soft cap: the rest of the file is on disk, just not on screen. */
+.ada-viewer-cap {
+  margin-top: 10px;
+  padding-left: 56px;
+  color: var(--ada-text-disabled);
+  font-size: 11px;
+}
+
+/* === images ================================================================= */
+
+.ada-viewer-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 14px;
+  /* a solid, slightly lighter bed so a transparent PNG still reads as an image */
+  background: var(--ada-bg-app);
+}
+
+.ada-viewer-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* === notices ================================================================ */
+
+.ada-viewer-quiet {
+  padding: 14px 16px;
+  color: var(--ada-text-disabled);
+  font-size: 12px;
+}
+
+.ada-viewer-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  padding: 20px;
+  text-align: center;
+}
+
+.ada-viewer-notice-msg {
+  max-width: 34ch;
+  margin: 0;
+  color: var(--ada-text-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* === the markdown mode toggle =============================================== */
+
+.ada-viewer-toggle {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--ada-line-08);
+  border-radius: var(--ada-radius-chip);
+  background: var(--ada-bg-pane-header);
+  color: var(--ada-text-muted);
+  cursor: pointer;
+}
+
+.ada-viewer-toggle:hover {
+  border-color: var(--ada-line-16);
+  color: var(--ada-text-primary);
+}

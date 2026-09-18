@@ -1,0 +1,383 @@
+/* The zone editor (design README 1d): a 44px toolbar, the canvas with the snap
+   substrate drawn on it, and a 30px status line. The root is opaque — the live
+   grid is still mounted underneath and must not show through. */
+
+.ada-zone-editor {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--ada-bg-window);
+  color: var(--ada-text-primary);
+  font-family: var(--ada-font-ui);
+}
+
+/* === toolbar =============================================================== */
+
+.ada-zone-bar {
+  flex: none;
+  height: var(--ada-size-toolbar);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  background: var(--ada-bg-sidebar);
+  border-top: 1px solid var(--ada-line-06);
+  border-bottom: 1px solid var(--ada-line-06);
+}
+
+.ada-zone-bar-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ada-text-strong);
+  margin-right: 4px;
+}
+
+.ada-zone-bar-label {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--ada-text-faint);
+}
+
+.ada-zone-bar-spacer {
+  flex: 1;
+}
+
+/* 12px/700 on the accent fill, per the mockup's Done button. */
+.ada-zone-done {
+  font-size: 12px;
+}
+
+/* === canvas ================================================================ */
+
+.ada-zone-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.ada-zone-canvas {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  margin: 8px;
+  border-radius: var(--ada-radius-pane);
+  overflow: hidden;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.ada-zone-canvas--busy {
+  cursor: grabbing;
+}
+
+/* An existing zone: an accent outline over the substrate, with its occupant
+   named on a chip in the middle. */
+.ada-zone {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--ada-accent-rgb), 0.55);
+  border-radius: var(--ada-radius-pane);
+  background: rgba(var(--ada-accent-rgb), 0.05);
+}
+
+.ada-zone--selected {
+  border: 2px solid var(--ada-accent);
+}
+
+/* The zones a Shift-click could merge with the current selection. */
+.ada-zone--mergeable {
+  border-style: dashed;
+  background: rgba(var(--ada-accent-rgb), 0.09);
+}
+
+/* While a gesture runs, everything it is not acting on steps back. */
+.ada-zone--dimmed {
+  opacity: 0.45;
+}
+
+.ada-zone-chip {
+  padding: 10px 16px;
+  background: var(--ada-bg-popover);
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-pane);
+  text-align: center;
+  pointer-events: none;
+}
+
+.ada-zone-chip-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ada-text-strong);
+}
+
+.ada-zone-chip-name--empty {
+  font-weight: 400;
+  color: var(--ada-text-muted);
+}
+
+.ada-zone-chip-size {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--ada-font-mono);
+  font-size: 10.5px;
+  color: var(--ada-text-muted);
+}
+
+/* === handles =============================================================== */
+
+/* A 16px grab band centred on the boundary — the pointer target is generous,
+   the mark it leaves on screen is not. */
+.ada-zone-handle {
+  position: absolute;
+}
+
+.ada-zone-handle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 2px;
+  background: var(--ada-accent);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.ada-zone-handle:hover::after {
+  opacity: 0.85;
+}
+
+.ada-zone-handle--left,
+.ada-zone-handle--right {
+  top: 12px;
+  bottom: 12px;
+  width: 16px;
+  cursor: ew-resize;
+}
+
+.ada-zone-handle--left {
+  left: -8px;
+}
+
+.ada-zone-handle--right {
+  right: -8px;
+}
+
+.ada-zone-handle--left::after,
+.ada-zone-handle--right::after {
+  width: 2px;
+  height: 26px;
+}
+
+.ada-zone-handle--up,
+.ada-zone-handle--down {
+  left: 12px;
+  right: 12px;
+  height: 16px;
+  cursor: ns-resize;
+}
+
+.ada-zone-handle--up {
+  top: -8px;
+}
+
+.ada-zone-handle--down {
+  bottom: -8px;
+}
+
+.ada-zone-handle--up::after,
+.ada-zone-handle--down::after {
+  width: 26px;
+  height: 2px;
+}
+
+/* Corner brackets: two borders of an L, so the handle reads as "this corner"
+   rather than as a dot floating near it. They belong to the zone under the
+   pointer — showing them on every zone at once turns the canvas into confetti. */
+.ada-zone-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.ada-zone:hover .ada-zone-corner,
+.ada-zone--selected .ada-zone-corner,
+.ada-zone--target .ada-zone-corner {
+  opacity: 1;
+}
+
+.ada-zone-corner::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 2px solid var(--ada-accent);
+}
+
+.ada-zone-corner--nw {
+  top: -2px;
+  left: -2px;
+  cursor: nwse-resize;
+}
+
+.ada-zone-corner--nw::after {
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: 4px;
+}
+
+.ada-zone-corner--ne {
+  top: -2px;
+  right: -2px;
+  cursor: nesw-resize;
+}
+
+.ada-zone-corner--ne::after {
+  border-left: 0;
+  border-bottom: 0;
+  border-top-right-radius: 4px;
+}
+
+.ada-zone-corner--sw {
+  bottom: -2px;
+  left: -2px;
+  cursor: nesw-resize;
+}
+
+.ada-zone-corner--sw::after {
+  border-right: 0;
+  border-top: 0;
+  border-bottom-left-radius: 4px;
+}
+
+.ada-zone-corner--se {
+  bottom: -2px;
+  right: -2px;
+  cursor: nwse-resize;
+}
+
+.ada-zone-corner--se::after {
+  border-left: 0;
+  border-top: 0;
+  border-bottom-right-radius: 4px;
+}
+
+/* === gesture previews ====================================================== */
+
+/* A substrate cell the draw currently owns. */
+.ada-zone-cell {
+  position: absolute;
+  background: rgba(var(--ada-accent-rgb), 0.1);
+  outline: 1px solid rgba(var(--ada-accent-rgb), 0.22);
+  outline-offset: -1px;
+  pointer-events: none;
+}
+
+.ada-zone-draw {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--ada-accent);
+  border-radius: var(--ada-radius-pane);
+  background: rgba(var(--ada-accent-rgb), 0.12);
+  pointer-events: none;
+}
+
+.ada-zone-draw--invalid,
+.ada-zone-cut--invalid {
+  border-color: var(--ada-warn);
+}
+
+.ada-zone-draw-chip {
+  padding: 8px 14px;
+  background: var(--ada-bg-app);
+  border-radius: var(--ada-radius-button);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ada-accent-text);
+}
+
+/* The grab dot the drawn rectangle hangs from. */
+.ada-zone-draw-dot {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ada-accent);
+}
+
+/* The two halves a live cut would produce. */
+.ada-zone-cut {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed rgba(var(--ada-accent-rgb), 0.6);
+  border-radius: var(--ada-radius-pane);
+  background: rgba(var(--ada-accent-rgb), 0.08);
+  pointer-events: none;
+}
+
+.ada-zone-cut-chip {
+  padding: 4px 9px;
+  background: var(--ada-bg-app);
+  border-radius: var(--ada-radius-chip);
+  font-family: var(--ada-font-mono);
+  font-size: 10.5px;
+  color: var(--ada-accent-text);
+}
+
+/* The line a cut, an edge drag or a corner drag is placing. */
+.ada-zone-guide {
+  position: absolute;
+  background: var(--ada-accent);
+  pointer-events: none;
+}
+
+.ada-zone-guide--x {
+  width: 2px;
+  margin-left: -1px;
+}
+
+.ada-zone-guide--y {
+  height: 2px;
+  margin-top: -1px;
+}
+
+/* === status ================================================================ */
+
+.ada-zone-status {
+  flex: none;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+  font-size: 11px;
+  color: var(--ada-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ada-zone-status-mode {
+  font-weight: 600;
+  color: var(--ada-text-tertiary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-zone-handle::after,
+  .ada-zone-corner {
+    transition: none;
+  }
+}

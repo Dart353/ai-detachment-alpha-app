@@ -1,0 +1,153 @@
+/* The context menu (design README 1c). Same surface as Popover, plus the row
+   geometry every menu in the app shares: 7px 10px, 6px radius, 12px labels. */
+
+.ada-menu {
+  position: fixed;
+  z-index: 70;
+  padding: 8px;
+  background: var(--ada-bg-popover);
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-popover);
+  box-shadow: var(--ada-shadow-popover);
+  color: var(--ada-text-primary);
+  font-family: var(--ada-font-ui);
+  font-size: 12px;
+  animation: ada-menu-in 120ms ease-out;
+}
+
+/* Flyouts are absolutely placed against the viewport too, and inherit the width
+   of their content rather than the root's fixed one. */
+.ada-menu-sub {
+  width: max-content;
+  min-width: 180px;
+  max-width: 320px;
+}
+
+@keyframes ada-menu-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ada-menu-list {
+  /* A level taller than the window scrolls inside itself instead of running off
+     the bottom edge where its tail is unreachable. */
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  outline: none;
+}
+
+.ada-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ada-text-secondary);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ada-menu-item:hover:not(:disabled),
+.ada-menu-item-active:not(:disabled) {
+  background: rgba(var(--ada-accent-rgb), 0.1);
+  color: var(--ada-text-strong);
+}
+
+.ada-menu-item:disabled {
+  color: var(--ada-text-disabled);
+  cursor: default;
+}
+
+.ada-menu-item-danger:not(:disabled) {
+  color: var(--ada-warn);
+}
+
+/* Fixed slot, occupied or not, so labels align down the column. */
+.ada-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  width: 16px;
+  color: var(--ada-text-muted);
+}
+
+.ada-menu-item-danger .ada-menu-icon {
+  color: inherit;
+}
+
+.ada-menu-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ada-menu-hint {
+  flex: 0 0 auto;
+  font-family: var(--ada-font-mono);
+  font-size: 10px;
+  color: var(--ada-text-muted);
+}
+
+.ada-menu-chevron {
+  flex: 0 0 auto;
+  color: var(--ada-text-muted);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.ada-menu-divider {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--ada-line-08);
+}
+
+.ada-menu-section {
+  padding: 6px 10px 4px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ada-text-muted);
+}
+
+.ada-menu-custom {
+  padding: 4px 10px;
+}
+
+.ada-menu-empty {
+  padding: 8px 10px;
+  color: var(--ada-text-muted);
+}
+
+.ada-menu-search {
+  display: block;
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-button);
+  background: var(--ada-line-05);
+  color: var(--ada-text-primary);
+  font-size: 12px;
+  outline: none;
+}
+
+.ada-menu-search:focus {
+  border-color: var(--ada-accent-pane-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-menu {
+    animation: none;
+  }
+}

@@ -1,0 +1,365 @@
+/* The shared furniture of every settings section (design README 1f): the section
+   heading, the cards it stacks, and the label/control rows inside them. Section
+   files style only what is theirs; anything two sections would repeat lives here. */
+
+.ada-set-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ada-text-strong);
+}
+
+.ada-set-sub {
+  margin-top: 6px;
+  max-width: 560px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ada-text-muted);
+}
+
+/* The column of cards under a section's copy. */
+.ada-set-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+  max-width: 760px;
+}
+
+.ada-set-card {
+  padding: 16px 18px;
+  border: 1px solid var(--ada-line-10);
+  border-radius: var(--ada-radius-card);
+  /* no token: the barely-there card wash the settings screen uses */
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* A card that is not available here (a Windows-only setting elsewhere): quieter
+   border, no wash, and its controls read as inert. */
+.ada-set-card--dim {
+  border-color: var(--ada-line-08);
+  background: transparent;
+}
+
+.ada-set-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ada-set-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ada-text-strong);
+}
+
+.ada-set-card--dim .ada-set-card-title {
+  color: var(--ada-text-secondary);
+}
+
+/* The CLI marks (✻ ◍ ✦): glyphs, not icons, so they keep the vendor's own sign. */
+.ada-set-glyph {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ada-text-muted);
+}
+
+.ada-set-glyph--accent {
+  color: var(--ada-accent);
+}
+
+.ada-set-card-spacer {
+  flex: 1;
+}
+
+.ada-set-card-hint {
+  margin-top: 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ada-text-dim);
+}
+
+/* === rows =================================================================== */
+
+/* Rows that follow a card header rather than starting the card. */
+.ada-set-rows {
+  margin-top: 6px;
+}
+
+.ada-set-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 11px 0;
+  border-top: 1px solid var(--ada-line-06);
+}
+
+/* The first row sits flush against the card's own padding. */
+.ada-set-row:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.ada-set-row:last-child {
+  padding-bottom: 0;
+}
+
+.ada-set-row--dim {
+  opacity: 0.45;
+}
+
+.ada-set-row-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.ada-set-row-label {
+  font-size: 12.5px;
+  color: var(--ada-text-primary);
+}
+
+.ada-set-row-desc {
+  margin-top: 3px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ada-text-dim);
+}
+
+.ada-set-row-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+/* === stepper ================================================================ */
+
+.ada-set-stepper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-button);
+}
+
+.ada-set-stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ada-text-muted);
+  cursor: pointer;
+}
+
+.ada-set-stepper-btn:hover:not(:disabled) {
+  background: var(--ada-line-06);
+  color: var(--ada-text-primary);
+}
+
+.ada-set-stepper-btn:disabled {
+  color: var(--ada-text-disabled);
+  cursor: default;
+}
+
+.ada-set-stepper-value {
+  min-width: 34px;
+  text-align: center;
+  font-family: var(--ada-font-mono);
+  font-size: 11.5px;
+  color: var(--ada-text-primary);
+}
+
+/* The live type sample under the Appearance controls; the face and size come
+   from the settings themselves, so only the frame is styled here. */
+.ada-appearance-preview {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: var(--ada-radius-row);
+  background: var(--ada-bg-term);
+  color: var(--ada-text-secondary);
+  line-height: 1.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === small shared bits ====================================================== */
+
+/* Status dot: green when the thing is live, grey when it is merely present. */
+.ada-set-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ada-text-disabled);
+}
+
+.ada-set-dot--on {
+  background: var(--ada-done);
+}
+
+.ada-set-ok {
+  font-size: 11.5px;
+  color: var(--ada-done);
+}
+
+.ada-set-warn {
+  font-size: 11.5px;
+  color: var(--ada-warn);
+}
+
+/* The answer to a "Check" press, under the row that asked for it. */
+.ada-set-probe {
+  margin-top: 12px;
+  font-family: var(--ada-font-mono);
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.ada-set-mono {
+  font-family: var(--ada-font-mono);
+  font-size: 10.5px;
+  color: var(--ada-text-faint);
+}
+
+/* A list of things the section owns (accounts, archived workspaces). */
+.ada-set-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ada-set-list-empty {
+  margin-top: 14px;
+  font-size: 11.5px;
+  color: var(--ada-text-dim);
+}
+
+.ada-set-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+}
+
+.ada-set-item--active {
+  background: var(--ada-line-05);
+}
+
+.ada-set-item-name {
+  font-size: 12.5px;
+  color: var(--ada-text-secondary);
+}
+
+.ada-set-item--active .ada-set-item-name {
+  font-weight: 600;
+  color: var(--ada-text-strong);
+}
+
+.ada-set-item-desc {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--ada-text-muted);
+}
+
+.ada-set-item-meta {
+  flex: none;
+  font-size: 11px;
+  color: var(--ada-text-faint);
+}
+
+/* Inline confirm: the destructive step never leaves the row it belongs to. */
+.ada-set-confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ada-text-muted);
+}
+
+/* === form bits shared by the modals ========================================= */
+
+.ada-set-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.ada-set-field-label {
+  font-size: 11.5px;
+  color: var(--ada-text-muted);
+}
+
+.ada-set-error {
+  margin-top: 10px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ada-warn);
+}
+
+/* === about ================================================================== */
+
+.ada-about-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 18px;
+}
+
+.ada-about-brand {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--ada-text-muted);
+}
+
+.ada-about-version {
+  font-family: var(--ada-font-mono);
+  font-size: 11.5px;
+  color: var(--ada-text-faint);
+}
+
+/* === the sign-in modal ====================================================== */
+
+/* The embedded `claude setup-token` terminal. Height is set inline from the
+   chosen type size, since it is a row count, not a pixel constant. */
+.ada-mint-term {
+  margin-top: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--ada-line-08);
+  border-radius: var(--ada-radius-pane);
+  background: var(--ada-bg-term);
+  overflow: hidden;
+}
+
+.ada-mint-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ada-mint-paste-toggle {
+  display: block;
+  margin-top: 14px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: var(--ada-font-ui);
+  font-size: 11.5px;
+  color: var(--ada-text-muted);
+  cursor: pointer;
+}
+
+.ada-mint-paste-toggle:hover {
+  color: var(--ada-text-primary);
+}

@@ -1,0 +1,43 @@
+/* The dashed "New agent here" tile (design 2a → Empty zone). */
+
+.ada-empty-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 1px dashed var(--ada-line-16);
+  border-radius: var(--ada-radius-pane);
+  color: var(--ada-text-faint);
+  font-family: var(--ada-font-ui);
+  cursor: pointer;
+}
+
+.ada-empty-zone:hover {
+  border-color: var(--ada-text-disabled);
+}
+
+/* While the quick-spawn menu is open the tile wears the accent, so it is
+   obvious which zone the menu is about to spawn into. */
+.ada-empty-zone.is-menu-open {
+  border-color: var(--ada-accent-pane-border);
+}
+
+.ada-empty-zone-plus {
+  font-size: 18px;
+  font-weight: 300;
+}
+
+.ada-empty-zone-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ada-text-muted);
+}
+
+.ada-empty-zone-hint {
+  font-size: 10.5px;
+}

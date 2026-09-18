@@ -1,0 +1,186 @@
+/* The pane header (design 2a "Pane headers", plus 4a's two usage fields). */
+
+.ada-pane-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--ada-size-pane-header);
+  padding: 0 10px;
+  background: var(--ada-bg-pane-header);
+  border-bottom: 1px solid var(--ada-line-05);
+  /* the bar is a drag handle and a double-click target; selecting its text is not
+     a gesture anyone wants */
+  user-select: none;
+}
+
+/* === status dot ============================================================ */
+
+.ada-pane-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.ada-pane-dot-working {
+  background: var(--ada-accent);
+}
+
+/* The one moving thing in the chrome: a pane that is waiting on the operator has
+   to be findable across a four-pane grid without reading every header. */
+.ada-pane-dot-attention {
+  background: var(--ada-warn);
+  animation: ada-pane-dot-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ada-pane-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.ada-pane-dot-idle {
+  background: var(--ada-text-disabled);
+}
+
+.ada-pane-dot-done {
+  background: var(--ada-done);
+}
+
+/* A dead process reads as a hollow ring — present, but no longer lit. */
+.ada-pane-dot-exited {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ada-text-disabled);
+}
+
+/* === identity ============================================================== */
+
+.ada-pane-name {
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ada-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ada-pane-header.is-focused .ada-pane-name {
+  color: var(--ada-text-strong);
+}
+
+.ada-pane-rename {
+  flex: none;
+  width: 140px;
+}
+
+.ada-pane-kind {
+  flex: none;
+  font-family: var(--ada-font-mono);
+  font-size: 10px;
+  color: var(--ada-text-dim);
+  white-space: nowrap;
+}
+
+.ada-pane-account {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: var(--ada-radius-chip);
+  background: var(--ada-line-06);
+  font-size: 9.5px;
+  color: var(--ada-text-muted);
+  white-space: nowrap;
+}
+
+.ada-pane-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+/* === usage + status ======================================================== */
+
+.ada-pane-share {
+  flex: none;
+  font-family: var(--ada-font-mono);
+  font-size: 10px;
+  color: var(--ada-text-dim);
+  white-space: nowrap;
+}
+
+.ada-pane-status {
+  flex: none;
+  margin-left: 2px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.ada-pane-status-working,
+.ada-pane-status-attention {
+  color: var(--ada-warn);
+}
+
+.ada-pane-status-idle {
+  color: var(--ada-text-dim);
+}
+
+.ada-pane-status-done {
+  color: var(--ada-done);
+}
+
+.ada-pane-status-exited {
+  color: var(--ada-text-disabled);
+}
+
+/* === actions =============================================================== */
+
+/* Three buttons on every pane would be three times the noise on a four-pane
+   grid, so they surface on hover — and stay up on the focused pane, which is the
+   one the operator is about to act on. */
+.ada-pane-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: 2px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.ada-pane-header:hover .ada-pane-actions,
+.ada-pane-header.is-focused .ada-pane-actions {
+  opacity: 1;
+}
+
+.ada-pane-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--ada-text-dim);
+  cursor: pointer;
+}
+
+.ada-pane-action:hover {
+  background: var(--ada-line-06);
+  color: var(--ada-text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-pane-dot-attention {
+    animation: none;
+  }
+
+  .ada-pane-actions {
+    transition: none;
+  }
+}

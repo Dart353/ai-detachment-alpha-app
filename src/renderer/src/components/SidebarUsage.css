@@ -1,0 +1,57 @@
+/* The sidebar footer's usage meters (design README 4a). Two quiet rows above the
+   path and branch lines, sized to sit inside the 244px column without wrapping. */
+
+.ada-sbu {
+  padding-bottom: 10px;
+}
+
+.ada-sbu-block + .ada-sbu-block {
+  margin-top: 12px;
+}
+
+.ada-sbu-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.ada-sbu-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--ada-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ada-sbu-pct {
+  flex: none;
+  font-family: var(--ada-font-mono);
+  font-size: 10px;
+  color: var(--ada-text-muted);
+}
+
+.ada-sbu-reset {
+  margin-top: 5px;
+  font-size: 10px;
+  color: var(--ada-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ada-sbu-unavailable {
+  padding-bottom: 10px;
+  font-size: 10px;
+  color: var(--ada-text-faint);
+}
+
+/* The per-pane share in the tree reads brighter on the focused row and quieter
+   on the rest. It lives here rather than in Sidebar.css because the number
+   itself is usage, not navigation. */
+.ada-sb-pane:not(.ada-sb-pane--active) .ada-sb-share {
+  color: var(--ada-text-dim);
+}

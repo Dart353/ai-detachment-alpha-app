@@ -1,0 +1,102 @@
+/* First run (design README 1e): the centred column the app opens on when no
+   folder has been chosen yet. */
+
+.ada-firstrun {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  background: var(--ada-bg-window);
+}
+
+.ada-firstrun-brand {
+  margin-top: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--ada-text-muted);
+}
+
+.ada-firstrun-headline {
+  margin-top: 10px;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ada-text-strong);
+}
+
+.ada-firstrun-explainer {
+  margin-top: 8px;
+  max-width: 380px;
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: center;
+  color: var(--ada-text-muted);
+}
+
+.ada-firstrun-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.ada-firstrun-recent {
+  width: 400px;
+  margin-top: 44px;
+}
+
+.ada-firstrun-recent-label {
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--ada-text-faint);
+}
+
+.ada-firstrun-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ada-firstrun-recent-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--ada-radius-row);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The top row is the one you almost always want, so it reads as pre-picked.
+   No token: .04 is below the hairline ramp, a wash rather than a surface. */
+.ada-firstrun-recent-row:first-child,
+.ada-firstrun-recent-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ada-firstrun-recent-caret {
+  font-size: 12px;
+  color: var(--ada-text-muted);
+}
+
+.ada-firstrun-recent-name {
+  font-size: 12px;
+  color: var(--ada-text-secondary);
+}
+
+.ada-firstrun-recent-path {
+  margin-left: auto;
+  font-family: var(--ada-font-mono);
+  font-size: 10.5px;
+  color: var(--ada-text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

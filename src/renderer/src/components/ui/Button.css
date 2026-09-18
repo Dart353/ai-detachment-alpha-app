@@ -1,0 +1,125 @@
+/* The button family (design README screens 1d, 1e, 1f). Four weights, one shape
+   language: everything is a flex row so an icon never shifts the label's baseline. */
+
+.ada-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--ada-radius-button);
+  background: transparent;
+  font-family: var(--ada-font-ui);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.ada-btn:disabled {
+  color: var(--ada-text-disabled);
+  cursor: default;
+}
+
+/* Primary — the single accent action on a screen. Dark ink, because #f05219 at
+   full strength is far too bright to carry light text. */
+.ada-btn-primary {
+  background: var(--ada-accent);
+  /* no token: the ink used only on top of a filled accent surface */
+  color: #1a1a1a;
+}
+
+/* Brightened rather than given a second accent literal — the token stays the
+   only place the brand colour is written down. */
+.ada-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.ada-btn-primary:disabled {
+  background: var(--ada-line-10);
+}
+
+/* Outline — the neighbouring, equal-rank action ("Quick terminal" beside "Open folder…"). */
+.ada-btn-outline {
+  /* no token: the .14 border alpha the mockups use for standing buttons */
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--ada-text-secondary);
+  font-weight: 600;
+}
+
+.ada-btn-outline:hover:not(:disabled) {
+  background: var(--ada-line-06);
+  border-color: var(--ada-line-16);
+  color: var(--ada-text-primary);
+}
+
+.ada-btn-outline:disabled {
+  border-color: var(--ada-line-08);
+}
+
+/* Ghost — chrome that should not read as a control until it is pointed at. */
+.ada-btn-ghost {
+  color: var(--ada-text-muted);
+  font-weight: 600;
+}
+
+.ada-btn-ghost:hover:not(:disabled) {
+  background: var(--ada-line-06);
+  color: var(--ada-text-primary);
+}
+
+/* Icon — the square glyph buttons in pane headers and the titlebar. */
+.ada-btn-icon {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 6px;
+  color: var(--ada-text-dim);
+}
+
+.ada-btn-icon:hover:not(:disabled) {
+  background: var(--ada-line-06);
+  color: var(--ada-text-primary);
+}
+
+/* "The thing I open is open" — same wash the layout-picker icon wears in 1b.
+   Primary is loud enough already, so it keeps its own fill. */
+.ada-btn-icon.ada-btn-active,
+.ada-btn-ghost.ada-btn-active,
+.ada-btn-outline.ada-btn-active {
+  background: var(--ada-line-08);
+  color: var(--ada-text-primary);
+}
+
+.ada-btn-sm {
+  padding: 4px 10px;
+  font-size: 11.5px;
+}
+
+.ada-btn-lg {
+  padding: 9px 20px;
+  border-radius: 8px;
+}
+
+.ada-btn-icon.ada-btn-sm,
+.ada-btn-icon.ada-btn-lg {
+  padding: 0;
+}
+
+.ada-btn-danger:not(:disabled) {
+  color: var(--ada-warn);
+}
+
+.ada-btn-primary.ada-btn-danger:not(:disabled) {
+  background: var(--ada-warn);
+  color: #1a1a1a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-btn {
+    transition: none;
+  }
+}

@@ -1,0 +1,221 @@
+/* The usage popover (design README 4a). The surface itself is `ui/Popover`;
+   everything here is the content laid out on it. */
+
+.ada-usage-pop {
+  padding: 18px;
+}
+
+.ada-usage-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ada-usage-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ada-text-strong);
+}
+
+.ada-usage-meta {
+  font-size: 10.5px;
+  color: var(--ada-text-dim);
+}
+
+/* === one limit window ======================================================= */
+
+.ada-usage-block--first {
+  margin-top: 16px;
+}
+
+/* The session block and the week are split by a rule; every per-model week
+   after them is just another beat of the same rhythm. */
+.ada-usage-block + .ada-usage-block {
+  margin-top: 14px;
+}
+
+.ada-usage-divider {
+  height: 1px;
+  margin: 16px 0;
+  background: var(--ada-line-08);
+}
+
+.ada-usage-block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.ada-usage-block-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ada-text-primary);
+}
+
+.ada-usage-pct {
+  font-family: var(--ada-font-mono);
+  font-size: 11.5px;
+}
+
+/* The window in play reads in the accent's tinted text; the bar keeps the
+   full-strength orange to itself. */
+.ada-usage-pct--accent {
+  color: var(--ada-accent-text);
+}
+
+.ada-usage-pct--neutral {
+  color: var(--ada-text-secondary);
+}
+
+.ada-usage-pct--warn {
+  color: var(--ada-warn);
+}
+
+.ada-usage-block-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 10.5px;
+  color: var(--ada-text-dim);
+}
+
+/* A projection or a spent-out window: the copy warms, the clock beside it does
+   not — the time left is a fact, not a warning. */
+.ada-usage-note--warn {
+  color: var(--ada-warn);
+}
+
+.ada-usage-left {
+  flex: none;
+  font-family: var(--ada-font-mono);
+}
+
+/* === this window, by session ================================================ */
+
+.ada-usage-caption {
+  margin-bottom: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--ada-text-faint);
+}
+
+.ada-usage-empty {
+  font-size: 11px;
+  color: var(--ada-text-dim);
+}
+
+.ada-usage-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ada-usage-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ada-usage-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.ada-usage-dot--working {
+  background: var(--ada-accent);
+}
+
+.ada-usage-dot--attention {
+  background: var(--ada-warn);
+}
+
+.ada-usage-dot--idle {
+  background: var(--ada-text-disabled);
+}
+
+.ada-usage-dot--done {
+  background: var(--ada-done);
+}
+
+/* A dead process reads as a hollow ring — present, but no longer lit. */
+.ada-usage-dot--exited {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ada-text-disabled);
+}
+
+.ada-usage-row-name {
+  flex: none;
+  width: 92px;
+  font-size: 11.5px;
+  color: var(--ada-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ada-usage-row-track {
+  flex: 1;
+  min-width: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ada-line-10);
+  overflow: hidden;
+}
+
+.ada-usage-row-fill {
+  display: block;
+  height: 100%;
+}
+
+/* These bars compare sessions with each other, so the threshold rule does not
+   apply: a full bar means "biggest here", not "nearly out". */
+.ada-usage-row-fill--accent {
+  background: var(--ada-accent);
+}
+
+.ada-usage-row-fill--neutral {
+  background: var(--ada-text-muted);
+}
+
+.ada-usage-row-pct {
+  flex: none;
+  width: 30px;
+  text-align: right;
+  font-family: var(--ada-font-mono);
+  font-size: 10.5px;
+  color: var(--ada-text-muted);
+}
+
+/* === footer ================================================================= */
+
+.ada-usage-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ada-line-08);
+}
+
+.ada-usage-history {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--ada-accent);
+  cursor: pointer;
+}
+
+.ada-usage-history:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

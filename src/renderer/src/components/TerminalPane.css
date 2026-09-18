@@ -1,0 +1,37 @@
+/* A pane tile: header, optional colour seam, terminal body (design 2a). */
+
+.ada-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--ada-bg-term);
+  border: 1px solid var(--ada-line-08);
+  border-radius: var(--ada-radius-pane);
+  /* the rounded corners have to clip the terminal, which paints square */
+  overflow: hidden;
+}
+
+.ada-pane.is-focused {
+  border-color: var(--ada-accent-pane-border);
+}
+
+.ada-pane-seam {
+  flex: none;
+  height: 2px;
+}
+
+/* The body is what FitAddon measures: its computed width/height resolve to the
+   content box, so the padding here is taken off the grid rather than overflowing
+   it. Never move this node — xterm paints into the element it was opened on. */
+.ada-pane-body {
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  overflow: hidden;
+}
+
+.ada-pane-body .xterm {
+  height: 100%;
+}

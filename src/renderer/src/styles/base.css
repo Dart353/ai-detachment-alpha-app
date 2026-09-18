@@ -1,0 +1,66 @@
+/** Global reset and the window's default surface. Component styles live beside
+ *  their component; nothing app-specific belongs here. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ada-bg-window);
+  color: var(--ada-text-primary);
+  font-family: var(--ada-font-ui);
+  font-size: 12px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  /* The app is chrome, not a document: a stray drag must not paint a text
+     selection across the UI. Terminals and text views opt back in themselves. */
+  user-select: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Thin themed scrollbars — the default light ones cut through the dark chrome. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ada-line-12) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--ada-line-10);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 6px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ada-line-16);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}

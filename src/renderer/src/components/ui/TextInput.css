@@ -1,0 +1,39 @@
+/* The house text field: a faint well rather than a raised box, so it sits inside
+   popovers and toolbars without competing with them. */
+
+.ada-input {
+  width: 100%;
+  padding: 6px 9px;
+  /* no token: the .04 wash used for inset wells (also the first RECENT row in 1e) */
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-button);
+  color: var(--ada-text-primary);
+  font-family: var(--ada-font-ui);
+  font-size: 12px;
+  outline: none;
+  /* the app disables selection globally; a field is exactly where it belongs */
+  user-select: text;
+}
+
+.ada-input::placeholder {
+  color: var(--ada-text-faint);
+}
+
+.ada-input:focus {
+  border-color: var(--ada-accent-pane-border);
+}
+
+.ada-input:disabled {
+  color: var(--ada-text-disabled);
+}
+
+.ada-input-mono {
+  font-family: var(--ada-font-mono);
+  font-size: 11.5px;
+}
+
+.ada-input-sm {
+  padding: 4px 7px;
+  font-size: 11.5px;
+}

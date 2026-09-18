@@ -1,0 +1,89 @@
+/* Workspace tabs in the title bar (design README 2a / mockup 1a). */
+
+.ada-ws-tabs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Crowded tabs scroll, but a scrollbar inside a 40px bar would eat the row. */
+  scrollbar-width: none;
+}
+
+.ada-ws-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.ada-ws-tab {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--ada-radius-row);
+  background: transparent;
+  font-size: 12px;
+  color: var(--ada-text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ada-ws-tab:hover {
+  color: var(--ada-text-secondary);
+}
+
+.ada-ws-tab--active {
+  background: var(--ada-accent-tab-bg);
+  border-color: var(--ada-accent-tab-border);
+  font-weight: 600;
+  color: var(--ada-accent-text);
+}
+
+.ada-ws-tab-count {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--ada-text-muted);
+}
+
+.ada-ws-tab[data-dragging] {
+  opacity: 0.5;
+}
+
+/* The insertion bar a reorder drag lands on. */
+.ada-ws-tab--drop-before::before,
+.ada-ws-tab--drop-after::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--ada-accent);
+}
+
+.ada-ws-tab--drop-before::before {
+  left: -3px;
+}
+
+.ada-ws-tab--drop-after::after {
+  right: -3px;
+}
+
+.ada-ws-tab-add {
+  padding: 5px 10px;
+  font-size: 13px;
+  color: var(--ada-text-faint);
+}
+
+.ada-ws-tab-add:hover {
+  color: var(--ada-text-secondary);
+}
+
+.ada-ws-tab-input {
+  width: 120px;
+}

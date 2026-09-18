@@ -1,0 +1,130 @@
+/* The layout picker's contents (design 1b). The surface itself is Popover's. */
+
+.ada-layouts {
+  padding: 16px;
+}
+
+.ada-layout-section {
+  margin-bottom: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--ada-text-muted);
+}
+
+.ada-layout-section--next {
+  margin: 16px 0 10px;
+}
+
+.ada-layout-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.ada-layout-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  background: transparent;
+  border: 1px solid var(--ada-line-09);
+  border-radius: var(--ada-radius-pane);
+  cursor: pointer;
+}
+
+.ada-layout-tile:hover:not(:disabled) {
+  border-color: var(--ada-line-16);
+}
+
+.ada-layout-tile:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* The mini wireframe: the preset's own rectangles, at 54×32. */
+.ada-layout-wire {
+  position: relative;
+  display: block;
+  width: 54px;
+  height: 32px;
+}
+
+.ada-layout-cell {
+  position: absolute;
+  border: 1.5px solid var(--ada-text-muted);
+  border-radius: 3px;
+}
+
+.ada-layout-label {
+  font-size: 10.5px;
+  color: var(--ada-text-tertiary);
+}
+
+/* The layout the workspace is actually in. */
+.ada-layout-tile.is-selected {
+  border-color: rgba(var(--ada-accent-rgb), 0.6);
+  background: rgba(var(--ada-accent-rgb), 0.06);
+}
+
+.ada-layout-tile.is-selected .ada-layout-cell {
+  border-color: var(--ada-text-primary);
+}
+
+.ada-layout-tile.is-selected .ada-layout-cell--main {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.ada-layout-tile.is-selected .ada-layout-label {
+  color: var(--ada-accent-text);
+}
+
+.ada-layout-check {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--ada-accent);
+  color: #1a1a1a;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.ada-layout-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ada-line-08);
+}
+
+.ada-layout-custom,
+.ada-layout-edit {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.ada-layout-custom {
+  color: var(--ada-text-muted);
+}
+
+.ada-layout-edit {
+  color: var(--ada-accent);
+}
+
+.ada-layout-custom:disabled,
+.ada-layout-edit:disabled {
+  color: var(--ada-text-disabled);
+  cursor: default;
+}

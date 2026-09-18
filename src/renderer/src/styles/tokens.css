@@ -1,0 +1,73 @@
+/**
+ * The design's token set (docs/design/README.md → "Design Tokens").
+ * Every colour, radius and chrome size the UI is allowed to use lives here;
+ * component stylesheets reference these variables and never repeat a literal.
+ */
+:root {
+  /* Brand */
+  --ada-accent: #f05219;
+  --ada-accent-rgb: 240, 82, 25;
+  --ada-accent-text: #f8cdbb;
+
+  /* Status */
+  --ada-warn: #e0784a;
+  --ada-done: #7ec27a;
+
+  /* Surfaces, darkest page shell outward to the popovers that float over it */
+  --ada-bg-app: #111114;
+  --ada-bg-window: #1c1c1f;
+  --ada-bg-sidebar: #161619;
+  --ada-bg-pane-header: #141417;
+  --ada-bg-term: #0b0b0d;
+  --ada-bg-popover: #202025;
+
+  /* The eight-step text grey ramp: strong titles down to disabled/idle */
+  --ada-text-strong: #f0f0f3;
+  --ada-text-primary: #e7e7ea;
+  --ada-text-secondary: #c6c6cc;
+  --ada-text-tertiary: #a3a3aa;
+  --ada-text-muted: #8b8b93;
+  --ada-text-dim: #75757d;
+  --ada-text-faint: #67676f;
+  --ada-text-disabled: #59595f;
+
+  /* Hairlines — dividers and borders are white at a handful of fixed alphas */
+  --ada-line-05: rgba(255, 255, 255, 0.05);
+  --ada-line-06: rgba(255, 255, 255, 0.06);
+  --ada-line-08: rgba(255, 255, 255, 0.08);
+  --ada-line-09: rgba(255, 255, 255, 0.09);
+  --ada-line-10: rgba(255, 255, 255, 0.1);
+  --ada-line-12: rgba(255, 255, 255, 0.12);
+  --ada-line-16: rgba(255, 255, 255, 0.16);
+
+  /* Accent surfaces at the opacities the mockups settled on */
+  --ada-accent-tab-bg: rgba(var(--ada-accent-rgb), 0.12);
+  --ada-accent-tab-border: rgba(var(--ada-accent-rgb), 0.32);
+  --ada-accent-row-bg: rgba(var(--ada-accent-rgb), 0.11);
+  --ada-accent-row-border: rgba(var(--ada-accent-rgb), 0.3);
+  --ada-accent-pane-border: rgba(var(--ada-accent-rgb), 0.5);
+
+  /* Shape */
+  --ada-radius-pane: 8px;
+  --ada-radius-popover: 10px;
+  --ada-radius-card: 10px;
+  --ada-radius-row: 7px;
+  --ada-radius-button: 7px;
+  --ada-radius-chip: 5px;
+
+  /* Chrome sizes */
+  --ada-size-titlebar: 40px;
+  --ada-size-pane-header: 32px;
+  --ada-size-toolbar: 44px;
+  --ada-size-sidebar: 244px;
+  --ada-size-rail: 46px;
+  --ada-size-settings-nav: 212px;
+  --ada-grid-gap: 8px;
+
+  /* Elevation */
+  --ada-shadow-popover: 0 18px 50px rgba(0, 0, 0, 0.55);
+
+  /* Type: UI chrome vs. everything that must align in columns */
+  --ada-font-ui: 'Segoe UI', system-ui, sans-serif;
+  --ada-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}

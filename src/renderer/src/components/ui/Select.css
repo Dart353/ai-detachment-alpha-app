@@ -1,0 +1,156 @@
+/* The dropdown. Trigger reads as an outline button; the menu is the popover
+   surface with the context menu's row geometry, so the two never look unrelated. */
+
+.ada-select {
+  display: inline-block;
+  min-width: 0;
+}
+
+.ada-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 9px;
+  /* no token: the .14 border alpha shared with the outline button */
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--ada-radius-button);
+  background: transparent;
+  color: var(--ada-text-secondary);
+  font-family: var(--ada-font-ui);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ada-select-trigger:hover:not(:disabled) {
+  background: var(--ada-line-06);
+  border-color: var(--ada-line-16);
+}
+
+.ada-select-trigger:disabled {
+  color: var(--ada-text-disabled);
+  border-color: var(--ada-line-08);
+  cursor: default;
+}
+
+.ada-select-sm .ada-select-trigger {
+  padding: 3px 7px;
+  font-size: 11.5px;
+}
+
+.ada-select-value {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ada-select-placeholder {
+  color: var(--ada-text-faint);
+}
+
+.ada-select-caret {
+  flex: 0 0 auto;
+  font-size: 9px;
+  line-height: 1;
+  color: var(--ada-text-faint);
+}
+
+.ada-select-menu {
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--ada-bg-popover);
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-popover);
+  box-shadow: var(--ada-shadow-popover);
+  font-family: var(--ada-font-ui);
+  font-size: 12px;
+  overflow: hidden;
+  animation: ada-select-in 120ms ease-out;
+}
+
+.ada-select-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+.ada-select-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ada-text-secondary);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ada-select-option-active:not(:disabled) {
+  background: rgba(var(--ada-accent-rgb), 0.1);
+  color: var(--ada-text-strong);
+}
+
+.ada-select-option:disabled {
+  color: var(--ada-text-disabled);
+  cursor: default;
+}
+
+/* Fixed slot, tick or no tick, so labels align down the column. */
+.ada-select-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 14px;
+  width: 14px;
+  color: var(--ada-accent);
+}
+
+.ada-select-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ada-select-empty {
+  padding: 8px 10px;
+  color: var(--ada-text-muted);
+}
+
+.ada-select-search {
+  flex: 0 0 auto;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-button);
+  background: var(--ada-line-05);
+  color: var(--ada-text-primary);
+  font-size: 12px;
+  outline: none;
+}
+
+.ada-select-search:focus {
+  border-color: var(--ada-accent-pane-border);
+}
+
+@keyframes ada-select-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-select-menu {
+    animation: none;
+  }
+}
