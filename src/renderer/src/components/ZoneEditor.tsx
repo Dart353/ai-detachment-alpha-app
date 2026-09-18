@@ -170,6 +170,13 @@ export default function ZoneEditor({ workspaceId, onClose }: ZoneEditorProps): J
   )
   /** The last layout WE sent, so an outside change is told apart from an echo. */
   const committed = useRef<ZoneLayout | undefined>(storeLayout)
+  /**
+   * The layout as it stood when the editor opened. Every edit is pushed to the
+   * store live so the grid follows the gesture, which means "Cancel" is a
+   * restore rather than a discard: put this back, reconciled against whatever
+   * panes exist now, and leave.
+   */
+  const opening = useRef<ZoneLayout | undefined>(storeLayout)
 
   // the layout as it stood when the current gesture began — edge drags are
   // applied to it cumulatively, so a drag never compounds its own rounding
@@ -405,7 +412,22 @@ export default function ZoneEditor({ workspaceId, onClose }: ZoneEditorProps): J
     return { can: true, reason: 'Merge the two selected zones into one' }
   })()
 
-  /** Whether the selection can be deleted — never at the cost of a pane's home. */
+  const livePaneIds = panes?.map((pane) => pane.id) ?? []
+  const livePaneKey = livePaneIds.join(',')
+
+  /** Panes in reading order, newcomers last — the order a re-seed fills zones in. */
+  const orderedPaneIds = useCallback((): string[] => {
+    const placed = zonePaneIds(draft).filter((paneId) => livePaneIds.includes(paneId))
+    return [...placed, ...livePaneIds.filter((paneId) => !placed.includes(paneId))]
+    // livePaneIds is a fresh array each render; the joined key is its identity
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, livePaneKey])
+
+  /**
+   * Whether the selection can be deleted. A pane living in a deleted zone moves
+   * to a free zone (deleteZone picks the nearest), so occupancy only blocks the
+   * delete when there is nowhere left for the pane to go.
+   */
   const deleteState = ((): { can: boolean; reason: string } => {
     if (selected.length === 0) return { can: false, reason: 'Select a zone to delete it' }
     if (draft.zones.length <= selected.length)
@@ -413,10 +435,19 @@ export default function ZoneEditor({ workspaceId, onClose }: ZoneEditorProps): J
     const occupied = selected
       .map((zoneId) => paneInZone(draft, zoneId))
       .filter((paneId): paneId is string => !!paneId)
-    if (occupied.length)
+    const taken = new Set(Object.values(draft.assign))
+    const freeAfter = draft.zones.filter(
+      (zone) => !selected.includes(zone.id) && !taken.has(zone.id)
+    ).length
+    if (occupied.length > freeAfter)
       return {
         can: false,
-        reason: `${paneLabel(occupied[0])} lives in that zone — move or close the pane first`
+        reason: `${paneLabel(occupied[0])} lives in that zone and no empty zone is left for it — close the pane or free a zone first`
+      }
+    if (occupied.length === 1)
+      return {
+        can: true,
+        reason: `Delete the selected zone — ${paneLabel(occupied[0])} moves to the nearest empty zone`
       }
     return { can: true, reason: 'Delete the selected zone' }
   })()
@@ -426,8 +457,10 @@ export default function ZoneEditor({ workspaceId, onClose }: ZoneEditorProps): J
     let next = draft
     for (const zoneId of selected) next = deleteZone(next, zoneId)
     setSelected([])
-    commit(next)
-  }, [commit, deleteState.can, draft, selected])
+    // deleteZone re-homes each pane itself; reconcile is the safety net that
+    // guarantees every live pane still has a zone before the grid draws it.
+    commit(reconcileZones(next, orderedPaneIds(), { rows: 1, cols: 1 }))
+  }, [commit, deleteState.can, draft, selected, orderedPaneIds])
 
   /**
    * With exactly one zone selected, the zones it could legally merge with. They
@@ -668,12 +701,10 @@ export default function ZoneEditor({ workspaceId, onClose }: ZoneEditorProps): J
 
   /* === applying layouts ===================================================== */
 
-  const livePaneIds = panes?.map((pane) => pane.id) ?? []
-
-  /** Panes in reading order, newcomers last — the order a re-seed fills zones in. */
-  const orderedPaneIds = (): string[] => {
-    const placed = zonePaneIds(draft).filter((paneId) => livePaneIds.includes(paneId))
-    return [...placed, ...livePaneIds.filter((paneId) => !placed.includes(paneId))]
+  const cancel = (): void => {
+    const original = opening.current
+    if (original) applyLayout(workspaceId, reconcileZones(original, orderedPaneIds(), { rows: 1, cols: 1 }))
+    onClose()
   }
 
   const applySaved = (saved: SavedLayout): void => {
@@ -930,6 +961,14 @@ export default function ZoneEditor({ workspaceId, onClose }: ZoneEditorProps): J
           onClick={() => setPanelOpen((open) => !open)}
         >
           Save layout…
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          title="Put the zones back the way they were when the editor opened"
+          onClick={cancel}
+        >
+          Cancel
         </Button>
         <Button variant="primary" className="ada-zone-done" onClick={onClose}>
           Done
