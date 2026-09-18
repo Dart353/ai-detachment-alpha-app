@@ -4,8 +4,8 @@
  *
  * Applying a preset is an ASSIGNMENT change over new rectangles — panes keep
  * their reading order and their processes, so the canvas re-arranges live and
- * nothing respawns. The picker stays open afterwards: trying two shapes in a row
- * is the whole point of it.
+ * nothing respawns. Picking a tile closes the picker: the result is visible on
+ * the canvas underneath, and a second shape is one click away again.
  */
 import type { JSX, RefObject } from 'react'
 import { selectActiveWorkspace, useApp } from '../store/app'
@@ -34,6 +34,23 @@ function cellStyle(rect: Rect): { left: string; top: string; width: string; heig
   }
 }
 
+/** A preset's wireframe: the cells, drawn from its own rectangles. */
+export function LayoutWire({ rects }: { rects: readonly Rect[] }): JSX.Element {
+  return (
+    <span className="ada-layout-wire" aria-hidden>
+      {/* The first rectangle is the preset's main region — the one the mockup
+          fills when the tile is the layout in use. */}
+      {rects.map((rect, index) => (
+        <span
+          key={`${rect.x}:${rect.y}:${rect.w}:${rect.h}`}
+          className={`ada-layout-cell${index === 0 ? ' ada-layout-cell--main' : ''}`}
+          style={cellStyle(rect)}
+        />
+      ))}
+    </span>
+  )
+}
+
 function LayoutTile({
   preset,
   selected,
@@ -54,17 +71,7 @@ function LayoutTile({
       aria-pressed={selected}
       onClick={onPick}
     >
-      <span className="ada-layout-wire" aria-hidden>
-        {/* The first rectangle is the preset's main region — the one the mockup
-            fills when the tile is the layout in use. */}
-        {preset.rects.map((rect, index) => (
-          <span
-            key={`${rect.x}:${rect.y}:${rect.w}:${rect.h}`}
-            className={`ada-layout-cell${index === 0 ? ' ada-layout-cell--main' : ''}`}
-            style={cellStyle(rect)}
-          />
-        ))}
-      </span>
+      <LayoutWire rects={preset.rects} />
       <span className="ada-layout-label">{preset.label}</span>
       {selected && (
         <span className="ada-layout-check" aria-hidden>
@@ -96,7 +103,9 @@ export default function LayoutPicker({
           selected={preset.id === selectedId}
           disabled={disabled}
           onPick={() => {
-            if (workspace) applyPreset(workspace.id, preset.id)
+            if (!workspace) return
+            applyPreset(workspace.id, preset.id)
+            onClose()
           }}
         />
       ))}
