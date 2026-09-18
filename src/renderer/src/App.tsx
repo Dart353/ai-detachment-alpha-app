@@ -5,6 +5,7 @@ import ExplorerPanel from './components/ExplorerPanel'
 import Grid from './components/Grid'
 import ZoneEditor from './components/ZoneEditor'
 import FirstRun from './components/FirstRun'
+import AddWorkspace from './components/AddWorkspace'
 import SettingsView from './components/SettingsView'
 import RestorePreview from './components/RestorePreview'
 import { Toasts } from './components/ui'
@@ -63,7 +64,13 @@ export default function App(): JSX.Element {
   if (!hydrated) return <div className={classes.join(' ')} />
 
   const titlebarVariant =
-    view === 'settings' ? 'settings' : view === 'firstRun' || zoneEditorOpen ? 'minimal' : 'full'
+    view === 'settings'
+      ? 'settings'
+      : view === 'addWorkspace'
+        ? 'addWorkspace'
+        : view === 'firstRun' || zoneEditorOpen
+          ? 'minimal'
+          : 'full'
 
   return (
     <div className={classes.join(' ')}>
@@ -94,6 +101,12 @@ export default function App(): JSX.Element {
         {view === 'firstRun' && (
           <div className="ada-app-layer">
             <FirstRun />
+          </div>
+        )}
+
+        {view === 'addWorkspace' && (
+          <div className="ada-app-layer">
+            <AddWorkspace />
           </div>
         )}
 

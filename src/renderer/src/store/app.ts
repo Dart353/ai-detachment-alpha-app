@@ -56,7 +56,7 @@ import {
 import { getFocusFn, useRuntime } from './runtime'
 
 /** Which top-level surface is on screen. */
-export type AppView = 'grid' | 'settings' | 'firstRun'
+export type AppView = 'grid' | 'settings' | 'firstRun' | 'addWorkspace'
 
 /** What a caller may specify when spawning a pane; everything else is derived. */
 export interface PaneInit {
@@ -67,6 +67,17 @@ export interface PaneInit {
   planMode?: boolean
   accountId?: string
   cwd?: string
+}
+
+/** Everything the Add workspace screen decides; the store turns it into a workspace. */
+export interface WorkspaceSpec {
+  rootDir: string
+  /** Blank means "name it after the folder". */
+  name: string
+  /** A ZONE_PRESETS id; unknown ids fall back to the single zone. */
+  presetId: string
+  /** One entry per zone of the preset, in reading order; null leaves the zone empty. */
+  panes: (PaneInit | null)[]
 }
 
 export interface ToastOptions {
@@ -100,9 +111,17 @@ export interface AppState {
   recents: RecentWorkspace[]
   toasts: Toast[]
   pendingRestore: PendingRestore | null
+  /** The folder the Add workspace screen opens with, when it was chosen elsewhere. */
+  addWorkspaceRoot: string | null
 
   /* workspaces */
   openWorkspace: (rootDir: string) => void
+  /** Show the Add workspace screen, optionally with a folder already chosen. */
+  openAddWorkspace: (rootDir?: string) => void
+  /** Leave the Add workspace screen without creating anything. */
+  cancelAddWorkspace: () => void
+  /** Create a workspace from the Add screen's choices; returns its id. */
+  createWorkspace: (spec: WorkspaceSpec) => string
   confirmRestore: (choice: 'restore' | 'empty' | 'cancel') => void
   closeWorkspace: (id: string) => void
   renameWorkspace: (id: string, name: string) => void
@@ -237,6 +256,7 @@ export const useApp = create<AppState>()((set, get) => ({
   hydrated: false,
   view: 'firstRun',
   zoneEditorOpen: false,
+  addWorkspaceRoot: null,
   settings: DEFAULT_SETTINGS,
   archive: [],
   recents: [],
@@ -286,6 +306,57 @@ export const useApp = create<AppState>()((set, get) => ({
       activeWorkspaceId: workspace.id,
       view: 'grid'
     })
+  },
+
+  openAddWorkspace: (rootDir) => {
+    set({ view: 'addWorkspace', addWorkspaceRoot: rootDir ?? null })
+  },
+
+  cancelAddWorkspace: () => {
+    set((state) => ({
+      view: state.workspaces.length ? 'grid' : 'firstRun',
+      addWorkspaceRoot: null
+    }))
+  },
+
+  createWorkspace: (spec) => {
+    const state = get()
+    const key = archiveKey(spec.rootDir)
+    const already = state.workspaces.find((workspace) => archiveKey(workspace.rootDir) === key)
+    if (already) {
+      // The folder is open: the honest result is that workspace, not a twin of it.
+      set({ activeWorkspaceId: already.id, view: 'grid', addWorkspaceRoot: null })
+      return already.id
+    }
+
+    const workspace = freshWorkspace(spec.rootDir)
+    const name = spec.name.trim()
+    if (name) workspace.name = name
+    workspace.layout = applyPresetById(workspace.layout, spec.presetId, [])
+    const recents = rememberWorkspace(state.recents, {
+      name: workspace.name,
+      rootDir: spec.rootDir
+    })
+    api()?.saveRecents(recents)
+    set({
+      recents,
+      workspaces: [...state.workspaces, workspace],
+      activeWorkspaceId: workspace.id,
+      view: 'grid',
+      addWorkspaceRoot: null
+    })
+
+    // zonesFromRects mints zones in the preset's rect order, which is the order
+    // the screen showed them in — so index i on screen is zones[i] here.
+    const zones = workspace.layout.zones
+    spec.panes.forEach((init, index) => {
+      const zone = zones[index]
+      if (init && zone) get().addPane(workspace.id, init, zone.id)
+    })
+    const first = get().workspaces.find((candidate) => candidate.id === workspace.id)
+    const firstPane = first?.panes[0]
+    if (firstPane) get().focusPane(firstPane.id)
+    return workspace.id
   },
 
   confirmRestore: (choice) => {

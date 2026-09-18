@@ -28,6 +28,7 @@ export default function WorkspaceTabs(): JSX.Element {
   const closeWorkspace = useApp((state) => state.closeWorkspace)
   const renameWorkspace = useApp((state) => state.renameWorkspace)
   const reorderWorkspaces = useApp((state) => state.reorderWorkspaces)
+  const openAddWorkspace = useApp((state) => state.openAddWorkspace)
   const openWorkspace = useApp((state) => state.openWorkspace)
 
   const [renamingId, setRenamingId] = useState<string | null>(null)
@@ -142,12 +143,9 @@ export default function WorkspaceTabs(): JSX.Element {
       <button
         type="button"
         className="ada-ws-tab ada-ws-tab-add ada-nodrag"
-        aria-label="Open a folder as a workspace"
-        title="Open a folder as a workspace"
-        onClick={async () => {
-          const dir = await window.api?.pickDir()
-          if (dir) openWorkspace(dir)
-        }}
+        aria-label="Add a workspace"
+        title="Add a workspace"
+        onClick={() => openAddWorkspace()}
       >
         +
       </button>
