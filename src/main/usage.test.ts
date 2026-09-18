@@ -1,18 +1,8 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import type { UsageWindow } from '../shared/types'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { sessionWindowTokens } from './usage'
-import { shouldWarn } from './ipc/usage'
-
-// The warning latch lives next to the poller, which pulls in Electron; nothing
-// in this file starts the poller, so a hollow module is enough to import it.
-vi.mock('electron', () => ({
-  app: { on: () => {}, getPath: () => os.tmpdir() },
-  ipcMain: { handle: () => {} },
-  Notification: { isSupported: () => false }
-}))
 
 const HOUR_MS = 60 * 60 * 1000
 // Anchored to the real clock: files written by the test carry a live mtime, and
@@ -177,37 +167,5 @@ describe('sessionWindowTokens', () => {
       bySessionId: {},
       windowTokens: 0
     })
-  })
-})
-
-describe('shouldWarn', () => {
-  function window(pct: number, resetsAt: number | null): UsageWindow {
-    return { key: 'session', label: 'Current session', pct, resetsAt }
-  }
-
-  it('fires once per window and reset, and again after the window rolls over', () => {
-    const latch = new Set<string>()
-    expect(shouldWarn(latch, window(84, NOW), 80)).toBe(true)
-    expect(shouldWarn(latch, window(91, NOW), 80)).toBe(false)
-    expect(shouldWarn(latch, window(81, NOW + 5 * HOUR_MS), 80)).toBe(true)
-  })
-
-  it('stays quiet below the threshold and does not latch', () => {
-    const latch = new Set<string>()
-    expect(shouldWarn(latch, window(79, NOW), 80)).toBe(false)
-    expect(latch.size).toBe(0)
-    expect(shouldWarn(latch, window(80, NOW), 80)).toBe(true)
-  })
-
-  it('keeps separate latches per window key', () => {
-    const latch = new Set<string>()
-    const weekly: UsageWindow = {
-      key: 'weekly_all',
-      label: 'Weekly · all models',
-      pct: 95,
-      resetsAt: NOW
-    }
-    expect(shouldWarn(latch, window(95, NOW), 80)).toBe(true)
-    expect(shouldWarn(latch, weekly, 80)).toBe(true)
   })
 })

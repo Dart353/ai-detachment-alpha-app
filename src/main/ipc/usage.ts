@@ -9,6 +9,7 @@ import {
   type PlanWindow
 } from '../planUsage'
 import { sessionWindowTokens } from '../usage'
+import { shouldWarn } from '../usageWarn'
 import { loadSettings } from '../store'
 import { log } from '../log'
 import type { IpcCtx } from './index'
@@ -97,20 +98,6 @@ async function buildSnapshot(force: boolean): Promise<UsageSnapshot> {
     bySessionId,
     windowTokens
   }
-}
-
-/**
- * Should this window raise a warning banner right now? True exactly once per
- * (window, reset time) pair: the meter keeps reporting 84% for hours, and one
- * banner per window per window-period is the whole point. A new reset time is a
- * new window, so the same key warns again after it rolls over.
- */
-export function shouldWarn(latch: Set<string>, window: UsageWindow, warnAtPct: number): boolean {
-  if (window.pct < warnAtPct) return false
-  const pair = `${window.key}:${window.resetsAt ?? 'unknown'}`
-  if (latch.has(pair)) return false
-  latch.add(pair)
-  return true
 }
 
 /** "resets 4:42 PM" for today's reset, "resets Mon 00:00" for a later one. */
