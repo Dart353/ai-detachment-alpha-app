@@ -101,16 +101,27 @@
   padding: 7px 10px;
 }
 
+/* A real hit target: 18px square around the 13px glyph, pulled left so the
+   glyph itself still sits where the mockup's 9px caret does. */
 .ada-sb-chevron {
   flex: none;
-  width: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: -5px;
   padding: 0;
   border: none;
+  border-radius: var(--ada-radius-chip);
   background: none;
-  font-size: 9px;
-  line-height: 1;
   color: var(--ada-text-muted);
   cursor: pointer;
+}
+
+.ada-sb-chevron:hover {
+  background: var(--ada-line-08);
+  color: var(--ada-text-secondary);
 }
 
 .ada-sb-ws-name {

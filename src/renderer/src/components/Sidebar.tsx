@@ -7,7 +7,18 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent
 } from 'react'
-import { Copy, FolderOpen, Pencil, Plus, RotateCcw, Settings, Terminal, X } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  FolderOpen,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Settings,
+  Terminal,
+  X
+} from 'lucide-react'
 import SidebarUsage from './SidebarUsage'
 import { Button, ContextMenu, TextInput, type MenuItem } from './ui'
 import { selectActiveWorkspace, useApp } from '../store/app'
@@ -296,7 +307,11 @@ function SidebarTree(): JSX.Element {
                   // The second click of a double-click opens the rename; it must
                   // not also re-select the workspace and pull focus away.
                   if (event.detail > 1) return
-                  selectWorkspace(workspace.id)
+                  // Clicking the workspace you are already in folds its panes
+                  // away, the way an explorer's section header does; clicking
+                  // any other one switches to it.
+                  if (active) toggleWorkspaceCollapsed(workspace.id)
+                  else selectWorkspace(workspace.id)
                 }}
                 onDoubleClick={() => setRenaming({ kind: 'workspace', id: workspace.id })}
                 onKeyDown={(event) => onRowKeyDown(event, () => selectWorkspace(workspace.id))}
@@ -320,7 +335,11 @@ function SidebarTree(): JSX.Element {
                     toggleWorkspaceCollapsed(workspace.id)
                   }}
                 >
-                  {workspace.collapsed ? '▸' : '▾'}
+                  {workspace.collapsed ? (
+                    <ChevronRight size={ICON} />
+                  ) : (
+                    <ChevronDown size={ICON} />
+                  )}
                 </button>
                 {renamingThis ? (
                   <RenameField
