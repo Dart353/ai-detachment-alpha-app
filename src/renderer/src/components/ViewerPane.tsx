@@ -26,6 +26,7 @@ import type { FileReadResult } from '../../../shared/types'
 import { useApp } from '../store/app'
 import { baseName } from '../lib/ids'
 import { PaneHeader, type MenuAnchor } from './PaneHeader'
+import { paneColorVars } from './paneColor'
 import { PANE_DND_TYPE } from './TerminalPane'
 import { revealLabel } from './paneMenu'
 import { Button } from './ui'
@@ -192,6 +193,7 @@ export function ViewerPane({
 
   const classes = ['ada-pane']
   if (focused) classes.push('is-focused')
+  if (pane.color) classes.push('has-color')
 
   const reveal = (): void => void window.api.revealPath(filePath)
 
@@ -230,6 +232,7 @@ export function ViewerPane({
   return (
     <div
       className={classes.join(' ')}
+      style={paneColorVars(pane.color)}
       data-pane-id={paneId}
       onPointerDown={() => focusPane(paneId)}
       onContextMenu={(event) => {
