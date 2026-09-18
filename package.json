@@ -1,7 +1,7 @@
 {
   "name": "ai-detachment-alpha",
   "productName": "AI Detachment Alpha",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A minimal Electron terminal multiplexer for Claude Code",
   "main": "./out/main/index.js",
   "private": true,
