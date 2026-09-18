@@ -664,6 +664,9 @@ export const useApp = create<AppState>()((set, get) => ({
       workspaces: mapWorkspace(state.workspaces, workspace.id, (current) => ({
         ...current,
         focusedPaneId: paneId,
+        // The sidebar highlights the focused pane's row; a folded workspace
+        // would hide that row, so focusing a pane unfolds its workspace.
+        collapsed: false,
         // Focusing a pane hidden behind another's maximize means "show me this
         // one" — the only sane reading is to drop the maximize.
         maximizedPaneId:

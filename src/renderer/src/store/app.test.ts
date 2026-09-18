@@ -361,6 +361,21 @@ describe('persistence', () => {
   })
 })
 
+describe('focusPane and the sidebar', () => {
+  it('unfolds a collapsed workspace so the focused row is visible', () => {
+    const state = useApp.getState()
+    state.openWorkspace('/tmp/fold')
+    const wsId = useApp.getState().activeWorkspaceId!
+    const paneId = state.addPane(wsId, { kind: 'terminal' })
+    state.toggleWorkspaceCollapsed(wsId)
+    expect(useApp.getState().workspaces[0].collapsed).toBe(true)
+    state.focusPane(paneId)
+    const workspace = useApp.getState().workspaces[0]
+    expect(workspace.collapsed).toBe(false)
+    expect(workspace.focusedPaneId).toBe(paneId)
+  })
+})
+
 describe('createWorkspace (the Add workspace screen)', () => {
   it('builds the chosen layout and seeds each zone with its pane', () => {
     const id = useApp.getState().createWorkspace({
