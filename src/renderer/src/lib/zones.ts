@@ -601,12 +601,15 @@ export function deleteZone(layout: ZoneLayout, zoneId: string): ZoneLayout {
     const centerX = gone.x + gone.w / 2
     const centerY = gone.y + gone.h / 2
     const free = zones.filter((zone) => !taken.has(zone.id))
-    const pool = free.length ? free : zones
-    const nearest = pool.reduce((best, zone) => {
+    // No free zone: the pane stays unassigned rather than doubling up on a
+    // neighbour — two panes in one zone is not a layout the grid can draw.
+    // reconcileZones places it (splitting the largest zone) on the next pass.
+    const nearest = free.reduce<Zone | null>((best, zone) => {
+      if (!best) return zone
       const dist = (zone.x + zone.w / 2 - centerX) ** 2 + (zone.y + zone.h / 2 - centerY) ** 2
       const bestDist = (best.x + best.w / 2 - centerX) ** 2 + (best.y + best.h / 2 - centerY) ** 2
       return dist < bestDist ? zone : best
-    }, pool[0])
+    }, null)
     if (nearest) assign[homeless] = nearest.id
   }
   return { ...layout, zones, assign }

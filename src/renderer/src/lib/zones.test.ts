@@ -6,6 +6,7 @@ import {
   ZONE_PRESETS,
   applyPresetById,
   computeZoneRects,
+  deleteZone,
   dropPaneOnZone,
   hasOverlap,
   makeGridZones,
@@ -201,5 +202,49 @@ describe('computeZoneRects', () => {
   it('honours a pane filter', () => {
     const layout = seed(['a', 'b'])
     expect([...computeZoneRects(layout, ['b']).keys()]).toEqual(['b'])
+  })
+})
+
+describe('deleteZone', () => {
+  it('moves the zone\'s pane to the nearest free zone', () => {
+    const layout = zonesFromRects(
+      [
+        { x: 0, y: 0, w: 50, h: 100 },
+        { x: 50, y: 0, w: 50, h: 50 },
+        { x: 50, y: 50, w: 50, h: 50 }
+      ],
+      ['a'],
+      DEFAULT_GRID
+    )
+    const home = zoneOfPane(layout, 'a')!
+    const after = deleteZone(layout, home)
+    expect(after.zones).toHaveLength(2)
+    expect(zoneOfPane(after, 'a')).not.toBe(home)
+    expect(zoneById(after, zoneOfPane(after, 'a')!)).toBeTruthy()
+    expect(hasOverlap(after.zones)).toBe(false)
+  })
+
+  it('never doubles two panes up in one zone when nothing is free', () => {
+    const layout = zonesFromRects(
+      [
+        { x: 0, y: 0, w: 50, h: 100 },
+        { x: 50, y: 0, w: 50, h: 100 }
+      ],
+      ['a', 'b'],
+      DEFAULT_GRID
+    )
+    const after = deleteZone(layout, zoneOfPane(layout, 'a')!)
+    expect(after.zones).toHaveLength(1)
+    expect(zoneOfPane(after, 'a')).toBeUndefined()
+    expect(zoneOfPane(after, 'b')).toBe(after.zones[0].id)
+    // reconcile then gives the homeless pane a zone of its own again
+    const placed = reconcileZones(after, ['a', 'b'], DEFAULT_GRID)
+    expect(allPlaced(placed, ['a', 'b'])).toBe(true)
+    expect(hasOverlap(placed.zones)).toBe(false)
+  })
+
+  it('keeps the last zone', () => {
+    const layout = zonesFromRects([{ x: 0, y: 0, w: 100, h: 100 }], [], DEFAULT_GRID)
+    expect(deleteZone(layout, layout.zones[0].id)).toBe(layout)
   })
 })
