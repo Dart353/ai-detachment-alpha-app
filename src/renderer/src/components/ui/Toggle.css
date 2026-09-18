@@ -1,0 +1,62 @@
+/* The settings switch: a 28×16 track whose knob slides 12px on. */
+
+.ada-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ada-toggle:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.ada-toggle-track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--ada-line-12);
+  transition: background 120ms ease;
+}
+
+.ada-toggle-on .ada-toggle-track {
+  background: var(--ada-accent);
+}
+
+.ada-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ada-text-strong);
+  transition: transform 120ms ease;
+}
+
+.ada-toggle-on .ada-toggle-knob {
+  transform: translateX(12px);
+}
+
+.ada-toggle-label {
+  font-size: 11px;
+  color: var(--ada-text-muted);
+}
+
+.ada-toggle:focus-visible .ada-toggle-track {
+  outline: 1px solid var(--ada-accent-pane-border);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-toggle-track,
+  .ada-toggle-knob {
+    transition: none;
+  }
+}

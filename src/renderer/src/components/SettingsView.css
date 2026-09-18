@@ -1,0 +1,63 @@
+/* The settings shell (design README 1f): a fixed left nav with Done pinned to its
+   bottom, and a scrolling content column. The sections themselves are styled by
+   settings/settings.css. */
+
+.ada-settings {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: var(--ada-bg-window);
+  font-family: var(--ada-font-ui);
+}
+
+.ada-settings-nav {
+  width: var(--ada-size-settings-nav);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px 10px;
+  background: var(--ada-bg-sidebar);
+  border-right: 1px solid var(--ada-line-06);
+}
+
+.ada-settings-nav-item {
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--ada-radius-row);
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  text-align: left;
+  color: var(--ada-text-secondary);
+  cursor: pointer;
+}
+
+.ada-settings-nav-item:hover {
+  background: var(--ada-line-05);
+  color: var(--ada-text-primary);
+}
+
+.ada-settings-nav-item--active,
+.ada-settings-nav-item--active:hover {
+  font-weight: 600;
+  color: var(--ada-accent-text);
+  /* no token: the 1f nav tint sits a touch below the workspace tab's .12 */
+  background: rgba(var(--ada-accent-rgb), 0.1);
+  border-color: rgba(var(--ada-accent-rgb), 0.22);
+}
+
+.ada-settings-nav-spacer {
+  flex: 1;
+}
+
+.ada-settings-done {
+  width: 100%;
+}
+
+.ada-settings-content {
+  flex: 1;
+  min-width: 0;
+  padding: 34px 44px;
+  overflow-y: auto;
+}

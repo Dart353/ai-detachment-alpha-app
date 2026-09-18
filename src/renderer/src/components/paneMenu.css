@@ -1,0 +1,33 @@
+/* The two bits of markup the menu builders render themselves: Claude Code's ✻
+   and the pane-colour swatch row. Everything else is a plain ContextMenu row. */
+
+.ada-menu-claude {
+  color: var(--ada-accent);
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Plan mode is the same agent in a quieter gear, so its glyph reads quieter too. */
+.ada-menu-claude--muted {
+  color: var(--ada-text-muted);
+}
+
+.ada-pane-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 6px;
+}
+
+.ada-pane-swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-chip);
+  cursor: pointer;
+}
+
+.ada-pane-swatch.is-on {
+  border-color: var(--ada-text-strong);
+}

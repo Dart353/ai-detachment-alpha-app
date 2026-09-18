@@ -1,0 +1,8 @@
+allowBuilds:
+  electron: true
+  # Pulled in by electron-builder for `package:win`. Its install script only
+  # fetches Windows installer helpers, which a Windows build downloads on
+  # demand anyway, so it is left unbuilt.
+  electron-winstaller: false
+  esbuild: true
+  node-pty: true

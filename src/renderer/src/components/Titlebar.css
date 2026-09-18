@@ -1,0 +1,70 @@
+/* The frameless window's title bar (design README 2a, 1d/1e/1f headers).
+   The strip itself drags the window; `.ada-nodrag` is how a control opts out. */
+
+.ada-titlebar {
+  height: var(--ada-size-titlebar);
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 0 14px;
+  background: var(--ada-bg-window);
+  -webkit-app-region: drag;
+}
+
+/* macOS puts its own traffic lights in this corner: leave them the room. */
+.ada-titlebar--mac {
+  padding-left: 78px;
+}
+
+.ada-nodrag {
+  -webkit-app-region: no-drag;
+}
+
+.ada-titlebar-spacer {
+  flex: 1;
+}
+
+/* The "Settings" caption sits exactly where the workspace tabs would. */
+.ada-titlebar-label {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--ada-text-muted);
+}
+
+/* Breathing room between the app's own controls and the window's. */
+.ada-titlebar-gap {
+  width: 16px;
+  flex: none;
+}
+
+.ada-titlebar-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+/* The sidebar and explorer toggles wear a quieter "on" wash than the layout
+   picker, which is a popover-is-open state rather than a persistent one. */
+.ada-titlebar .ada-titlebar-toggle.ada-btn-active {
+  background: var(--ada-line-06);
+}
+
+/* Titlebar glyph buttons are wider than tall — the window-control proportion. */
+.ada-titlebar .ada-titlebar-wide,
+.ada-titlebar .ada-titlebar-winbtn {
+  width: 34px;
+  height: 26px;
+}
+
+.ada-titlebar .ada-titlebar-winbtn {
+  color: var(--ada-text-muted);
+}
+
+/* No red anywhere in this app: close hovers a shade brighter, nothing more. */
+.ada-titlebar .ada-titlebar-close:hover:not(:disabled) {
+  background: var(--ada-line-08);
+}

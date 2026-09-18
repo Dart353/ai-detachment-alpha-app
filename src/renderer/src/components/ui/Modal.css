@@ -1,0 +1,65 @@
+/* The dialog: a dimmed, slightly blurred page under one popover-surfaced card. */
+
+.ada-modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  /* no token: the dialog scrim is the only place this black wash is used */
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  animation: ada-modal-in 120ms ease-out;
+}
+
+.ada-modal {
+  width: 100%;
+  max-width: 460px;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 20px 22px;
+  background: var(--ada-bg-popover);
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-card);
+  box-shadow: var(--ada-shadow-popover);
+  color: var(--ada-text-primary);
+  font-family: var(--ada-font-ui);
+  font-size: 12px;
+  outline: none;
+}
+
+.ada-modal-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ada-text-strong);
+}
+
+.ada-modal-body {
+  color: var(--ada-text-secondary);
+}
+
+.ada-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+@keyframes ada-modal-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-modal-scrim {
+    animation: none;
+  }
+}

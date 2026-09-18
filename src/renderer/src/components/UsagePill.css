@@ -1,0 +1,70 @@
+/* The titlebar usage pill (design README 4a). A quiet chip: the numbers carry
+   the meaning, the box only has to hold them together. */
+
+.ada-usage-pill {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: var(--ada-radius-row);
+  /* The one wash between the .06 and .08 hairlines the tokens name — the design
+     asks for .07 here and there is no token for it. */
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--ada-line-10);
+  cursor: pointer;
+}
+
+.ada-usage-pill:hover {
+  border-color: var(--ada-line-16);
+}
+
+.ada-usage-pill:focus-visible {
+  outline: 1px solid var(--ada-accent-pane-border);
+  outline-offset: 2px;
+}
+
+.ada-usage-pill-pct {
+  font-family: var(--ada-font-mono);
+  font-size: 10.5px;
+  color: var(--ada-text-secondary);
+}
+
+.ada-usage-pill-track {
+  display: block;
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ada-line-12);
+  overflow: hidden;
+}
+
+.ada-usage-pill-fill {
+  display: block;
+  height: 100%;
+  transition: width 200ms ease;
+}
+
+.ada-usage-pill-left {
+  font-size: 10px;
+  color: var(--ada-text-dim);
+}
+
+/* The threshold palette, shared by every usage fill outside the Meter itself. */
+.ada-usage-fill--accent {
+  background: var(--ada-accent);
+}
+
+.ada-usage-fill--neutral {
+  background: var(--ada-text-muted);
+}
+
+.ada-usage-fill--warn {
+  background: var(--ada-warn);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-usage-pill-fill {
+    transition: none;
+  }
+}

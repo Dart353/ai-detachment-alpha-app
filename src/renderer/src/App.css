@@ -1,0 +1,59 @@
+/* The app shell (design README 2a): window frame, title bar, and the stack of
+   surfaces that take turns over the always-mounted pane grids. */
+
+.ada-app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ada-bg-window);
+  color: var(--ada-text-primary);
+}
+
+/* The frameless window draws its own edge: hairline border, 10px radius. */
+.ada-app--framed {
+  border: 1px solid var(--ada-line-09);
+  border-radius: 10px;
+}
+
+.ada-app-main {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.ada-app-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+/* Hidden, never unmounted — see the comment in App.tsx. */
+.ada-app-body--hidden {
+  display: none;
+}
+
+.ada-app-grids {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.ada-app-grid {
+  position: absolute;
+  inset: 0;
+}
+
+.ada-app-grid--hidden {
+  display: none;
+}
+
+/* First run, Settings and the zone editor: full-bleed surfaces that cover the
+   grids without disturbing them. */
+.ada-app-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  background: var(--ada-bg-window);
+}

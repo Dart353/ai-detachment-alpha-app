@@ -1,0 +1,32 @@
+/* The one floating surface (design README 1b): every menu, picker and dropdown
+   in the app is this box. Changing it here changes all of them. */
+
+.ada-popover {
+  position: fixed;
+  z-index: 60;
+  background: var(--ada-bg-popover);
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-popover);
+  box-shadow: var(--ada-shadow-popover);
+  color: var(--ada-text-primary);
+  font-family: var(--ada-font-ui);
+  font-size: 12px;
+  animation: ada-popover-in 120ms ease-out;
+}
+
+@keyframes ada-popover-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* A surface that appears out of nowhere is the point; the fade is decoration, and
+   decoration is exactly what this preference asks us to drop. */
+@media (prefers-reduced-motion: reduce) {
+  .ada-popover {
+    animation: none;
+  }
+}

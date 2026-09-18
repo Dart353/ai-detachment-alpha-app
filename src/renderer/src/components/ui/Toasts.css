@@ -1,0 +1,94 @@
+/* The toast stack: bottom-right, on the same floating surface as every popover. */
+
+.ada-toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  /* the stack itself is not a target — only the cards inside it are */
+  pointer-events: none;
+}
+
+.ada-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 360px;
+  padding: 9px 10px 9px 12px;
+  background: var(--ada-bg-popover);
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-popover);
+  box-shadow: var(--ada-shadow-popover);
+  color: var(--ada-text-secondary);
+  font-family: var(--ada-font-ui);
+  font-size: 12px;
+  pointer-events: auto;
+  animation: ada-toast-in 120ms ease-out;
+}
+
+/* A bar, not a red card: the palette tops out at warn, and this is a report. */
+.ada-toast-error {
+  border-left: 3px solid var(--ada-warn);
+  padding-left: 10px;
+}
+
+.ada-toast-msg {
+  flex: 1 1 auto;
+}
+
+.ada-toast-action {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ada-accent);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ada-toast-action:hover {
+  background: rgba(var(--ada-accent-rgb), 0.1);
+}
+
+.ada-toast-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ada-text-dim);
+  cursor: pointer;
+}
+
+.ada-toast-close:hover {
+  background: var(--ada-line-06);
+  color: var(--ada-text-primary);
+}
+
+@keyframes ada-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-toast {
+    animation: none;
+  }
+}

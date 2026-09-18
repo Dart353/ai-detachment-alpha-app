@@ -1,0 +1,182 @@
+/* Rendered markdown inside a viewer pane: prose in the UI face, code in the mono
+   one, and a highlight palette drawn from the app's own greys plus the accent —
+   the preview must read as part of the app, not as a web page dropped into it. */
+
+.ada-md {
+  padding: 14px 18px 24px;
+  color: var(--ada-text-secondary);
+  font-family: var(--ada-font-ui);
+  font-size: 13px;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.ada-md h1,
+.ada-md h2,
+.ada-md h3,
+.ada-md h4,
+.ada-md h5,
+.ada-md h6 {
+  margin: 1.4em 0 0.5em;
+  color: var(--ada-text-strong);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.ada-md > :first-child {
+  margin-top: 0;
+}
+
+.ada-md h1 {
+  font-size: 20px;
+}
+.ada-md h2 {
+  font-size: 17px;
+}
+.ada-md h3 {
+  font-size: 15px;
+}
+.ada-md h4,
+.ada-md h5,
+.ada-md h6 {
+  font-size: 13px;
+}
+
+.ada-md h1,
+.ada-md h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--ada-line-08);
+}
+
+.ada-md p,
+.ada-md ul,
+.ada-md ol,
+.ada-md blockquote,
+.ada-md table {
+  margin: 0 0 0.9em;
+}
+
+.ada-md ul,
+.ada-md ol {
+  padding-left: 1.4em;
+}
+
+.ada-md li {
+  margin: 0.2em 0;
+}
+
+.ada-md a {
+  color: var(--ada-accent-text);
+  text-decoration: none;
+}
+
+.ada-md a:hover {
+  text-decoration: underline;
+}
+
+.ada-md strong {
+  color: var(--ada-text-strong);
+  font-weight: 600;
+}
+
+.ada-md blockquote {
+  padding: 0 0 0 12px;
+  border-left: 2px solid var(--ada-line-12);
+  color: var(--ada-text-muted);
+}
+
+.ada-md hr {
+  margin: 1.4em 0;
+  border: none;
+  border-top: 1px solid var(--ada-line-08);
+}
+
+.ada-md img {
+  max-width: 100%;
+  border-radius: var(--ada-radius-chip);
+}
+
+/* An image reference nothing could be resolved for. */
+.ada-md-img-missing {
+  color: var(--ada-text-disabled);
+  font-size: 11.5px;
+  font-style: italic;
+}
+
+/* === code =================================================================== */
+
+.ada-md code {
+  padding: 1px 5px;
+  border-radius: var(--ada-radius-chip);
+  background: var(--ada-line-06);
+  font-family: var(--ada-font-mono);
+  font-size: 11.5px;
+}
+
+.ada-md pre {
+  margin: 0 0 1em;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border: 1px solid var(--ada-line-06);
+  border-radius: var(--ada-radius-card);
+  background: var(--ada-bg-term);
+}
+
+.ada-md pre code {
+  padding: 0;
+  background: none;
+  line-height: 1.6;
+}
+
+/* rehype-highlight's classes, mapped onto the app's own palette. */
+.ada-md .hljs-comment,
+.ada-md .hljs-quote {
+  color: var(--ada-text-disabled);
+  font-style: italic;
+}
+
+.ada-md .hljs-keyword,
+.ada-md .hljs-selector-tag,
+.ada-md .hljs-literal,
+.ada-md .hljs-built_in {
+  color: var(--ada-accent-text);
+}
+
+.ada-md .hljs-string,
+.ada-md .hljs-attr,
+.ada-md .hljs-regexp {
+  color: var(--ada-done);
+}
+
+.ada-md .hljs-number,
+.ada-md .hljs-symbol,
+.ada-md .hljs-meta {
+  color: var(--ada-warn);
+}
+
+.ada-md .hljs-title,
+.ada-md .hljs-name,
+.ada-md .hljs-section {
+  color: var(--ada-text-strong);
+}
+
+/* === tables ================================================================= */
+
+.ada-md table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.ada-md th,
+.ada-md td {
+  padding: 5px 9px;
+  border: 1px solid var(--ada-line-08);
+  text-align: left;
+}
+
+.ada-md th {
+  background: var(--ada-line-05);
+  color: var(--ada-text-primary);
+  font-weight: 600;
+}

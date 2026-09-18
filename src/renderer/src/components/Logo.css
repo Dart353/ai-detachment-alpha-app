@@ -1,0 +1,102 @@
+/* The app mark's chevrons fade in left to right, hold, then settle back together
+   (design ask: "a fading animation where the chevrons fade in left to right and
+   repeats"). The resting opacities live here so the static mark and the peak of
+   the loop are the same image — the fade-back gradient is part of the brand. */
+
+.ada-logo__c1 {
+  --rest: 1;
+  opacity: var(--rest);
+}
+
+.ada-logo__c2 {
+  --rest: 0.65;
+  opacity: var(--rest);
+}
+
+.ada-logo__c3 {
+  --rest: 0.35;
+  opacity: var(--rest);
+}
+
+/* One loop is 2.4s: staggered fade-ins at 0s / 0.25s / 0.5s, a hold of roughly a
+   third of the loop, then a shared fade back. Opacity never reaches 0 and
+   nothing moves, so the mark stays calm at title bar size. */
+.ada-logo--animated .ada-logo__c1 {
+  animation: ada-logo-chevron-1 2400ms ease-in-out infinite;
+}
+
+.ada-logo--animated .ada-logo__c2 {
+  animation: ada-logo-chevron-2 2400ms ease-in-out infinite;
+}
+
+.ada-logo--animated .ada-logo__c3 {
+  animation: ada-logo-chevron-3 2400ms ease-in-out infinite;
+}
+
+@keyframes ada-logo-chevron-1 {
+  0% {
+    opacity: 0.08;
+  }
+  16.7% {
+    opacity: var(--rest);
+  }
+  72.5% {
+    opacity: var(--rest);
+  }
+  91.7% {
+    opacity: 0.08;
+  }
+  100% {
+    opacity: 0.08;
+  }
+}
+
+@keyframes ada-logo-chevron-2 {
+  0% {
+    opacity: 0.08;
+  }
+  10.4% {
+    opacity: 0.08;
+  }
+  27% {
+    opacity: var(--rest);
+  }
+  72.5% {
+    opacity: var(--rest);
+  }
+  91.7% {
+    opacity: 0.08;
+  }
+  100% {
+    opacity: 0.08;
+  }
+}
+
+@keyframes ada-logo-chevron-3 {
+  0% {
+    opacity: 0.08;
+  }
+  20.8% {
+    opacity: 0.08;
+  }
+  37.5% {
+    opacity: var(--rest);
+  }
+  72.5% {
+    opacity: var(--rest);
+  }
+  91.7% {
+    opacity: 0.08;
+  }
+  100% {
+    opacity: 0.08;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-logo--animated .ada-logo__c1,
+  .ada-logo--animated .ada-logo__c2,
+  .ada-logo--animated .ada-logo__c3 {
+    animation: none;
+  }
+}

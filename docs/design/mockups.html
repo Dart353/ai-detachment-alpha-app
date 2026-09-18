@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#111114;font-family:'Segoe UI',system-ui,sans-serif}
+a{color:#f05219;text-decoration:none}a:hover{color:#ffd84d}
+.dv-turn{padding:40px 44px 32px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 24px}
+.dv-tid{font:600 10px 'JetBrains Mono',monospace;padding:3px 7px;background:#f05219;color:#1a1a1a;border-radius:4px}
+.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#e7e7ea}
+.dv-opts{display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#e7e7ea;border-radius:5px}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 system-ui,sans-serif;color:rgba(255,255,255,.55)}
+.dv-opt:target .dv-oid{background:#f05219;color:#1a1a1a}
+.dv-next{margin:26px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(255,255,255,.45)}
+</style>
+</helmet>
+<section class="dv-turn" id="t4">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Usage &amp; limit windows</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="4a">
+<div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Titlebar meter → usage popover (session · weekly · per-model)</div>
+<div style="width:1440px;height:900px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;color:#e7e7ea;position:relative">
+  <div style="height:40px;display:flex;align-items:center;padding:0 8px 0 14px;gap:12px;flex:none">
+    <svg width="24" height="16" viewBox="0 0 30 18" style="flex:none"><path d="M2 2 L9 9 L2 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 2 L18 9 L11 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".65"></path><path d="M20 2 L27 9 L20 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"></path></svg>
+    <span style="width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#a3a3aa;font-size:12px">◫</span>
+    <div style="flex:1;display:flex;justify-content:center;gap:4px">
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;background:rgba(240,82,25,.12);border:1px solid rgba(240,82,25,.32);font-size:12px;font-weight:600;color:#f8cdbb">brand-site<span style="font-size:10px;font-weight:400;color:#8b8b93">4</span></span>
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;font-size:12px;color:#8b8b93">dotfiles<span style="font-size:10px">1</span></span>
+      <span style="display:flex;align-items:center;padding:5px 10px;border-radius:7px;font-size:13px;color:#67676f">+</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)">
+      <span style="font-size:10.5px;color:#c6c6cc;font-family:'JetBrains Mono',monospace">62%</span>
+      <span style="width:46px;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden;display:block"><span style="display:block;width:62%;height:100%;background:#f05219"></span></span>
+      <span style="font-size:10px;color:#75757d">2h 14m</span>
+    </div>
+    <div style="display:flex;gap:2px;color:#8b8b93;font-size:12px">
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▦</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">⚙</span>
+      <span style="width:16px"></span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">─</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▢</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">✕</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:244px;flex:none;background:#161619;border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;padding:14px 10px 10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 6px 10px">
+        <span style="font-size:10px;letter-spacing:.12em;color:#67676f;font-weight:600">SESSIONS</span>
+        <span style="color:#8b8b93;font-size:13px">+</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;background:rgba(240,82,25,.11);border:1px solid rgba(240,82,25,.3)">
+          <span style="width:6px;height:6px;border-radius:50%;background:#f05219;flex:none"></span>
+          <div style="min-width:0;flex:1"><div style="font-size:12px;font-weight:600;color:#f0f0f3">refactor-auth</div><div style="font-size:10px;color:#8b8b93">Claude Code · working</div></div>
+          <span style="font-size:10px;color:#8b8b93;font-family:'JetBrains Mono',monospace">41%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px">
+          <span style="width:6px;height:6px;border-radius:50%;background:#59595f;flex:none"></span>
+          <div style="min-width:0;flex:1"><div style="font-size:12px;color:#c6c6cc">tests</div><div style="font-size:10px;color:#75757d">Claude Code · idle</div></div>
+          <span style="font-size:10px;color:#75757d;font-family:'JetBrains Mono',monospace">14%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px">
+          <span style="width:6px;height:6px;border-radius:50%;background:#59595f;flex:none"></span>
+          <div style="min-width:0;flex:1"><div style="font-size:12px;color:#c6c6cc">shell</div><div style="font-size:10px;color:#75757d">Terminal · idle</div></div>
+          <span style="font-size:10px;color:#59595f;font-family:'JetBrains Mono',monospace">—</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;color:#67676f;font-size:12px"><span>+</span><span>New agent</span></div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="padding:10px 6px 2px;border-top:1px solid rgba(255,255,255,.06)">
+        <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-size:10px;letter-spacing:.1em;color:#67676f;font-weight:600">SESSION WINDOW</span><span style="font-size:10px;color:#8b8b93;font-family:'JetBrains Mono',monospace">62%</span></div>
+        <div style="height:4px;border-radius:2px;background:rgba(255,255,255,.1);margin-top:6px;overflow:hidden"><div style="width:62%;height:100%;background:#f05219"></div></div>
+        <div style="font-size:10px;color:#67676f;margin-top:5px">resets in 2h 14m</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:12px"><span style="font-size:10px;letter-spacing:.1em;color:#67676f;font-weight:600">WEEKLY · ALL</span><span style="font-size:10px;color:#8b8b93;font-family:'JetBrains Mono',monospace">38%</span></div>
+        <div style="height:4px;border-radius:2px;background:rgba(255,255,255,.1);margin-top:6px;overflow:hidden"><div style="width:38%;height:100%;background:#8b8b93"></div></div>
+        <div style="font-size:10px;color:#67676f;margin-top:5px">resets Mon 00:00</div>
+      </div>
+    </div>
+    <div style="flex:1;display:grid;grid-template-columns:3fr 2fr;grid-template-rows:1fr 1fr;gap:8px;padding:8px;min-width:0">
+      <div style="grid-row:1/3;display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(240,82,25,.5);border-radius:8px;overflow:hidden">
+        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+          <span style="width:6px;height:6px;border-radius:50%;background:#f05219"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#f0f0f3">refactor-auth</span>
+          <span style="font-size:10px;color:#75757d;font-family:'JetBrains Mono',monospace">opus 4.6</span>
+          <span style="flex:1"></span>
+          <span style="font-size:10px;color:#75757d;font-family:'JetBrains Mono',monospace">41% of window</span>
+          <span style="font-size:10px;color:#e0784a;margin-left:10px">Working</span>
+        </div>
+        <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:#c6c6cc">
+          <div><span style="color:#8b8b93">&gt;</span> refactor the auth middleware to use the new session store</div>
+          <div style="color:#e7e7ea;margin-top:8px">● Updating call sites in 6 files…</div>
+          <div style="color:#8b8b93;margin-top:6px">● Edit(src/routes/login.ts)</div>
+          <div style="color:#59595f">&nbsp;&nbsp;⎿ sessionStore.get(req.cookies.sid)</div>
+          <div style="margin-top:8px;color:#f05219">✳ Editing src/routes/refresh.ts…</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden">
+        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+          <span style="width:6px;height:6px;border-radius:50%;background:#59595f"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#c6c6cc">tests</span>
+          <span style="font-size:10px;color:#75757d;font-family:'JetBrains Mono',monospace">sonnet 4.6</span>
+          <span style="flex:1"></span><span style="font-size:10px;color:#75757d">Idle</span>
+        </div>
+        <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#c6c6cc">● All 34 tests pass.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed rgba(255,255,255,.16);border-radius:8px;color:#67676f">
+        <span style="font-size:18px;font-weight:300">+</span>
+        <span style="font-size:12px;font-weight:600;color:#8b8b93">New agent here</span>
+        <span style="font-size:10.5px">Right-click for a quick spawn</span>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute;top:44px;right:120px;width:352px;background:#202025;border:1px solid rgba(255,255,255,.12);border-radius:10px;box-shadow:0 18px 50px rgba(0,0,0,.55);padding:18px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <span style="font-size:13px;font-weight:700;color:#f0f0f3">Usage</span>
+      <span style="font-size:10.5px;color:#75757d">Max 20× · updated 30s ago</span>
+    </div>
+
+    <div style="margin-top:16px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <span style="font-size:11.5px;font-weight:600;color:#e7e7ea">Current session</span>
+        <span style="font-size:11.5px;color:#f8cdbb;font-family:'JetBrains Mono',monospace">62% used</span>
+      </div>
+      <div style="height:6px;border-radius:3px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden"><div style="width:62%;height:100%;background:#f05219"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10.5px;color:#75757d"><span>5-hour window · resets 4:42 PM</span><span style="font-family:'JetBrains Mono',monospace">2h 14m left</span></div>
+    </div>
+
+    <div style="height:1px;background:rgba(255,255,255,.08);margin:16px 0"></div>
+
+    <div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <span style="font-size:11.5px;font-weight:600;color:#e7e7ea">Weekly · all models</span>
+        <span style="font-size:11.5px;color:#c6c6cc;font-family:'JetBrains Mono',monospace">38% used</span>
+      </div>
+      <div style="height:6px;border-radius:3px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden"><div style="width:38%;height:100%;background:#8b8b93"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10.5px;color:#75757d"><span>resets Mon 00:00</span><span style="font-family:'JetBrains Mono',monospace">4d 9h left</span></div>
+    </div>
+
+    <div style="margin-top:14px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <span style="font-size:11.5px;font-weight:600;color:#e7e7ea">Weekly · Opus</span>
+        <span style="font-size:11.5px;color:#e0784a;font-family:'JetBrains Mono',monospace">81% used</span>
+      </div>
+      <div style="height:6px;border-radius:3px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden"><div style="width:81%;height:100%;background:#e0784a"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10.5px;color:#e0784a"><span>at this rate you'll cap Friday</span><span style="font-family:'JetBrains Mono',monospace;color:#75757d">4d 9h left</span></div>
+    </div>
+
+    <div style="height:1px;background:rgba(255,255,255,.08);margin:16px 0"></div>
+
+    <div style="font-size:10px;letter-spacing:.12em;color:#67676f;font-weight:600;margin-bottom:10px">THIS WINDOW, BY SESSION</div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="width:6px;height:6px;border-radius:50%;background:#f05219;flex:none"></span>
+        <span style="font-size:11.5px;color:#e7e7ea;width:92px">refactor-auth</span>
+        <span style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden"><span style="display:block;width:66%;height:100%;background:#f05219"></span></span>
+        <span style="font-size:10.5px;color:#8b8b93;font-family:'JetBrains Mono',monospace;width:30px;text-align:right">41%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="width:6px;height:6px;border-radius:50%;background:#59595f;flex:none"></span>
+        <span style="font-size:11.5px;color:#c6c6cc;width:92px">tests</span>
+        <span style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden"><span style="display:block;width:23%;height:100%;background:#8b8b93"></span></span>
+        <span style="font-size:10.5px;color:#8b8b93;font-family:'JetBrains Mono',monospace;width:30px;text-align:right">14%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="width:6px;height:6px;border-radius:50%;background:#7ec27a;flex:none"></span>
+        <span style="font-size:11.5px;color:#c6c6cc;width:92px">test-runner</span>
+        <span style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden"><span style="display:block;width:11%;height:100%;background:#8b8b93"></span></span>
+        <span style="font-size:10.5px;color:#8b8b93;font-family:'JetBrains Mono',monospace;width:30px;text-align:right">7%</span>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
+      <span style="font-size:11px;color:#8b8b93">Warn me at 80%</span>
+      <span style="font-size:11px;color:#f05219">Full history →</span>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "add a full usage history screen" · "move the meter into the sidebar only" · "add per-model cost in dollars"</p>
+</section>
+<section class="dv-turn" id="t3">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Logo lab — terminal / hacker marks, in titlebar context</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Prompt chevron + block cursor</div>
+<div style="width:560px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden">
+  <div style="height:40px;display:flex;align-items:center;padding:0 14px;gap:12px">
+    <svg width="22" height="18" viewBox="0 0 26 20"><path d="M3 3 L11 10 L3 17" stroke="#f05219" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><rect x="15" y="12.5" width="8" height="4.5" fill="#f05219"></rect></svg>
+    <span style="flex:1;display:flex;justify-content:center"><span style="padding:5px 14px;border-radius:7px;background:rgba(240,82,25,.12);border:1px solid rgba(240,82,25,.32);font-size:12px;font-weight:600;color:#f8cdbb">brand-site</span></span>
+    <span style="display:flex;gap:14px;color:#8b8b93;font-size:12px"><span>─</span><span>▢</span><span>✕</span></span>
+  </div>
+  <div style="height:56px;background:#0b0b0d;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:0 16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#c6c6cc">app icon feel: ❯▮ — the prompt itself</div>
+</div>
+</div>
+
+<div class="dv-opt" id="3b">
+<div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Cursor multiplexed — one block splitting into three</div>
+<div style="width:560px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden">
+  <div style="height:40px;display:flex;align-items:center;padding:0 14px;gap:12px">
+    <svg width="22" height="18" viewBox="0 0 26 20"><rect x="2" y="7" width="7" height="6" fill="#f05219"></rect><rect x="15" y="1.5" width="7" height="4.5" fill="#f05219" opacity=".9"></rect><rect x="15" y="8" width="7" height="4.5" fill="#f05219" opacity=".65"></rect><rect x="15" y="14.5" width="7" height="4.5" fill="#f05219" opacity=".4"></rect></svg>
+    <span style="flex:1;display:flex;justify-content:center"><span style="padding:5px 14px;border-radius:7px;background:rgba(240,82,25,.12);border:1px solid rgba(240,82,25,.32);font-size:12px;font-weight:600;color:#f8cdbb">brand-site</span></span>
+    <span style="display:flex;gap:14px;color:#8b8b93;font-size:12px"><span>─</span><span>▢</span><span>✕</span></span>
+  </div>
+  <div style="height:56px;background:#0b0b0d;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:0 16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#c6c6cc">one cursor, three sessions — the multiplexer story</div>
+</div>
+</div>
+
+<div class="dv-opt" id="3c">
+<div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a>Typed α with cursor — pure monospace text</div>
+<div style="width:560px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden">
+  <div style="height:40px;display:flex;align-items:center;padding:0 14px;gap:12px">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:500;color:#f05219;letter-spacing:-.02em">α<span style="display:inline-block;width:8px;height:14px;background:#f05219;opacity:.55;vertical-align:-2px;margin-left:1px"></span></span>
+    <span style="flex:1;display:flex;justify-content:center"><span style="padding:5px 14px;border-radius:7px;background:rgba(240,82,25,.12);border:1px solid rgba(240,82,25,.32);font-size:12px;font-weight:600;color:#f8cdbb">brand-site</span></span>
+    <span style="display:flex;gap:14px;color:#8b8b93;font-size:12px"><span>─</span><span>▢</span><span>✕</span></span>
+  </div>
+  <div style="height:56px;background:#0b0b0d;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:0 16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#c6c6cc">alpha as something you just typed — α▮</div>
+</div>
+</div>
+
+<div class="dv-opt" id="3d">
+<div class="dv-olabel"><a class="dv-oid" href="#3d">3d</a>Scanline A — letterform sliced into raster lines</div>
+<div style="width:560px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden">
+  <div style="height:40px;display:flex;align-items:center;padding:0 14px;gap:12px">
+    <svg width="20" height="18" viewBox="0 0 24 22"><polygon points="12,1 15.5,5 8.5,5" fill="#f05219"></polygon><polygon points="7.2,8 16.8,8 18,12 6,12" fill="#f05219" opacity=".85"></polygon><rect x="9" y="12" width="6" height="3" fill="#0b0b0d"></rect><polygon points="4.8,15 9,15 9,19 3.6,19" fill="#f05219" opacity=".6"></polygon><polygon points="15,15 19.2,15 20.4,19 15,19" fill="#f05219" opacity=".6"></polygon></svg>
+    <span style="flex:1;display:flex;justify-content:center"><span style="padding:5px 14px;border-radius:7px;background:rgba(240,82,25,.12);border:1px solid rgba(240,82,25,.32);font-size:12px;font-weight:600;color:#f8cdbb">brand-site</span></span>
+    <span style="display:flex;gap:14px;color:#8b8b93;font-size:12px"><span>─</span><span>▢</span><span>✕</span></span>
+  </div>
+  <div style="height:56px;background:#0b0b0d;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:0 16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#c6c6cc">the A read through CRT scanlines</div>
+</div>
+</div>
+
+<div class="dv-opt" id="3e">
+<div class="dv-olabel"><a class="dv-oid" href="#3e">3e</a>Triple chevron — three parallel sessions</div>
+<div style="width:560px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden">
+  <div style="height:40px;display:flex;align-items:center;padding:0 14px;gap:12px">
+    <svg width="24" height="16" viewBox="0 0 30 18"><path d="M2 2 L9 9 L2 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 2 L18 9 L11 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".65"></path><path d="M20 2 L27 9 L20 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"></path></svg>
+    <span style="flex:1;display:flex;justify-content:center"><span style="padding:5px 14px;border-radius:7px;background:rgba(240,82,25,.12);border:1px solid rgba(240,82,25,.32);font-size:12px;font-weight:600;color:#f8cdbb">brand-site</span></span>
+    <span style="display:flex;gap:14px;color:#8b8b93;font-size:12px"><span>─</span><span>▢</span><span>✕</span></span>
+  </div>
+  <div style="height:56px;background:#0b0b0d;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:0 16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#c6c6cc">prompts stacked in parallel — ❯❯❯</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Say the id to apply it everywhere — e.g. "go with <a class="dv-oid" href="#3b">3b</a>" · or "mix: <a class="dv-oid" href="#3a">3a</a> chevron with <a class="dv-oid" href="#3e">3e</a> fade"</p>
+</section>
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Nested sub-agents + new scheme (hsl 16 88% 52%)</span></div>
+<div class="dv-opts">
+
+<!-- ============ 2a NESTED SUB-AGENTS ============ -->
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Sub-agents nested under a parent session — tree in the sidebar, linked panes in the grid</div>
+<div style="width:1440px;height:900px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;color:#e7e7ea">
+  <div style="height:40px;display:flex;align-items:center;padding:0 8px 0 14px;gap:12px;flex:none">
+    <svg width="24" height="16" viewBox="0 0 30 18" style="flex:none"><path d="M2 2 L9 9 L2 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 2 L18 9 L11 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".65"></path><path d="M20 2 L27 9 L20 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"></path></svg>
+    <span style="width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);color:#a3a3aa;font-size:12px">◫</span>
+    <div style="flex:1;display:flex;justify-content:center;gap:4px">
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;background:rgba(240,82,25,.12);border:1px solid rgba(240,82,25,.32);font-size:12px;font-weight:600;color:#f8cdbb">brand-site<span style="font-size:10px;font-weight:400;color:#8b8b93">4</span></span>
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;font-size:12px;color:#8b8b93">dotfiles<span style="font-size:10px">1</span></span>
+      <span style="display:flex;align-items:center;padding:5px 10px;border-radius:7px;font-size:13px;color:#67676f">+</span>
+    </div>
+    <div style="display:flex;gap:2px;color:#8b8b93;font-size:12px">
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▦</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">⚙</span>
+      <span style="width:16px"></span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">─</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▢</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">✕</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:244px;flex:none;background:#161619;border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;padding:14px 10px 10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 6px 10px">
+        <span style="font-size:10px;letter-spacing:.12em;color:#67676f;font-weight:600">SESSIONS</span>
+        <span style="color:#8b8b93;font-size:13px">+</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;background:rgba(240,82,25,.11);border:1px solid rgba(240,82,25,.3)">
+          <span style="font-size:9px;color:#8b8b93">▾</span>
+          <span style="width:6px;height:6px;border-radius:50%;background:#f05219;flex:none"></span>
+          <div style="min-width:0"><div style="font-size:12px;font-weight:600;color:#f0f0f3">refactor-auth</div><div style="font-size:10px;color:#8b8b93">Claude Code · working · 2 sub-agents</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;margin-left:13px;padding-left:12px;border-left:1px solid rgba(255,255,255,.1)">
+          <div style="display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:7px">
+            <span style="width:6px;height:6px;border-radius:50%;background:#7ec27a;flex:none"></span>
+            <div style="min-width:0"><div style="font-size:11.5px;color:#c6c6cc">explore-codebase</div><div style="font-size:10px;color:#75757d">sub-agent · done</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.04)">
+            <span style="width:6px;height:6px;border-radius:50%;background:#e0784a;flex:none"></span>
+            <div style="min-width:0"><div style="font-size:11.5px;color:#e7e7ea">test-runner</div><div style="font-size:10px;color:#75757d">sub-agent · working</div></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px">
+          <span style="width:9px"></span>
+          <span style="width:6px;height:6px;border-radius:50%;background:#59595f;flex:none"></span>
+          <div style="min-width:0"><div style="font-size:12px;color:#c6c6cc">tests</div><div style="font-size:10px;color:#75757d">Claude Code · idle</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;color:#67676f;font-size:12px"><span style="width:9px"></span><span>+</span><span>New agent</span></div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="padding:8px 6px 2px;border-top:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:10px;color:#67676f;font-family:'JetBrains Mono',monospace">~/dev/brand-site</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:10px;color:#8b8b93"><span style="width:5px;height:5px;border-radius:50%;background:#7ec27a"></span>main · clean</div>
+      </div>
+    </div>
+    <div style="flex:1;display:grid;grid-template-columns:3fr 2fr;grid-template-rows:1fr 1fr;gap:8px;padding:8px;min-width:0">
+      <div style="grid-row:1/3;display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(240,82,25,.5);border-radius:8px;overflow:hidden">
+        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+          <span style="width:6px;height:6px;border-radius:50%;background:#f05219"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#f0f0f3">refactor-auth</span>
+          <span style="font-size:10px;color:#75757d;font-family:'JetBrains Mono',monospace">claude</span>
+          <span style="font-size:9.5px;color:#f8cdbb;background:rgba(240,82,25,.12);border:1px solid rgba(240,82,25,.3);border-radius:5px;padding:2px 7px">2 sub-agents</span>
+          <span style="flex:1"></span>
+          <span style="font-size:10px;color:#e0784a">Working</span>
+          <span style="color:#75757d;font-size:12px;margin-left:8px">⋯</span><span style="color:#75757d;font-size:11px;margin-left:6px">⤢</span><span style="color:#75757d;font-size:11px;margin-left:6px">✕</span>
+        </div>
+        <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:#c6c6cc;overflow:hidden">
+          <div><span style="color:#8b8b93">&gt;</span> refactor the auth middleware to use the new session store</div>
+          <div style="color:#e7e7ea;margin-top:8px">● I'll split this: one sub-agent maps the auth flows, another keeps the suite green while I edit.</div>
+          <div style="color:#8b8b93;margin-top:6px">● Task(explore-codebase)</div>
+          <div style="color:#59595f">&nbsp;&nbsp;⎿ Done · mapped 14 call sites</div>
+          <div style="color:#8b8b93;margin-top:4px">● Task(test-runner)</div>
+          <div style="color:#59595f">&nbsp;&nbsp;⎿ Running · 26/34 passing</div>
+          <div style="color:#8b8b93;margin-top:4px">● Edit(src/middleware/auth.ts)</div>
+          <div style="color:#59595f">&nbsp;&nbsp;⎿ Replaced cookie parsing with sessionStore.get()</div>
+          <div style="margin-top:8px;color:#f05219">✳ Waiting on test-runner…</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden">
+        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+          <span style="font-size:10px;color:#75757d">↳</span>
+          <span style="width:6px;height:6px;border-radius:50%;background:#7ec27a"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#c6c6cc">explore-codebase</span>
+          <span style="font-size:9.5px;color:#8b8b93;background:rgba(255,255,255,.06);border-radius:5px;padding:2px 7px">refactor-auth</span>
+          <span style="flex:1"></span>
+          <span style="font-size:10px;color:#7ec27a">Done</span>
+        </div>
+        <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:#c6c6cc">
+          <div style="color:#8b8b93">● Grep(sessionStore|parseCookie)</div>
+          <div style="color:#59595f">&nbsp;&nbsp;⎿ 14 matches in 6 files</div>
+          <div style="color:#e7e7ea;margin-top:8px">● Auth flows: login, refresh, logout, 3 middleware</div>
+          <div style="color:#e7e7ea">&nbsp;&nbsp;consumers. Report handed back to parent.</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden">
+        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+          <span style="font-size:10px;color:#75757d">↳</span>
+          <span style="width:6px;height:6px;border-radius:50%;background:#e0784a"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#e7e7ea">test-runner</span>
+          <span style="font-size:9.5px;color:#8b8b93;background:rgba(255,255,255,.06);border-radius:5px;padding:2px 7px">refactor-auth</span>
+          <span style="flex:1"></span>
+          <span style="font-size:10px;color:#e0784a">Working</span>
+        </div>
+        <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:#c6c6cc">
+          <div style="color:#8b8b93">● Bash(npm test -- --watch)</div>
+          <div style="color:#59595f">&nbsp;&nbsp;⎿ auth.test.ts · 26/34 passing</div>
+          <div style="margin-top:8px;color:#f05219">✳ Re-running after middleware edit…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "collapse the sub-agents into the parent pane" · "recolor tweak: softer accent" · "add a needs-attention state to <a class="dv-oid" href="#2a">2a</a>"</p>
+</section>
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Claude Code multiplexer — core screens</span></div>
+<div class="dv-opts">
+
+<!-- ============ 1a MAIN GRID ============ -->
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Main grid · expanded sidebar · workspace tabs in the titlebar</div>
+<div style="width:1440px;height:900px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;color:#e7e7ea">
+  <div style="height:40px;display:flex;align-items:center;padding:0 8px 0 14px;gap:12px;flex:none">
+    <svg width="24" height="16" viewBox="0 0 30 18" style="flex:none"><path d="M2 2 L9 9 L2 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 2 L18 9 L11 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".65"></path><path d="M20 2 L27 9 L20 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"></path></svg>
+    <span style="width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);color:#a3a3aa;font-size:12px">◫</span>
+    <div style="flex:1;display:flex;justify-content:center;gap:4px">
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;background:rgba(240,82,25,.1);border:1px solid rgba(240,82,25,.28);font-size:12px;font-weight:600;color:#f8cdbb">brand-site<span style="font-size:10px;font-weight:400;color:#8b8b93">2</span></span>
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;font-size:12px;color:#8b8b93">dotfiles<span style="font-size:10px">1</span></span>
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;font-size:12px;color:#8b8b93">api-server<span style="font-size:10px">3</span></span>
+      <span style="display:flex;align-items:center;padding:5px 10px;border-radius:7px;font-size:13px;color:#67676f">+</span>
+    </div>
+    <div style="display:flex;gap:2px;color:#8b8b93;font-size:12px">
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▦</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">⚙</span>
+      <span style="width:16px"></span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">─</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▢</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">✕</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:232px;flex:none;background:#161619;border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;padding:14px 10px 10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 6px 10px">
+        <span style="font-size:10px;letter-spacing:.12em;color:#67676f;font-weight:600">SESSIONS</span>
+        <span style="color:#8b8b93;font-size:13px">+</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;background:rgba(240,82,25,.09);border:1px solid rgba(240,82,25,.25)">
+          <span style="width:6px;height:6px;border-radius:50%;background:#f05219;flex:none"></span>
+          <div style="min-width:0"><div style="font-size:12px;font-weight:600;color:#f0f0f3">refactor-auth</div><div style="font-size:10px;color:#8b8b93">Claude Code · working</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px">
+          <span style="width:6px;height:6px;border-radius:50%;background:#59595f;flex:none"></span>
+          <div style="min-width:0"><div style="font-size:12px;color:#c6c6cc">tests</div><div style="font-size:10px;color:#75757d">Claude Code · idle</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px">
+          <span style="width:6px;height:6px;border-radius:50%;background:#59595f;flex:none"></span>
+          <div style="min-width:0"><div style="font-size:12px;color:#c6c6cc">shell</div><div style="font-size:10px;color:#75757d">Terminal · idle</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;color:#67676f;font-size:12px"><span>+</span><span>New agent</span></div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="padding:8px 6px 2px;border-top:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:10px;color:#67676f;font-family:'JetBrains Mono',monospace">~/dev/brand-site</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:10px;color:#8b8b93"><span style="width:5px;height:5px;border-radius:50%;background:#7ec27a"></span>main · clean</div>
+      </div>
+    </div>
+    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;padding:8px;min-width:0">
+      <div style="display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(240,82,25,.45);border-radius:8px;overflow:hidden">
+        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+          <span style="width:6px;height:6px;border-radius:50%;background:#f05219"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#f0f0f3">refactor-auth</span>
+          <span style="font-size:10px;color:#75757d;font-family:'JetBrains Mono',monospace">claude</span>
+          <span style="flex:1"></span>
+          <span style="font-size:10px;color:#e0784a">Working</span>
+          <span style="color:#75757d;font-size:12px;margin-left:8px">⋯</span><span style="color:#75757d;font-size:11px;margin-left:6px">⤢</span><span style="color:#75757d;font-size:11px;margin-left:6px">✕</span>
+        </div>
+        <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:#c6c6cc;overflow:hidden">
+          <div><span style="color:#8b8b93">&gt;</span> refactor the auth middleware to use the new session store</div>
+          <div style="color:#e7e7ea;margin-top:8px">● I'll start by reading the current middleware.</div>
+          <div style="color:#8b8b93;margin-top:6px">● Read(src/middleware/auth.ts)</div>
+          <div style="color:#59595f">&nbsp;&nbsp;⎿ 142 lines</div>
+          <div style="color:#8b8b93;margin-top:4px">● Edit(src/middleware/auth.ts)</div>
+          <div style="color:#59595f">&nbsp;&nbsp;⎿ Replaced cookie parsing with sessionStore.get()</div>
+          <div style="margin-top:8px;color:#f05219">✳ Running tests…</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden">
+        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+          <span style="width:6px;height:6px;border-radius:50%;background:#59595f"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#c6c6cc">tests</span>
+          <span style="font-size:10px;color:#75757d;font-family:'JetBrains Mono',monospace">claude</span>
+          <span style="flex:1"></span>
+          <span style="font-size:10px;color:#75757d">Idle</span>
+        </div>
+        <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:#c6c6cc">
+          <div><span style="color:#8b8b93">&gt;</span> run the timer suite and fix any flakes</div>
+          <div style="color:#e7e7ea;margin-top:8px">● All 34 tests pass. The flake was a fake-timer leak in</div>
+          <div style="color:#e7e7ea">&nbsp;&nbsp;timer.test.ts — fixed by restoring timers in afterEach.</div>
+          <div style="margin-top:8px"><span style="color:#8b8b93">&gt;</span> <span style="display:inline-block;width:7px;height:14px;background:#f05219;vertical-align:-2px"></span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden">
+        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+          <span style="width:6px;height:6px;border-radius:50%;background:#59595f"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#c6c6cc">shell</span>
+          <span style="font-size:10px;color:#75757d;font-family:'JetBrains Mono',monospace">pwsh</span>
+          <span style="flex:1"></span>
+          <span style="font-size:10px;color:#75757d">Idle</span>
+        </div>
+        <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:#c6c6cc">
+          <div>PS C:\Users\me\dev\brand-site&gt; <span style="display:inline-block;width:7px;height:14px;background:#75757d;vertical-align:-2px"></span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed rgba(255,255,255,.16);border-radius:8px;color:#67676f">
+        <span style="font-size:18px;font-weight:300">+</span>
+        <span style="font-size:12px;font-weight:600;color:#8b8b93">New agent here</span>
+        <span style="font-size:10.5px">Right-click for a quick spawn</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 1b LAYOUT PICKER ============ -->
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Layout picker · collapsed icon rail</div>
+<div style="width:1440px;height:900px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;color:#e7e7ea;position:relative">
+  <div style="height:40px;display:flex;align-items:center;padding:0 8px 0 14px;gap:12px;flex:none">
+    <svg width="24" height="16" viewBox="0 0 30 18" style="flex:none"><path d="M2 2 L9 9 L2 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 2 L18 9 L11 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".65"></path><path d="M20 2 L27 9 L20 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"></path></svg>
+    <span style="width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#a3a3aa;font-size:12px">◫</span>
+    <div style="flex:1;display:flex;justify-content:center;gap:4px">
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;background:rgba(240,82,25,.1);border:1px solid rgba(240,82,25,.28);font-size:12px;font-weight:600;color:#f8cdbb">brand-site<span style="font-size:10px;font-weight:400;color:#8b8b93">2</span></span>
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;font-size:12px;color:#8b8b93">dotfiles<span style="font-size:10px">1</span></span>
+      <span style="display:flex;align-items:center;padding:5px 10px;border-radius:7px;font-size:13px;color:#67676f">+</span>
+    </div>
+    <div style="display:flex;gap:2px;color:#8b8b93;font-size:12px">
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border-radius:6px;color:#f0f0f3">▦</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">⚙</span>
+      <span style="width:16px"></span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">─</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▢</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">✕</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:46px;flex:none;background:#161619;border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:10px">
+      <span style="width:8px;height:8px;border-radius:50%;background:#f05219"></span>
+      <span style="width:8px;height:8px;border-radius:50%;background:#59595f"></span>
+      <span style="width:8px;height:8px;border-radius:50%;background:#59595f"></span>
+      <span style="color:#67676f;font-size:13px;margin-top:2px">+</span>
+      <span style="flex:1"></span>
+      <span style="color:#67676f;font-size:12px">⚙</span>
+    </div>
+    <div style="flex:1;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:8px;padding:8px;min-width:0">
+      <div style="grid-row:1/3;display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden">
+        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+          <span style="width:6px;height:6px;border-radius:50%;background:#f05219"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#f0f0f3">refactor-auth</span>
+          <span style="font-size:10px;color:#75757d;font-family:'JetBrains Mono',monospace">claude</span>
+          <span style="flex:1"></span><span style="font-size:10px;color:#e0784a">Working</span>
+        </div>
+        <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:#c6c6cc">
+          <div><span style="color:#8b8b93">&gt;</span> refactor the auth middleware to use the new session store</div>
+          <div style="color:#e7e7ea;margin-top:8px">● Updating call sites in 6 files…</div>
+          <div style="margin-top:6px;color:#f05219">✳ Editing src/routes/login.ts</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden">
+        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+          <span style="width:6px;height:6px;border-radius:50%;background:#59595f"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#c6c6cc">tests</span>
+          <span style="flex:1"></span><span style="font-size:10px;color:#75757d">Idle</span>
+        </div>
+        <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#c6c6cc">PS C:\…\brand-site&gt; ▁</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed rgba(255,255,255,.16);border-radius:8px;color:#67676f">
+        <span style="font-size:18px;font-weight:300">+</span>
+        <span style="font-size:12px;font-weight:600;color:#8b8b93">New agent here</span>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute;top:44px;right:84px;width:392px;background:#202025;border:1px solid rgba(255,255,255,.12);border-radius:10px;box-shadow:0 18px 50px rgba(0,0,0,.55);padding:16px">
+    <div style="font-size:10px;letter-spacing:.12em;color:#8b8b93;font-weight:600;margin-bottom:10px">GRIDS</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid rgba(255,255,255,.09);border-radius:8px"><div style="width:54px;height:32px;border:1.5px solid #8b8b93;border-radius:3px"></div><span style="font-size:10.5px;color:#a3a3aa">Single</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid rgba(255,255,255,.09);border-radius:8px"><div style="width:54px;height:32px;display:flex;gap:3px"><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div></div><span style="font-size:10.5px;color:#a3a3aa">2 columns</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid rgba(255,255,255,.09);border-radius:8px"><div style="width:54px;height:32px;display:flex;flex-direction:column;gap:3px"><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div></div><span style="font-size:10.5px;color:#a3a3aa">2 rows</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid rgba(255,255,255,.09);border-radius:8px"><div style="width:54px;height:32px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px"><div style="border:1.5px solid #8b8b93;border-radius:3px"></div><div style="border:1.5px solid #8b8b93;border-radius:3px"></div><div style="border:1.5px solid #8b8b93;border-radius:3px"></div><div style="border:1.5px solid #8b8b93;border-radius:3px"></div></div><span style="font-size:10.5px;color:#a3a3aa">2 × 2</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid rgba(255,255,255,.09);border-radius:8px"><div style="width:54px;height:32px;display:flex;gap:3px"><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div></div><span style="font-size:10.5px;color:#a3a3aa">3 columns</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid rgba(255,255,255,.09);border-radius:8px"><div style="width:54px;height:32px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:3px"><div style="border:1.5px solid #8b8b93;border-radius:3px"></div><div style="border:1.5px solid #8b8b93;border-radius:3px"></div><div style="border:1.5px solid #8b8b93;border-radius:3px"></div><div style="border:1.5px solid #8b8b93;border-radius:3px"></div><div style="border:1.5px solid #8b8b93;border-radius:3px"></div><div style="border:1.5px solid #8b8b93;border-radius:3px"></div></div><span style="font-size:10.5px;color:#a3a3aa">2 × 3</span></div>
+    </div>
+    <div style="font-size:10px;letter-spacing:.12em;color:#8b8b93;font-weight:600;margin:16px 0 10px">ARRANGEMENTS</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid rgba(255,255,255,.09);border-radius:8px"><div style="width:54px;height:32px;display:flex;gap:3px"><div style="flex:2;border:1.5px solid #8b8b93;border-radius:3px"></div><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div></div><span style="font-size:10.5px;color:#a3a3aa">Main + side</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid rgba(255,255,255,.09);border-radius:8px"><div style="width:54px;height:32px;display:flex;gap:3px"><div style="flex:2;border:1.5px solid #8b8b93;border-radius:3px"></div><div style="flex:1;display:flex;flex-direction:column;gap:3px"><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div></div></div><span style="font-size:10.5px;color:#a3a3aa">Main + 2</span></div>
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid rgba(240,82,25,.6);border-radius:8px;background:rgba(240,82,25,.06)"><div style="width:54px;height:32px;display:flex;gap:3px"><div style="flex:2;border:1.5px solid #e7e7ea;border-radius:3px;background:rgba(255,255,255,.14)"></div><div style="flex:1;display:flex;flex-direction:column;gap:3px"><div style="flex:1;border:1.5px solid #e7e7ea;border-radius:3px"></div><div style="flex:1;border:1.5px solid #e7e7ea;border-radius:3px"></div><div style="flex:1;border:1.5px solid #e7e7ea;border-radius:3px"></div></div></div><span style="font-size:10.5px;color:#f8cdbb">Main + 3</span><span style="position:absolute;top:-6px;right:-6px;width:15px;height:15px;border-radius:50%;background:#f05219;color:#1a1a1a;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700">✓</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid rgba(255,255,255,.09);border-radius:8px"><div style="width:54px;height:32px;display:flex;flex-direction:column;gap:3px"><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div><div style="flex:1;display:flex;gap:3px"><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div><div style="flex:1;border:1.5px solid #8b8b93;border-radius:3px"></div></div></div><span style="font-size:10.5px;color:#a3a3aa">Top + 2 below</span></div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:#8b8b93">Custom zones…</span>
+      <span style="font-size:11px;color:#f05219">Edit layout →</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 1c QUICK SPAWN ============ -->
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Quick spawn menu on an empty zone</div>
+<div style="width:1440px;height:900px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;color:#e7e7ea;position:relative">
+  <div style="height:40px;display:flex;align-items:center;padding:0 8px 0 14px;gap:12px;flex:none">
+    <svg width="24" height="16" viewBox="0 0 30 18" style="flex:none"><path d="M2 2 L9 9 L2 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 2 L18 9 L11 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".65"></path><path d="M20 2 L27 9 L20 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"></path></svg>
+    <span style="width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#a3a3aa;font-size:12px">◫</span>
+    <div style="flex:1;display:flex;justify-content:center;gap:4px">
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;background:rgba(240,82,25,.1);border:1px solid rgba(240,82,25,.28);font-size:12px;font-weight:600;color:#f8cdbb">brand-site<span style="font-size:10px;font-weight:400;color:#8b8b93">2</span></span>
+      <span style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:7px;font-size:12px;color:#8b8b93">dotfiles<span style="font-size:10px">1</span></span>
+      <span style="display:flex;align-items:center;padding:5px 10px;border-radius:7px;font-size:13px;color:#67676f">+</span>
+    </div>
+    <div style="display:flex;gap:2px;color:#8b8b93;font-size:12px">
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▦</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">⚙</span>
+      <span style="width:16px"></span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">─</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▢</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">✕</span>
+    </div>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;padding:8px;min-height:0">
+    <div style="grid-column:1/3;display:flex;flex-direction:column;background:#0b0b0d;border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden">
+      <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#141417;border-bottom:1px solid rgba(255,255,255,.05);flex:none">
+        <span style="width:6px;height:6px;border-radius:50%;background:#f05219"></span>
+        <span style="font-size:11.5px;font-weight:600;color:#f0f0f3">refactor-auth</span>
+        <span style="font-size:10px;color:#75757d;font-family:'JetBrains Mono',monospace">claude</span>
+        <span style="flex:1"></span><span style="font-size:10px;color:#e0784a">Working</span>
+      </div>
+      <div style="flex:1;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:#c6c6cc">
+        <div><span style="color:#8b8b93">&gt;</span> add rate limiting to the login route</div>
+        <div style="color:#e7e7ea;margin-top:8px">● I'll add a sliding-window limiter keyed on IP + account.</div>
+        <div style="color:#8b8b93;margin-top:6px">● Write(src/middleware/rateLimit.ts)</div>
+        <div style="color:#59595f">&nbsp;&nbsp;⎿ 61 lines</div>
+      </div>
+    </div>
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed rgba(240,82,25,.5);border-radius:8px;color:#67676f">
+      <span style="font-size:18px;font-weight:300">+</span>
+      <span style="font-size:12px;font-weight:600;color:#8b8b93">New agent here</span>
+      <div style="position:absolute;left:56%;top:22%;width:230px;background:#202025;border:1px solid rgba(255,255,255,.12);border-radius:10px;box-shadow:0 18px 50px rgba(0,0,0,.55);padding:8px;text-align:left">
+        <div style="font-size:9.5px;letter-spacing:.12em;color:#8b8b93;font-weight:600;padding:4px 10px 8px">SPAWN HERE</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;background:rgba(240,82,25,.1)"><span style="color:#f05219">✻</span><span style="font-size:12px;color:#f0f0f3">Claude Code</span><span style="flex:1"></span><span style="font-size:10px;color:#8b8b93;font-family:'JetBrains Mono',monospace">↵</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px"><span style="color:#8b8b93">▣</span><span style="font-size:12px;color:#c6c6cc">Terminal</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px"><span style="color:#8b8b93">✻</span><span style="font-size:12px;color:#c6c6cc">Claude Code · plan mode</span></div>
+        <div style="height:1px;background:rgba(255,255,255,.08);margin:6px 4px"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px"><span style="color:#8b8b93">⧉</span><span style="font-size:12px;color:#c6c6cc">Duplicate pane</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px"><span style="color:#8b8b93">+</span><span style="font-size:12px;color:#c6c6cc">New agent…</span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed rgba(255,255,255,.16);border-radius:8px;color:#67676f">
+      <span style="font-size:18px;font-weight:300">+</span>
+      <span style="font-size:12px;font-weight:600;color:#8b8b93">New agent here</span>
+      <span style="font-size:10.5px">Right-click for a quick spawn</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 1d ZONE EDITOR ============ -->
+<div class="dv-opt" id="1d">
+<div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Zone editor · drag to draw, snap to grid</div>
+<div style="width:1440px;height:900px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;color:#e7e7ea">
+  <div style="height:40px;display:flex;align-items:center;padding:0 8px 0 14px;gap:12px;flex:none">
+    <svg width="24" height="16" viewBox="0 0 30 18" style="flex:none"><path d="M2 2 L9 9 L2 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 2 L18 9 L11 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".65"></path><path d="M20 2 L27 9 L20 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"></path></svg>
+    <div style="flex:1"></div>
+    <div style="display:flex;gap:2px;color:#8b8b93;font-size:12px">
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">─</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▢</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">✕</span>
+    </div>
+  </div>
+  <div style="height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;background:#161619;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);flex:none">
+    <span style="font-size:12.5px;font-weight:700;color:#f0f0f3">Edit zones</span>
+    <span style="font-size:10px;letter-spacing:.1em;color:#67676f;font-weight:600">APPLY</span>
+    <span style="display:flex;align-items:center;gap:8px;padding:5px 12px;border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:11.5px;color:#c6c6cc">Apply a layout… <span style="font-size:9px;color:#67676f">▾</span></span>
+    <span style="font-size:10px;letter-spacing:.1em;color:#67676f;font-weight:600;margin-left:6px">ARRANGE</span>
+    <span style="padding:5px 12px;border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:11.5px;color:#c6c6cc">Even out</span>
+    <span style="padding:5px 12px;border-radius:7px;font-size:11.5px;color:#59595f">Merge</span>
+    <span style="padding:5px 12px;border-radius:7px;font-size:11.5px;color:#59595f">Delete</span>
+    <span style="font-size:10px;letter-spacing:.1em;color:#67676f;font-weight:600;margin-left:6px">GRID</span>
+    <span style="display:flex;align-items:center;gap:8px;padding:5px 12px;border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:11.5px;color:#c6c6cc">12 × 12 <span style="font-size:9px;color:#67676f">▾</span></span>
+    <span style="flex:1"></span>
+    <span style="padding:5px 12px;border-radius:7px;font-size:11.5px;color:#c6c6cc">Save layout…</span>
+    <span style="padding:6px 16px;border-radius:7px;font-size:12px;font-weight:700;background:#f05219;color:#1a1a1a">Done</span>
+  </div>
+  <div style="flex:1;position:relative;margin:8px;border-radius:8px;overflow:hidden;background:repeating-linear-gradient(to right,transparent 0,transparent 118px,rgba(240,82,25,.07) 118px,rgba(240,82,25,.07) 119px),repeating-linear-gradient(to bottom,transparent 0,transparent 65px,rgba(240,82,25,.07) 65px,rgba(240,82,25,.07) 66px)">
+    <div style="position:absolute;left:0;top:0;width:59%;height:100%;border:1px solid rgba(240,82,25,.55);border-radius:8px;background:rgba(240,82,25,.05);display:flex;align-items:center;justify-content:center">
+      <div style="background:#202025;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:12px;font-weight:600;color:#f0f0f3">refactor-auth</div><div style="font-size:10.5px;color:#8b8b93;font-family:'JetBrains Mono',monospace;margin-top:2px">58% × 100%</div></div>
+    </div>
+    <div style="position:absolute;left:60%;top:0;width:40%;height:49%;border:1px solid rgba(240,82,25,.55);border-radius:8px;background:rgba(240,82,25,.05);display:flex;align-items:center;justify-content:center">
+      <div style="background:#202025;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:12px;font-weight:600;color:#f0f0f3">tests</div><div style="font-size:10.5px;color:#8b8b93;font-family:'JetBrains Mono',monospace;margin-top:2px">41% × 50%</div></div>
+    </div>
+    <div style="position:absolute;left:60%;top:51%;width:40%;height:49%;border:2px solid #f05219;border-radius:8px;background:rgba(240,82,25,.12);display:flex;align-items:center;justify-content:center">
+      <div style="background:#111114;border-radius:7px;padding:8px 14px;text-align:center"><div style="font-size:11.5px;font-weight:600;color:#f8cdbb">New zone · 41% × 50%</div></div>
+      <span style="position:absolute;right:-5px;bottom:-5px;width:10px;height:10px;border-radius:50%;background:#f05219"></span>
+    </div>
+  </div>
+  <div style="height:30px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#67676f;flex:none">
+    <span style="color:#a3a3aa;font-weight:600">Drawing</span> · releases into a 41% × 50% zone · drag inside a zone to cut · Shift-click two to merge · Alt bypasses snapping
+  </div>
+</div>
+</div>
+
+<!-- ============ 1e FIRST RUN ============ -->
+<div class="dv-opt" id="1e">
+<div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>First run · no workspaces yet</div>
+<div style="width:1440px;height:900px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;color:#e7e7ea">
+  <div style="height:40px;display:flex;align-items:center;padding:0 8px 0 14px;gap:12px;flex:none">
+    <svg width="24" height="16" viewBox="0 0 30 18" style="flex:none"><path d="M2 2 L9 9 L2 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 2 L18 9 L11 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".65"></path><path d="M20 2 L27 9 L20 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"></path></svg>
+    <div style="flex:1"></div>
+    <div style="display:flex;gap:2px;color:#8b8b93;font-size:12px">
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">─</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▢</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">✕</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0">
+    <svg width="66" height="40" viewBox="0 0 30 18"><path d="M2 2 L9 9 L2 16" stroke="#f05219" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 2 L18 9 L11 16" stroke="#f05219" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".65"></path><path d="M20 2 L27 9 L20 16" stroke="#f05219" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"></path></svg>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#8b8b93;margin-top:16px">AI DETACHMENT ALPHA</div>
+    <div style="font-size:19px;font-weight:700;color:#f0f0f3;margin-top:10px">Open a folder to start</div>
+    <div style="font-size:13px;color:#8b8b93;margin-top:8px;max-width:380px;text-align:center;line-height:1.55">A workspace is a folder. Sessions you spawn inside it share its directory and survive tab switches.</div>
+    <div style="display:flex;gap:10px;margin-top:26px">
+      <span style="padding:9px 20px;border-radius:8px;background:#f05219;color:#1a1a1a;font-size:12.5px;font-weight:700">Open folder…</span>
+      <span style="padding:9px 20px;border-radius:8px;border:1px solid rgba(255,255,255,.14);color:#c6c6cc;font-size:12.5px">Quick terminal</span>
+    </div>
+    <div style="margin-top:44px;width:400px">
+      <div style="font-size:10px;letter-spacing:.12em;color:#67676f;font-weight:600;margin-bottom:8px">RECENT</div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:7px;background:rgba(255,255,255,.04)"><span style="color:#8b8b93;font-size:12px">▸</span><span style="font-size:12px;color:#c6c6cc">brand-site</span><span style="flex:1"></span><span style="font-size:10.5px;color:#67676f;font-family:'JetBrains Mono',monospace">~/Downloads/design_handoff</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:7px"><span style="color:#8b8b93;font-size:12px">▸</span><span style="font-size:12px;color:#c6c6cc">api-server</span><span style="flex:1"></span><span style="font-size:10.5px;color:#67676f;font-family:'JetBrains Mono',monospace">~/dev/api-server</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:7px"><span style="color:#8b8b93;font-size:12px">▸</span><span style="font-size:12px;color:#c6c6cc">dotfiles</span><span style="flex:1"></span><span style="font-size:10.5px;color:#67676f;font-family:'JetBrains Mono',monospace">~/dotfiles</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 1f SETTINGS ============ -->
+<div class="dv-opt" id="1f">
+<div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Settings · accounts</div>
+<div style="width:1440px;height:900px;background:#1c1c1f;border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;color:#e7e7ea">
+  <div style="height:40px;display:flex;align-items:center;padding:0 8px 0 14px;gap:12px;flex:none">
+    <svg width="24" height="16" viewBox="0 0 30 18" style="flex:none"><path d="M2 2 L9 9 L2 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 2 L18 9 L11 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".65"></path><path d="M20 2 L27 9 L20 16" stroke="#f05219" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"></path></svg>
+    <div style="flex:1;display:flex;justify-content:center"><span style="font-size:12px;color:#8b8b93">Settings</span></div>
+    <div style="display:flex;gap:2px;color:#8b8b93;font-size:12px">
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">─</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">▢</span>
+      <span style="width:34px;height:26px;display:flex;align-items:center;justify-content:center">✕</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:212px;flex:none;background:#161619;border-right:1px solid rgba(255,255,255,.06);padding:18px 10px;display:flex;flex-direction:column;gap:2px">
+      <div style="padding:7px 12px;border-radius:7px;font-size:12px;color:#c6c6cc">Appearance</div>
+      <div style="padding:7px 12px;border-radius:7px;font-size:12px;color:#c6c6cc">Terminal</div>
+      <div style="padding:7px 12px;border-radius:7px;font-size:12px;color:#c6c6cc">Agents</div>
+      <div style="padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;color:#f8cdbb;background:rgba(240,82,25,.1);border:1px solid rgba(240,82,25,.22)">Accounts</div>
+      <div style="padding:7px 12px;border-radius:7px;font-size:12px;color:#c6c6cc">Workspaces</div>
+      <div style="padding:7px 12px;border-radius:7px;font-size:12px;color:#c6c6cc">About</div>
+      <div style="flex:1"></div>
+      <span style="padding:7px 14px;border-radius:7px;background:#f05219;color:#1a1a1a;font-size:12px;font-weight:700;text-align:center">Done</span>
+    </div>
+    <div style="flex:1;padding:34px 44px;overflow:hidden">
+      <div style="font-size:16px;font-weight:700;color:#f0f0f3">Accounts</div>
+      <div style="font-size:12px;color:#8b8b93;margin-top:6px;max-width:560px;line-height:1.55">Run different panes as different accounts. Claude accounts get their own config folder; other CLIs get a key injected at launch.</div>
+      <div style="margin-top:24px;max-width:760px;display:flex;flex-direction:column;gap:12px">
+        <div style="border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:16px 18px;background:rgba(255,255,255,.02)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="color:#f05219">✻</span><span style="font-size:13px;font-weight:700;color:#f0f0f3">Claude Code</span>
+            <span style="flex:1"></span>
+            <span style="font-size:11.5px;color:#c6c6cc;padding:5px 12px;border:1px solid rgba(255,255,255,.14);border-radius:7px">Sign in</span>
+            <span style="font-size:11.5px;color:#c6c6cc;padding:5px 12px;border:1px solid rgba(255,255,255,.14);border-radius:7px">API key</span>
+          </div>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04)">
+              <span style="width:6px;height:6px;border-radius:50%;background:#7ec27a"></span>
+              <div><div style="font-size:12px;font-weight:600;color:#f0f0f3">Default</div><div style="font-size:10.5px;color:#8b8b93">Your own login</div></div>
+              <span style="flex:1"></span><span style="font-size:10.5px;color:#67676f">used by 3 panes</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px">
+              <span style="width:6px;height:6px;border-radius:50%;background:#59595f"></span>
+              <div><div style="font-size:12px;color:#c6c6cc">work-account</div><div style="font-size:10.5px;color:#75757d">Separate config folder</div></div>
+              <span style="flex:1"></span><span style="font-size:10.5px;color:#67676f">idle</span>
+            </div>
+          </div>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px 18px">
+          <div style="display:flex;align-items:center;gap:10px"><span style="color:#8b8b93">◍</span><span style="font-size:13px;font-weight:700;color:#c6c6cc">Codex</span><span style="flex:1"></span><span style="font-size:11.5px;color:#c6c6cc;padding:5px 12px;border:1px solid rgba(255,255,255,.14);border-radius:7px">API key</span></div>
+          <div style="font-size:11.5px;color:#75757d;margin-top:10px">No keys stored. Panes inherit whatever is in your environment.</div>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px 18px">
+          <div style="display:flex;align-items:center;gap:10px"><span style="color:#8b8b93">✦</span><span style="font-size:13px;font-weight:700;color:#c6c6cc">Gemini CLI</span><span style="flex:1"></span><span style="font-size:11.5px;color:#c6c6cc;padding:5px 12px;border:1px solid rgba(255,255,255,.14);border-radius:7px">API key</span></div>
+          <div style="font-size:11.5px;color:#75757d;margin-top:10px">No keys stored. Panes inherit whatever is in your environment.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "make <a class="dv-oid" href="#1a">1a</a> denser with 6 panes" · "pane context menu like the screenshots" · "light theme pass on <a class="dv-oid" href="#1a">1a</a>"</p>
+</section>
+
+</x-dc>
+</body>
+</html>

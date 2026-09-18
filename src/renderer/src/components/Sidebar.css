@@ -1,0 +1,389 @@
+/* The sidebar: the workspace tree, its footer, and the collapsed rail
+   (design README "Sidebar", mockups 2a / 4a / 1b). */
+
+.ada-sidebar {
+  flex: none;
+  width: var(--ada-size-sidebar);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 8px 6px;
+  background: var(--ada-bg-sidebar);
+  border-right: 1px solid var(--ada-line-06);
+  transition: width 120ms ease;
+}
+
+.ada-sidebar--rail {
+  width: var(--ada-size-rail);
+  padding: 0;
+}
+
+/* === header ================================================================= */
+
+.ada-sidebar-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 8px;
+}
+
+.ada-sidebar-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--ada-text-faint);
+}
+
+/* === the tree =============================================================== */
+
+.ada-sidebar-tree {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* room for the insertion line drawn against the first and last rows */
+  padding: 2px 0 8px;
+}
+
+.ada-sb-node {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Every row — workspace, pane, drop target — shares one shell so the accent
+   border on the active pane cannot shift its neighbours by a pixel. */
+.ada-sb-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid transparent;
+  border-radius: var(--ada-radius-row);
+  cursor: pointer;
+}
+
+.ada-sb-row:hover {
+  /* the faintest wash in the app; no token sits this low */
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ada-sb-row--dragging {
+  opacity: 0.5;
+}
+
+/* The bar a reorder drag would land on. */
+.ada-sb-row--drop-before::before,
+.ada-sb-row--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ada-accent);
+}
+
+.ada-sb-row--drop-before::before {
+  top: -2px;
+}
+
+.ada-sb-row--drop-after::after {
+  bottom: -2px;
+}
+
+/* === workspace row ========================================================== */
+
+.ada-sb-ws {
+  padding: 7px 10px;
+}
+
+.ada-sb-chevron {
+  flex: none;
+  width: 9px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 9px;
+  line-height: 1;
+  color: var(--ada-text-muted);
+  cursor: pointer;
+}
+
+.ada-sb-ws-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ada-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ada-sb-ws--active .ada-sb-ws-name {
+  color: var(--ada-text-strong);
+}
+
+.ada-sb-count {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: var(--ada-radius-chip);
+  background: var(--ada-line-06);
+  font-size: 10px;
+  color: var(--ada-text-muted);
+}
+
+/* === nested panes =========================================================== */
+
+.ada-sb-children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 13px;
+  padding-left: 12px;
+  border-left: 1px solid var(--ada-line-10);
+}
+
+.ada-sb-pane {
+  padding: 6px 10px;
+}
+
+.ada-sb-pane--active {
+  background: var(--ada-accent-row-bg);
+  border-color: var(--ada-accent-row-border);
+}
+
+.ada-sb-pane--active:hover {
+  background: var(--ada-accent-row-bg);
+}
+
+.ada-sb-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.ada-sb-dot--working {
+  background: var(--ada-accent);
+}
+
+/* A pane waiting on the operator is the one thing in the tree that moves. */
+.ada-sb-dot--attention {
+  background: var(--ada-warn);
+  animation: ada-sb-dot-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ada-sb-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.ada-sb-dot--idle {
+  background: var(--ada-text-disabled);
+}
+
+.ada-sb-dot--done {
+  background: var(--ada-done);
+}
+
+/* A dead process reads as a hollow ring — present, but no longer lit. */
+.ada-sb-dot--exited {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ada-text-disabled);
+}
+
+.ada-sb-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ada-sb-pane-name {
+  font-size: 11.5px;
+  color: var(--ada-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ada-sb-pane--active .ada-sb-pane-name {
+  font-weight: 600;
+  color: var(--ada-text-strong);
+}
+
+.ada-sb-sub {
+  font-size: 10px;
+  color: var(--ada-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ada-sb-share {
+  flex: none;
+  font-family: var(--ada-font-mono);
+  font-size: 10px;
+  color: var(--ada-text-muted);
+}
+
+.ada-sb-share--none {
+  color: var(--ada-text-disabled);
+}
+
+.ada-sb-rename {
+  flex: 1;
+  min-width: 0;
+}
+
+/* === the spawn row and the empty state ====================================== */
+
+.ada-sb-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: var(--ada-radius-row);
+  background: none;
+  font-size: 12px;
+  color: var(--ada-text-faint);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ada-sb-new:hover {
+  color: var(--ada-text-secondary);
+}
+
+.ada-sb-new-plus {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.ada-sb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 10px;
+}
+
+.ada-sb-empty-text {
+  font-size: 11.5px;
+  color: var(--ada-text-muted);
+}
+
+/* The one glyph that is not a lucide icon: Claude Code's own mark. */
+.ada-sb-glyph {
+  font-size: 12px;
+  color: var(--ada-accent);
+}
+
+/* === footer ================================================================= */
+
+.ada-sidebar-foot {
+  flex: none;
+  padding: 8px 6px 2px;
+  border-top: 1px solid var(--ada-line-06);
+}
+
+.ada-sb-path {
+  font-family: var(--ada-font-mono);
+  font-size: 10px;
+  color: var(--ada-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ada-sb-git {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--ada-text-muted);
+}
+
+.ada-sb-git-dot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ada-done);
+}
+
+.ada-sb-git-dot--dirty {
+  background: var(--ada-warn);
+}
+
+/* === the collapsed rail ===================================================== */
+
+.ada-sidebar-rail {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  overflow: hidden;
+}
+
+.ada-sb-rail-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.ada-sb-rail-add,
+.ada-sb-rail-settings {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ada-text-faint);
+  cursor: pointer;
+}
+
+.ada-sb-rail-add:hover,
+.ada-sb-rail-settings:hover {
+  color: var(--ada-text-secondary);
+}
+
+.ada-sb-rail-add {
+  margin-top: 2px;
+}
+
+.ada-sb-rail-spacer {
+  flex: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-sidebar {
+    transition: none;
+  }
+
+  .ada-sb-dot--attention {
+    animation: none;
+  }
+}
