@@ -80,7 +80,10 @@ jobs:
       # postinstall rebuilds node-pty against Electron; the Windows runner has
       # the Visual Studio build tools and Python that needs.
       - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck && pnpm test
+      # A rebuild of an existing tag checks out code that already shipped; its
+      # tests ran when it was released, and re-running them there proves nothing.
+      - if: github.event_name == 'push'
+        run: pnpm typecheck && pnpm test
       # --publish never: electron-builder must not try to upload on its own when
       # it sees GH_TOKEN; the attach job below owns that.
       - run: pnpm package:${{ matrix.platform }} --publish never
