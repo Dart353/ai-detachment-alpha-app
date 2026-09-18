@@ -5,6 +5,12 @@ import type { SpawnOpts } from '../shared/types'
 
 // node-pty is a native module built for Electron's ABI; the manager only ever
 // touches it through the injectable spawn seam, so the import is stubbed out.
+// The prompt-ready gate is a Unix affair: a native Windows pane starts
+// `ready: true` by design (PowerShell has no bracketed-paste signal to wait
+// for), so the tests that watch the gate hold describe behaviour that does
+// not exist there. WSL panes on Windows do wait, but the tests run native.
+const unixOnly = it.skipIf(process.platform === 'win32')
+
 vi.mock('node-pty', () => ({
   spawn: () => {
     throw new Error('node-pty must not be spawned from tests')
@@ -105,7 +111,7 @@ describe('scanPromptSignal', () => {
 })
 
 describe('PtyManager command injection', () => {
-  it('holds the launch command until the shell signals it is reading', () => {
+  unixOnly('holds the launch command until the shell signals it is reading', () => {
     const { manager, spawned } = managerWithFakes()
     manager.spawn(claudePane, () => undefined, () => undefined)
     const shell = spawned[0]
@@ -127,7 +133,7 @@ describe('PtyManager command injection', () => {
     expect(shell.writes).toEqual(['claude\r'])
   })
 
-  it('writes the command after the fallback timeout for a shell that never signals', () => {
+  unixOnly('writes the command after the fallback timeout for a shell that never signals', () => {
     vi.useFakeTimers()
     const { manager, spawned } = managerWithFakes()
     manager.spawn(claudePane, () => undefined, () => undefined)
@@ -140,7 +146,7 @@ describe('PtyManager command injection', () => {
     expect(shell.writes).toEqual(['claude\r'])
   })
 
-  it('does not type into a pane that was killed before it became ready', () => {
+  unixOnly('does not type into a pane that was killed before it became ready', () => {
     vi.useFakeTimers()
     const { manager, spawned } = managerWithFakes()
     manager.spawn(claudePane, () => undefined, () => undefined)
@@ -175,7 +181,7 @@ describe('PtyManager proc identity', () => {
     expect(exits).toEqual([claudePane.id])
   })
 
-  it('drops output-driven readiness from a stale proc', () => {
+  unixOnly('drops output-driven readiness from a stale proc', () => {
     const { manager, spawned } = managerWithFakes()
     manager.spawn(claudePane, () => undefined, () => undefined)
     manager.spawn(claudePane, () => undefined, () => undefined)
