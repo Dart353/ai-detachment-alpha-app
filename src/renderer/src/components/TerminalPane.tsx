@@ -34,6 +34,7 @@ import { buildLaunchCommand } from '../lib/launch'
 import { shellQuote } from '../lib/shellQuote'
 import { useTerminalPane } from '../hooks/useTerminalPane'
 import { PaneHeader, type MenuAnchor } from './PaneHeader'
+import { paneColorVars } from './paneColor'
 import { Button, Modal } from './ui'
 import './TerminalPane.css'
 
@@ -290,10 +291,12 @@ export function TerminalPane({
 
   const classes = ['ada-pane']
   if (focused) classes.push('is-focused')
+  if (pane.color) classes.push('has-color')
 
   return (
     <div
       className={classes.join(' ')}
+      style={paneColorVars(pane.color)}
       data-pane-id={paneId}
       onPointerDown={() => focusPane(paneId)}
       onContextMenu={(event) => {

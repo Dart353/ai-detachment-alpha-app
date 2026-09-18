@@ -21,6 +21,21 @@
   height: 2px;
 }
 
+/* A coloured pane wears its colour, not just the seam: the border carries it
+   (full strength when focused, so focus still reads), and the header is tinted
+   with it. The colour arrives as --ada-pane-color from the pane's inline style. */
+.ada-pane.has-color {
+  border-color: color-mix(in srgb, var(--ada-pane-color) 40%, transparent);
+}
+
+.ada-pane.has-color.is-focused {
+  border-color: var(--ada-pane-color);
+}
+
+.ada-pane.has-color .ada-pane-header {
+  background: color-mix(in srgb, var(--ada-pane-color) 16%, var(--ada-bg-pane-header));
+}
+
 /* The body is what FitAddon measures: its computed width/height resolve to the
    content box, so the padding here is taken off the grid rather than overflowing
    it. Never move this node — xterm paints into the element it was opened on. */
