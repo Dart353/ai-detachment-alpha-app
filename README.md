@@ -46,6 +46,23 @@ pnpm dev
 | `pnpm test:e2e` | build, then drive the real app over CDP (see below) |
 | `pnpm package:dir` | fast unpacked Linux build into `release/linux-unpacked` |
 | `pnpm package:linux` / `:win` / `:mac` | full electron-builder packaging |
+
+### Packaging for Windows
+
+Build on a Windows machine (node-pty is a native module compiled against the
+host, and electron-builder does not cross-compile it):
+
+```powershell
+# prerequisites, once: Node 22+, pnpm, and the Visual Studio 2022 Build Tools
+# with the "Desktop development with C++" workload (node-gyp needs it)
+pnpm install
+pnpm package:win
+```
+
+The NSIS installer lands in `release\AI Detachment Alpha Setup 0.1.0.exe`
+(per-user, custom install dir). It is unsigned, so SmartScreen will warn on
+first launch; code signing is a later step. `pnpm package:mac` works the same
+way on a Mac (unsigned, unnotarized until certificates are added).
 | `pnpm make:icon` | regenerate `build/icon.png` (already committed) |
 
 ### The end-to-end smoke test
@@ -65,8 +82,10 @@ never sets that flag.
 
 VS Code's integrated terminal exports `ELECTRON_RUN_AS_NODE=1`. Inheriting it
 makes Electron boot as plain Node — no window, no renderer, no error that says
-why. Every script that starts Electron therefore runs under
-`env -u ELECTRON_RUN_AS_NODE`, and the PTY manager strips it (along with the
+why. Every script that starts Electron therefore goes through
+`scripts/electron-vite.mjs`, a tiny cross-platform launcher that deletes the
+variable before spawning electron-vite (POSIX `env -u` does not exist in
+PowerShell or cmd), and the PTY manager strips it (along with the
 `CLAUDE_CODE_*` session vars, which would otherwise make a child `claude` adopt
 this app's session) from every process it spawns.
 

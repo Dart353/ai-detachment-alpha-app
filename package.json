@@ -7,9 +7,9 @@
   "private": true,
   "packageManager": "pnpm@11.3.0",
   "scripts": {
-    "dev": "env -u ELECTRON_RUN_AS_NODE electron-vite dev",
-    "build": "env -u ELECTRON_RUN_AS_NODE electron-vite build",
-    "start": "env -u ELECTRON_RUN_AS_NODE electron-vite preview",
+    "dev": "node scripts/electron-vite.mjs dev",
+    "build": "node scripts/electron-vite.mjs build",
+    "start": "node scripts/electron-vite.mjs preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "pnpm build && node scripts/e2e-smoke.mjs",
