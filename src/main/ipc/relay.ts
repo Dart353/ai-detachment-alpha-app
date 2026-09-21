@@ -95,6 +95,7 @@ export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
     url,
     key,
     name: settings.name.trim() || os.hostname(),
+    version: app.getVersion(),
     feed: feed(settings),
     onChange: (event) => {
       if (event.state === 'connected') log.info(`relay: registered as ${event.hostId.slice(0, 12)}…`)
