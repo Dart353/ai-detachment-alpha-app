@@ -131,6 +131,7 @@ function mergeSettings(base: Settings, stored: Record<string, unknown>): Setting
     ...(stored as Partial<Settings>),
     wsl: { ...base.wsl, ...(isRecord(stored['wsl']) ? stored['wsl'] : {}) },
     cliPaths: { ...base.cliPaths, ...(isRecord(stored['cliPaths']) ? stored['cliPaths'] : {}) },
+    relay: { ...base.relay, ...(isRecord(stored['relay']) ? stored['relay'] : {}) },
     notifications: {
       ...base.notifications,
       ...notifications,
@@ -150,6 +151,21 @@ function mergeSettings(base: Settings, stored: Record<string, unknown>): Setting
 export function loadSettings(): Settings {
   const raw = readJson(file('ada-settings.json'))
   return isRecord(raw) ? mergeSettings(DEFAULT_SETTINGS, raw) : { ...DEFAULT_SETTINGS }
+}
+
+/**
+ * The relay pairing key, encrypted. Its own file because it is the one secret
+ * the store holds: nothing that reads settings should ever be handed it by
+ * accident, and rotating it must not rewrite anything else.
+ */
+export function loadRelayKeyCiphertext(): string | null {
+  const raw = readJson(file('ada-relay.json'))
+  const key = isRecord(raw) ? raw['key'] : null
+  return typeof key === 'string' && key ? key : null
+}
+
+export function saveRelayKeyCiphertext(ciphertext: string): void {
+  writeJsonAtomic(file('ada-relay.json'), { key: ciphertext })
 }
 
 /**

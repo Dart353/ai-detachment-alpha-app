@@ -42,10 +42,11 @@ this app ports with their reasoning comments and neutral vocabulary.
 | `accounts.ts` / `accountMint.ts` | multiple Claude accounts and their config dirs |
 | `fileTree.ts`, `git.ts`, `ssh.ts` | explorer listings, branch + dirty flag, `~/.ssh/config` |
 | `protocol.ts` | the `ada-file://` scheme the sandboxed renderer reads files through |
+| `relay.ts` | Remote: the outbound socket.io link that publishes pane statuses to the relay a phone watches |
 | `log.ts` | `logs/ada.log`, the ring buffer, and crash reports |
 
 `src/main/ipc/*.ts` is **one file per area** (`pty`, `sessions`, `store`, `fs`,
-`git`, `ssh`, `hooks`, `usage`, `accounts`, `window`, `misc`), all registered
+`git`, `ssh`, `hooks`, `usage`, `accounts`, `window`, `misc`, `relay`), all registered
 once by `ipc/index.ts` before the window exists. Handlers reach the window only
 through the `IpcCtx` they are given, never through a captured reference.
 

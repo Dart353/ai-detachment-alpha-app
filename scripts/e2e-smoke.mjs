@@ -514,8 +514,97 @@ function buildSteps(cdp, dirs) {
         )
         if (!back.ok) throw new StepError('the terminal was remounted by the detour', back)
       }
+    ],
+    [
+      'remote registers with a relay and publishes the pane list',
+      async (scratch) => {
+        // A stand-in relay in this process: the real one lives in its own repo
+        // and has its own tests. This one speaks just enough of the handshake
+        // to register a host and collect what it publishes.
+        const relay = await startFakeRelay()
+        try {
+          await cdp.evaluate(
+            `${store}.updateSettings({ relay: { enabled: true, url: ${json(relay.url)}, name: 'smoke' } })
+             return true`
+          )
+          await waitFor(
+            cdp,
+            'the relay link to report itself connected',
+            `const status = await window.api.relayStatus()
+             return { ok: status.state === 'connected' && !!status.hostId, ...status }`
+          )
+          const key = await cdp.evaluate(`return window.api.relayKey()`)
+          if (!/^[0-9a-f]{64}$/.test(key ?? '')) {
+            throw new StepError('the pairing key is not 64 hex chars', { key })
+          }
+          if (relay.auth.key !== key) {
+            throw new StepError('the app registered with a different key than it shows', {
+              shown: key,
+              sent: relay.auth.key
+            })
+          }
+
+          // The publisher debounces, so the first feed after enabling may be empty.
+          const deadline = Date.now() + WAIT_MS
+          let feed = null
+          while (Date.now() < deadline) {
+            feed = relay.feeds.at(-1) ?? null
+            if (feed?.workspaces.some((ws) => ws.panes.some((pane) => pane.id === scratch.paneOne))) break
+            await sleep(250)
+          }
+          const pane = feed?.workspaces.flatMap((ws) => ws.panes).find((p) => p.id === scratch.paneOne)
+          if (!pane || !pane.status || feed.host?.name !== 'smoke') {
+            throw new StepError('the relay never received the terminal pane', feed)
+          }
+
+          await cdp.evaluate(
+            `${store}.updateSettings({ relay: { enabled: false, url: ${json(relay.url)}, name: 'smoke' } })
+             return true`
+          )
+          await waitFor(
+            cdp,
+            'the relay link to close',
+            `const status = await window.api.relayStatus()
+             return { ok: status.state === 'off', ...status }`
+          )
+        } finally {
+          await relay.close()
+        }
+      }
     ]
   ]
+}
+
+/**
+ * The relay's host-side handshake, minus everything the phone side needs:
+ * accept a host with a well-formed key, say `registered`, keep its feeds.
+ */
+async function startFakeRelay() {
+  const { createServer } = await import('node:http')
+  const { Server } = require('socket.io')
+  const server = createServer()
+  const io = new Server(server)
+  const state = { auth: null, feeds: [] }
+  io.on('connection', (socket) => {
+    const auth = socket.handshake.auth
+    if (auth.role !== 'host' || !/^[0-9a-f]{64}$/.test(auth.key ?? '')) {
+      socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 1 })
+      setImmediate(() => socket.disconnect(true))
+      return
+    }
+    state.auth = auth
+    socket.on('feed', (feed) => state.feeds.push(feed))
+    socket.emit('registered', { hostId: 'smoke', viewers: 0 })
+  })
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+  return {
+    url: `http://127.0.0.1:${server.address().port}`,
+    get auth() {
+      return state.auth
+    },
+    feeds: state.feeds,
+    close: () => new Promise((resolve) => io.close(() => resolve()))
+  }
 }
 
 /* === the run ================================================================ */

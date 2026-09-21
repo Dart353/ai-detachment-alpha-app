@@ -10,6 +10,7 @@ import { registerGitIpc } from './git'
 import { registerUsageIpc } from './usage'
 import { registerAccountsIpc } from './accounts'
 import { registerMiscIpc } from './misc'
+import { registerRelayIpc } from './relay'
 
 /**
  * What every IPC area gets instead of a module-level reference to the window.
@@ -41,4 +42,5 @@ export function registerAllIpc(ctx: IpcCtx): void {
   registerUsageIpc(ctx)
   registerAccountsIpc(ctx)
   registerMiscIpc(ctx)
+  registerRelayIpc(ctx)
 }
