@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.1.0...v1.2.0) (2026-09-21)
+
+
+### Features
+
+* **remote:** let the phone add panes and open folders ([cbad6ca](https://github.com/Dart353/ai-detachment-alpha-app/commit/cbad6cae4cc12d81570351ef9fdb9ba65f0ea751))
+* **remote:** open a pane from the phone and type into it ([855c809](https://github.com/Dart353/ai-detachment-alpha-app/commit/855c809003113aa09dbee0da4817df3395eb973c))
+* **remote:** publish pane statuses to a relay for the phone ([e7b7e97](https://github.com/Dart353/ai-detachment-alpha-app/commit/e7b7e972467718cb63596d0ada2ea3926142dad2))
+
+
+### Bug Fixes
+
+* **remote:** send a User-Agent on the relay connection ([6c6448c](https://github.com/Dart353/ai-detachment-alpha-app/commit/6c6448c3c5f4e1549b0e099a7355c1f5c9fe30ae))
+
 ## [1.1.0](https://github.com/Dart353/ai-detachment-alpha/compare/v1.0.0...v1.1.0) (2026-09-18)
 
 
