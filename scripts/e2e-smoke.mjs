@@ -577,6 +577,26 @@ function buildSteps(cdp, dirs) {
           const echoed = await relay.outputUntil((text) => text.includes('smoke-42'), PTY_WAIT_MS)
           if (!echoed) throw new StepError('typed input never produced output', relay.outputs.slice(-5))
 
+          // A phone can add a pane: the workspace gains one and the next feed says so.
+          const before = await cdp.evaluate(
+            `return ${store}.workspaces.find((ws) => ws.id === ${json(scratch.wsA)}).panes.length`
+          )
+          relay.addPane(scratch.wsA, 'terminal')
+          const grew = await waitFor(
+            cdp,
+            'the workspace to gain the pane the relay asked for',
+            `const ws = ${store}.workspaces.find((ws) => ws.id === ${json(scratch.wsA)})
+             return { ok: ws.panes.length === ${before} + 1, panes: ws.panes.length }`
+          )
+          const announced = Date.now() + WAIT_MS
+          let listed = false
+          while (Date.now() < announced && !listed) {
+            const latest = relay.feeds.at(-1)
+            listed = latest?.workspaces.find((ws) => ws.id === scratch.wsA)?.panes.length === grew.panes
+            if (!listed) await sleep(250)
+          }
+          if (!listed) throw new StepError('the feed never listed the added pane', relay.feeds.at(-1))
+
           await cdp.evaluate(
             `${store}.updateSettings({ relay: { enabled: false, url: ${json(relay.url)}, name: 'smoke' } })
              return true`
@@ -608,7 +628,7 @@ async function startFakeRelay() {
   io.on('connection', (socket) => {
     const auth = socket.handshake.auth
     if (auth.role !== 'host' || !/^[0-9a-f]{64}$/.test(auth.key ?? '')) {
-      socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 2 })
+      socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 3 })
       setImmediate(() => socket.disconnect(true))
       return
     }
@@ -637,6 +657,7 @@ async function startFakeRelay() {
         state.socket.emit('watch', { paneId })
       }),
     input: (paneId, data) => state.socket.emit('input', { paneId, data }),
+    addPane: (workspaceId, kind) => state.socket.emit('addPane', { workspaceId, kind }),
     /** Wait until the streamed output, joined, satisfies `test`. */
     outputUntil: async (test, timeoutMs) => {
       const deadline = Date.now() + timeoutMs

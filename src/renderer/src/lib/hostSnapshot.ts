@@ -1,6 +1,7 @@
 import type {
   HostSnapshot,
   PaneStatus,
+  RecentWorkspace,
   SessionInfo,
   Workspace
 } from '../../../shared/types'
@@ -11,6 +12,7 @@ import type {
  */
 export interface HostSnapshotInputs {
   workspaces: Workspace[]
+  recents: RecentWorkspace[]
   status: Record<string, PaneStatus>
   sessions: Record<string, SessionInfo>
   lastActivity: Record<string, number>
@@ -29,6 +31,7 @@ export interface HostSnapshotInputs {
 export function buildHostSnapshot(inputs: HostSnapshotInputs): HostSnapshot {
   return {
     updatedAt: inputs.now,
+    recents: inputs.recents.map((recent) => ({ name: recent.name, rootDir: recent.rootDir })),
     workspaces: inputs.workspaces.map((workspace) => ({
       id: workspace.id,
       name: workspace.name,

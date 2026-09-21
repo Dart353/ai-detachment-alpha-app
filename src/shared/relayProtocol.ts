@@ -18,7 +18,7 @@
  * into them. There is no read-only key.
  */
 
-export const PROTOCOL_VERSION = 2
+export const PROTOCOL_VERSION = 3
 
 /** A 256-bit key as 64 lowercase hex chars — what the desktop shows and the phone types. */
 export const KEY_RE = /^[0-9a-f]{64}$/
@@ -48,13 +48,43 @@ export interface FeedWorkspace {
   panes: FeedPane[]
 }
 
+/** A folder the desktop has opened before, offered on the phone for reopening. */
+export interface FeedRecent {
+  name: string
+  rootDir: string
+}
+
 /** One machine's whole picture, replaced wholesale on every publish. */
 export interface Feed {
   workspaces: FeedWorkspace[]
+  /** Recent folders, most recent first, for "open a workspace" on the phone. */
+  recents: FeedRecent[]
   /** epoch ms the desktop built it */
   updatedAt: number
   host: { name: string; version: string }
 }
+
+/* === acting on the desktop ================================================== */
+
+/** The pane kinds a phone may add; ssh and viewer panes need a desktop. */
+export type AddablePaneKind = 'claude' | 'terminal'
+
+/** Add a pane to an open workspace; the desktop places it as a split would. */
+export interface AddPane {
+  workspaceId: string
+  kind: AddablePaneKind
+}
+
+/**
+ * Open a folder as a workspace, as the desktop's own open dialog would: a
+ * folder that is already open is focused, an archived one is restored.
+ */
+export interface OpenWorkspace {
+  rootDir: string
+}
+
+/** The most a `rootDir` may carry. */
+export const ROOT_DIR_MAX_CHARS = 1024
 
 /* === watching a pane ======================================================== */
 
@@ -131,6 +161,8 @@ export interface RelayToHost {
   unwatch: (target: { paneId: string }) => void
   /** A viewer typed into this pane. */
   input: (input: Input) => void
+  addPane: (request: AddPane) => void
+  openWorkspace: (request: OpenWorkspace) => void
 }
 
 export interface RelayToViewer {
@@ -147,4 +179,6 @@ export interface ViewerToRelay {
   watch: (target: { hostId: string; paneId: string }) => void
   unwatch: (target: { hostId: string; paneId: string }) => void
   input: (input: { hostId: string } & Input) => void
+  addPane: (request: { hostId: string } & AddPane) => void
+  openWorkspace: (request: { hostId: string } & OpenWorkspace) => void
 }

@@ -20,6 +20,7 @@ import {
   X
 } from 'lucide-react'
 import SidebarUsage from './SidebarUsage'
+import { paneColorVars } from './paneColor'
 import { Button, ContextMenu, TextInput, type MenuItem } from './ui'
 import { selectActiveWorkspace, useApp } from '../store/app'
 import { useRuntime } from '../store/runtime'
@@ -437,10 +438,12 @@ function PaneRow({
 
   const classes = ['ada-sb-row', 'ada-sb-pane']
   if (active) classes.push('ada-sb-pane--active')
+  if (pane.color) classes.push('has-color')
 
   return (
     <div
       className={classes.join(' ')}
+      style={paneColorVars(pane.color)}
       role="button"
       tabIndex={0}
       title={pane.name}
@@ -588,7 +591,8 @@ function RailDot({ pane, onSelect }: { pane: Pane; onSelect: () => void }): JSX.
   return (
     <button
       type="button"
-      className={`ada-sb-rail-dot ada-sb-dot--${status}`}
+      className={`ada-sb-rail-dot ada-sb-dot--${status}${pane.color ? ' has-color' : ''}`}
+      style={paneColorVars(pane.color)}
       title={pane.name}
       aria-label={pane.name}
       onClick={onSelect}

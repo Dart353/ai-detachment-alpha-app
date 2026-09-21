@@ -18,6 +18,7 @@ import type {
   PtyDataEvent,
   PtyExitEvent,
   RecentWorkspace,
+  RelayCommand,
   RelayStatus,
   SavedLayout,
   SessionInfo,
@@ -161,6 +162,7 @@ const api: Api = {
   rotateRelayKey: () => ipcRenderer.invoke(CH.relayRotateKey) as Promise<string>,
   publishRelaySnapshot: (snapshot: HostSnapshot) => ipcRenderer.send(CH.relayPublish, snapshot),
   onRelayChanged: (cb: (status: RelayStatus) => void) => sub<RelayStatus>(CH.relayChanged, cb),
+  onRelayCommand: (cb: (command: RelayCommand) => void) => sub<RelayCommand>(CH.relayCommand, cb),
 
   /* === misc host services === */
   copyText: (text: string) => ipcRenderer.send(CH.copyText, text),

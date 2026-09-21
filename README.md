@@ -129,7 +129,10 @@ Nothing on this machine is exposed — no port, no tunnel — and it works from
 whichever network the machine is on. Tap a pane on the phone and it opens: the
 recent output replays into a terminal at the desktop's size, output streams
 live, and a prompt box plus a key bar (Esc, arrows, Enter, Ctrl+C) type into
-that pane's PTY. The desktop keeps ownership of the terminal's size.
+that pane's PTY. The phone can also add a Claude Code or terminal pane to an
+open workspace, and open a recent folder (an archived one is restored with its
+panes, without the desktop's prompt). The desktop keeps ownership of the
+terminal's size.
 
 Pairing: each machine has a **pairing key** (256 random bits, shown under
 Settings → Remote). The relay knows the machine only by the key's SHA-256; the
