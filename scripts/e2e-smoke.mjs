@@ -557,6 +557,26 @@ function buildSteps(cdp, dirs) {
             throw new StepError('the relay never received the terminal pane', feed)
           }
 
+          // Watch the pane as a phone would. The restored shell may still be
+          // starting: wait for its prompt on the desktop first, so the screen
+          // replay has something to carry — a phone that opens a pane earlier
+          // correctly gets an empty screen and then the prompt as live output.
+          await waitFor(
+            cdp,
+            'the restored shell prompt',
+            `const rows = document.querySelector('[data-pane-id="' + ${json(scratch.paneOne)} + '"] .xterm-rows')
+             const text = (rows?.innerText ?? '').trim()
+             return { ok: text.length > 0, text }`,
+            PTY_WAIT_MS
+          )
+          const screen = await relay.watch(scratch.paneOne)
+          if (typeof screen.data !== 'string' || screen.data.length === 0 || !(screen.cols > 0)) {
+            throw new StepError('the screen replay was empty', screen)
+          }
+          relay.input(scratch.paneOne, 'echo smoke-$((40+2))\r')
+          const echoed = await relay.outputUntil((text) => text.includes('smoke-42'), PTY_WAIT_MS)
+          if (!echoed) throw new StepError('typed input never produced output', relay.outputs.slice(-5))
+
           await cdp.evaluate(
             `${store}.updateSettings({ relay: { enabled: false, url: ${json(relay.url)}, name: 'smoke' } })
              return true`
@@ -584,16 +604,18 @@ async function startFakeRelay() {
   const { Server } = require('socket.io')
   const server = createServer()
   const io = new Server(server)
-  const state = { auth: null, feeds: [] }
+  const state = { auth: null, feeds: [], outputs: [], socket: null }
   io.on('connection', (socket) => {
     const auth = socket.handshake.auth
     if (auth.role !== 'host' || !/^[0-9a-f]{64}$/.test(auth.key ?? '')) {
-      socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 1 })
+      socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 2 })
       setImmediate(() => socket.disconnect(true))
       return
     }
     state.auth = auth
+    state.socket = socket
     socket.on('feed', (feed) => state.feeds.push(feed))
+    socket.on('output', (output) => state.outputs.push(output.data))
     socket.emit('registered', { hostId: 'smoke', viewers: 0 })
   })
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
@@ -603,6 +625,27 @@ async function startFakeRelay() {
       return state.auth
     },
     feeds: state.feeds,
+    outputs: state.outputs,
+    /** Ask the host to stream a pane; resolves with its screen replay. */
+    watch: (paneId) =>
+      new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new StepError('no screen for the watched pane', null)), WAIT_MS)
+        state.socket.once('screen', (screen) => {
+          clearTimeout(timer)
+          resolve(screen)
+        })
+        state.socket.emit('watch', { paneId })
+      }),
+    input: (paneId, data) => state.socket.emit('input', { paneId, data }),
+    /** Wait until the streamed output, joined, satisfies `test`. */
+    outputUntil: async (test, timeoutMs) => {
+      const deadline = Date.now() + timeoutMs
+      while (Date.now() < deadline) {
+        if (test(state.outputs.join(''))) return true
+        await sleep(100)
+      }
+      return false
+    },
     close: () => new Promise((resolve) => io.close(() => resolve()))
   }
 }

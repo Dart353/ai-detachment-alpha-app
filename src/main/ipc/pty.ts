@@ -4,6 +4,7 @@ import type { PtyDataEvent, PtyExitEvent, SpawnOpts } from '../../shared/types'
 import { mintCommandFor, resolveAccountEnv } from '../accounts'
 import { feedMintOutput } from '../accountMint'
 import { log } from '../log'
+import { paneTap } from '../paneTap'
 import { isWsl, toStored } from '../platform'
 import { PtyManager } from '../ptyManager'
 import { loadSettings } from '../store'
@@ -32,6 +33,9 @@ export function registerPtyIpc(ctx: IpcCtx): void {
     shellPath: () => loadSettings().shellPath,
     accountEnv: (accountId) => resolveAccountEnv(accountId)
   })
+  // Keystrokes from a phone (via the relay) land here; the tap only forwards
+  // them for panes it has seen output from, so nothing else is reachable.
+  paneTap.setWriter((id, data) => ptys.write(id, data))
 
   /** Kill every PTY a departed window owned; nothing else can reach them. */
   const killOwnedBy = (owner: WebContents): void => {
@@ -68,11 +72,16 @@ export function registerPtyIpc(ctx: IpcCtx): void {
       event.sender.once('destroyed', () => killOwnedBy(event.sender))
     }
 
+    if (!isMint && opts.cols && opts.rows) paneTap.resize(opts.id, opts.cols, opts.rows)
     try {
       ptys.spawn(
         spawnOpts,
         (id, data) => {
           sendPtyEvent(id, CH.ptyData, { id, data })
+          // The tap keeps the tail of every pane's output for a phone that opens
+          // it later, and streams the rest to one watching now. A mint run is
+          // never tapped: its output carries a credential.
+          if (!isMint) paneTap.push(id, data)
           // The token a setup-token run prints is captured HERE: main already
           // has the output, so the credential never travels to the renderer.
           if (!isMint) return
@@ -82,6 +91,7 @@ export function registerPtyIpc(ctx: IpcCtx): void {
         (id, code) => {
           sendPtyEvent(id, CH.ptyExit, { id, code })
           ptyOwners.delete(id)
+          paneTap.drop(id)
         }
       )
     } catch (err) {
@@ -113,7 +123,9 @@ export function registerPtyIpc(ctx: IpcCtx): void {
   ipcMain.on(
     CH.ptyResize,
     (event, { id, cols, rows }: { id: string; cols: number; rows: number }) => {
-      if (ownedByOr(id, event.sender)) ptys.resize(id, cols, rows)
+      if (!ownedByOr(id, event.sender)) return
+      ptys.resize(id, cols, rows)
+      if (cols > 0 && rows > 0) paneTap.resize(id, cols, rows)
     }
   )
 
@@ -121,6 +133,7 @@ export function registerPtyIpc(ctx: IpcCtx): void {
     if (!ownedByOr(id, event.sender)) return
     ptys.kill(id)
     ptyOwners.delete(id)
+    paneTap.drop(id)
   })
 
   // Renderer-driven flow control: pause/resume a PTY when its terminal backs up.
