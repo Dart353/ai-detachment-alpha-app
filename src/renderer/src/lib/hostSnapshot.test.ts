@@ -43,12 +43,14 @@ describe('buildHostSnapshot', () => {
   it('carries the status, transcript facts and colour per pane', () => {
     const snapshot = buildHostSnapshot({
       workspaces: [workspace],
+      recents: [{ name: 'api', rootDir: '/home/me/dev/api', lastOpenedAt: 5 }],
       status: { p1: 'attention', p2: 'idle' },
       sessions: { p1: session },
       lastActivity: { p1: 90 },
       now: 100
     })
     expect(snapshot.updatedAt).toBe(100)
+    expect(snapshot.recents).toEqual([{ name: 'api', rootDir: '/home/me/dev/api' }])
     expect(snapshot.workspaces).toHaveLength(1)
     expect(snapshot.workspaces[0]).toMatchObject({ id: 'ws1', name: 'api', rootDir: '/home/me/dev/api' })
     expect(snapshot.workspaces[0].panes[0]).toEqual({
@@ -67,6 +69,7 @@ describe('buildHostSnapshot', () => {
   it('defaults an unresolved pane to idle and never drops it', () => {
     const snapshot = buildHostSnapshot({
       workspaces: [workspace],
+      recents: [],
       status: {},
       sessions: {},
       lastActivity: {},
@@ -89,6 +92,7 @@ describe('buildHostSnapshot', () => {
     const text = JSON.stringify(
       buildHostSnapshot({
         workspaces: [workspace],
+        recents: [],
         status: {},
         sessions: { p1: session },
         lastActivity: {},

@@ -16,6 +16,7 @@ import type {
   PtyDataEvent,
   PtyExitEvent,
   RecentWorkspace,
+  RelayCommand,
   RelayStatus,
   SavedLayout,
   SessionInfo,
@@ -113,6 +114,7 @@ export const CH = {
   relayRotateKey: 'relay:rotateKey',
   relayPublish: 'relay:publish',
   relayChanged: 'relay:changed',
+  relayCommand: 'relay:command',
 
   // misc host services
   copyText: 'misc:copyText',
@@ -231,6 +233,8 @@ export interface Api {
   /** The renderer's latest view of every pane, for main to push to the relay. */
   publishRelaySnapshot(snapshot: HostSnapshot): void
   onRelayChanged(cb: (status: RelayStatus) => void): Unsubscribe
+  /** A phone asked for a pane or a workspace; the renderer carries it out. */
+  onRelayCommand(cb: (command: RelayCommand) => void): Unsubscribe
 
   /* === misc host services === */
   copyText(text: string): void
@@ -312,6 +316,7 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   rotateRelayKey: true,
   publishRelaySnapshot: true,
   onRelayChanged: true,
+  onRelayCommand: true,
   copyText: true,
   revealPath: true,
   openExternal: true,

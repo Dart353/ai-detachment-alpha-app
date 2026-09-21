@@ -7,6 +7,7 @@ import { RelayLink, hostIdFor, isKey, mintKey, normalizeRelayUrl, type LinkEvent
 
 const feed: Feed = {
   workspaces: [],
+  recents: [],
   updatedAt: 1,
   host: { name: 'office', version: '1.0.0' }
 }

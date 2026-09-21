@@ -25,7 +25,7 @@ import type { IpcCtx } from './index'
 let link: RelayLink | null = null
 /** paneId → stop streaming it; one entry per pane a phone is watching. */
 const watched = new Map<string, () => void>()
-let snapshot: HostSnapshot = { workspaces: [], updatedAt: 0 }
+let snapshot: HostSnapshot = { workspaces: [], recents: [], updatedAt: 0 }
 let status: RelayStatus = { state: 'off', hostId: null, viewers: 0, keyPersisted: true }
 /** The key when it cannot be persisted; null while it can. */
 let sessionKey: string | null = null
@@ -129,7 +129,10 @@ export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
     },
     onInput: ({ paneId, data }) => {
       if (!paneTap.write(paneId, data)) log.warn(`relay: input for unknown pane ${paneId} dropped`)
-    }
+    },
+    // The renderer owns the workspace tree: main only carries the ask across.
+    onAddPane: ({ workspaceId, kind }) => ctx.send(CH.relayCommand, { type: 'addPane', workspaceId, kind }),
+    onOpenWorkspace: ({ rootDir }) => ctx.send(CH.relayCommand, { type: 'openWorkspace', rootDir })
   })
 }
 

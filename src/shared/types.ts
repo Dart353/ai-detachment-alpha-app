@@ -207,9 +207,19 @@ export interface HostWorkspace {
  */
 export interface HostSnapshot {
   workspaces: HostWorkspace[]
+  /** Recent folders, most recent first, so the phone can open one. */
+  recents: { name: string; rootDir: string }[]
   /** epoch ms the renderer built it */
   updatedAt: number
 }
+
+/**
+ * Something a phone asked this machine to do, relayed by main to the renderer,
+ * which owns the workspace tree and does it exactly as a click would.
+ */
+export type RelayCommand =
+  | { type: 'addPane'; workspaceId: string; kind: 'claude' | 'terminal' }
+  | { type: 'openWorkspace'; rootDir: string }
 
 /** What Settings shows about the relay link. */
 export interface RelayStatus {

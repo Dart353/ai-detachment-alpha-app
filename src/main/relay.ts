@@ -3,11 +3,13 @@ import { io, type Socket } from 'socket.io-client'
 import {
   KEY_RE,
   PROTOCOL_VERSION,
+  type AddPane,
   type Auth,
   type AuthError,
   type Feed,
   type HostToRelay,
   type Input,
+  type OpenWorkspace,
   type RelayToHost,
   type Screen
 } from '../shared/relayProtocol'
@@ -79,6 +81,10 @@ export interface RelayLinkOpts {
   onUnwatch?: (paneId: string) => void
   /** A phone typed into this pane. */
   onInput?: (input: Input) => void
+  /** A phone asked for a new pane in an open workspace. */
+  onAddPane?: (request: AddPane) => void
+  /** A phone asked to open a folder as a workspace. */
+  onOpenWorkspace?: (request: OpenWorkspace) => void
 }
 
 export class RelayLink {
@@ -134,6 +140,20 @@ export class RelayLink {
     this.socket.on('input', (input) => {
       if (input && typeof input.paneId === 'string' && typeof input.data === 'string') {
         this.opts.onInput?.(input)
+      }
+    })
+    this.socket.on('addPane', (request) => {
+      if (
+        request &&
+        typeof request.workspaceId === 'string' &&
+        (request.kind === 'claude' || request.kind === 'terminal')
+      ) {
+        this.opts.onAddPane?.({ workspaceId: request.workspaceId, kind: request.kind })
+      }
+    })
+    this.socket.on('openWorkspace', (request) => {
+      if (request && typeof request.rootDir === 'string' && request.rootDir.trim()) {
+        this.opts.onOpenWorkspace?.({ rootDir: request.rootDir.trim() })
       }
     })
     this.emit('connecting')
