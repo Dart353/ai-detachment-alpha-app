@@ -64,6 +64,8 @@ export interface RelayLinkOpts {
   url: string
   key: string
   name: string
+  /** The app version, for the connection's User-Agent. */
+  version: string
   /** What to send on connect and on every `publish`. */
   feed: () => Feed
   onChange: (event: LinkEvent) => void
@@ -86,7 +88,11 @@ export class RelayLink {
       auth,
       // WebSocket first; polling only as the fallback for a hostile proxy.
       transports: ['websocket', 'polling'],
-      reconnectionDelayMax: 30_000
+      reconnectionDelayMax: 30_000,
+      // Node's WebSocket client sends no User-Agent at all, and a reverse
+      // proxy that tarpits empty agents (a sensible default for a public
+      // server) would swallow the connection without a word.
+      extraHeaders: { 'User-Agent': `ai-detachment-alpha/${opts.version}` }
     })
 
     this.socket.on('registered', ({ viewers }) => {

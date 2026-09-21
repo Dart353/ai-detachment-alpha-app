@@ -45,6 +45,7 @@ describe('RelayLink', () => {
   let url: string
   let link: RelayLink | null = null
   const received: unknown[] = []
+  const agents: string[] = []
 
   beforeEach(async () => {
     server = http.createServer()
@@ -61,6 +62,7 @@ describe('RelayLink', () => {
         return
       }
       socket.on('feed', (value) => received.push(value))
+      agents.push(socket.handshake.headers['user-agent'] ?? '')
       socket.emit('registered', { hostId: 'x', viewers: 2 })
     })
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
@@ -91,10 +93,11 @@ describe('RelayLink', () => {
   it('registers, reports viewers, and sends the feed on connect and on publish', async () => {
     const events: LinkEvent[] = []
     const key = mintKey()
-    link = new RelayLink({ url, key, name: 'office', feed: () => feed, onChange: (e) => events.push(e) })
+    link = new RelayLink({ url, key, name: 'office', version: '1.0.0', feed: () => feed, onChange: (e) => events.push(e) })
     expect(events[0]).toMatchObject({ state: 'connecting', hostId: hostIdFor(key) })
     const connected = await untilState(events, 'connected')
     expect(connected.viewers).toBe(2)
+    expect(agents.at(-1)).toBe('ai-detachment-alpha/1.0.0')
     await new Promise((resolve) => setTimeout(resolve, 30))
     expect(received).toHaveLength(1)
     link.publish()
@@ -108,6 +111,7 @@ describe('RelayLink', () => {
       url: 'http://127.0.0.1:1',
       key: mintKey(),
       name: 'office',
+      version: '1.0.0',
       feed: () => feed,
       onChange: (e) => events.push(e)
     })
