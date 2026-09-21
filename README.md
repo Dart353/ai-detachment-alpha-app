@@ -114,7 +114,26 @@ Two environment variables move it:
   uses, and what also switches the renderer into its test mode).
 
 Account tokens are the exception: they are encrypted with the OS keychain
-through Electron's `safeStorage` and never leave the main process.
+through Electron's `safeStorage` and never leave the main process. The relay
+pairing key (`ada-relay.json`) is stored the same way.
+
+## Remote: watching your panes from a phone
+
+Settings → Remote connects the app to a **relay**
+([ai-detachment-alpha-relay](https://github.com/Dart353/ai-detachment-alpha-relay))
+you run on a server of your own. The app keeps one outbound socket.io
+connection to it and pushes what its panes are doing: every workspace and pane,
+the same `working · attention · idle · done · exited` pill the sidebar shows,
+the transcript's title or last prompt, and how long ago the pane last spoke.
+Nothing on this machine is exposed — no port, no tunnel — and it works from
+whichever network the machine is on. Read-only for now; prompting from the
+phone is the next step.
+
+Pairing: each machine has a **pairing key** (256 random bits, shown under
+Settings → Remote). The relay knows the machine only by the key's SHA-256; the
+phone opens the relay's page, adds the key once, and sees that machine — and
+every other machine it holds a key for — on one screen. **Rotate** revokes
+every phone. Run this on each machine you work from.
 
 ## WSL mode
 

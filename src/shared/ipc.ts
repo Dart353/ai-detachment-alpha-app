@@ -9,12 +9,14 @@ import type {
   FileTreeEntry,
   GitStatus,
   HookEvent,
+  HostSnapshot,
   PaneReg,
   PendingMint,
   PersistedState,
   PtyDataEvent,
   PtyExitEvent,
   RecentWorkspace,
+  RelayStatus,
   SavedLayout,
   SessionInfo,
   Settings,
@@ -104,6 +106,13 @@ export const CH = {
   accountsCancelMint: 'accounts:cancelMint',
   accountsChanged: 'accounts:changed',
   accountsMintDone: 'accounts:mintDone',
+
+  // remote (the relay a phone watches this machine through)
+  relayStatus: 'relay:status',
+  relayKey: 'relay:key',
+  relayRotateKey: 'relay:rotateKey',
+  relayPublish: 'relay:publish',
+  relayChanged: 'relay:changed',
 
   // misc host services
   copyText: 'misc:copyText',
@@ -213,6 +222,16 @@ export interface Api {
     cb: (event: { ptyId: string; ok: boolean; account?: ClaudeAccount; error?: string }) => void
   ): Unsubscribe
 
+  /* === remote === */
+  relayStatus(): Promise<RelayStatus>
+  /** The pairing key the phone needs. Shown in Settings, nowhere else. */
+  relayKey(): Promise<string>
+  /** Mint a new key; every paired phone has to pair again. */
+  rotateRelayKey(): Promise<string>
+  /** The renderer's latest view of every pane, for main to push to the relay. */
+  publishRelaySnapshot(snapshot: HostSnapshot): void
+  onRelayChanged(cb: (status: RelayStatus) => void): Unsubscribe
+
   /* === misc host services === */
   copyText(text: string): void
   revealPath(path: string): Promise<void>
@@ -288,6 +307,11 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   cancelMint: true,
   onAccountsChanged: true,
   onMintDone: true,
+  relayStatus: true,
+  relayKey: true,
+  rotateRelayKey: true,
+  publishRelaySnapshot: true,
+  onRelayChanged: true,
   copyText: true,
   revealPath: true,
   openExternal: true,
