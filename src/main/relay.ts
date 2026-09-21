@@ -7,7 +7,9 @@ import {
   type AuthError,
   type Feed,
   type HostToRelay,
-  type RelayToHost
+  type Input,
+  type RelayToHost,
+  type Screen
 } from '../shared/relayProtocol'
 
 /**
@@ -16,11 +18,13 @@ import {
  * One outbound socket.io connection, registered as a host under the pairing
  * key. It pushes the latest feed on every change and again on every
  * reconnect, because the relay only remembers a feed while the socket that
- * sent it is alive. socket.io owns the reconnect schedule; this class only
- * turns its events into a status the Settings screen can show.
+ * sent it is alive. Watching flows the other way: the relay says which pane a
+ * phone opened, the link answers with a screen and then streams that pane's
+ * output; input from the phone arrives here and goes to the PTY.
  *
- * Pure of Electron on purpose, so a vitest can run it against a real relay on
- * a random port.
+ * socket.io owns the reconnect schedule; this class only turns its events
+ * into a status the Settings screen can show. Pure of Electron on purpose,
+ * so a vitest can run it against a real relay on a random port.
  */
 
 /** 256 random bits as 64 hex chars — what the phone types. */
@@ -69,6 +73,12 @@ export interface RelayLinkOpts {
   /** What to send on connect and on every `publish`. */
   feed: () => Feed
   onChange: (event: LinkEvent) => void
+  /** A phone opened this pane: answer with `sendScreen`, then stream it. */
+  onWatch?: (paneId: string) => void
+  /** The last phone left this pane. */
+  onUnwatch?: (paneId: string) => void
+  /** A phone typed into this pane. */
+  onInput?: (input: Input) => void
 }
 
 export class RelayLink {
@@ -115,12 +125,31 @@ export class RelayLink {
     this.socket.on('connect_error', (err) => {
       this.emit('connecting', err.message)
     })
+    this.socket.on('watch', ({ paneId }) => {
+      if (typeof paneId === 'string') this.opts.onWatch?.(paneId)
+    })
+    this.socket.on('unwatch', ({ paneId }) => {
+      if (typeof paneId === 'string') this.opts.onUnwatch?.(paneId)
+    })
+    this.socket.on('input', (input) => {
+      if (input && typeof input.paneId === 'string' && typeof input.data === 'string') {
+        this.opts.onInput?.(input)
+      }
+    })
     this.emit('connecting')
   }
 
   /** Push the current feed; a no-op while disconnected (it goes on reconnect). */
   publish(): void {
     if (this.socket.connected) this.socket.emit('feed', this.opts.feed())
+  }
+
+  sendScreen(screen: Screen): void {
+    if (this.socket.connected) this.socket.emit('screen', screen)
+  }
+
+  sendOutput(paneId: string, data: string): void {
+    if (this.socket.connected) this.socket.emit('output', { paneId, data })
   }
 
   close(): void {

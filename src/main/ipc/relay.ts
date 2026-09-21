@@ -4,6 +4,7 @@ import { CH } from '../../shared/ipc'
 import type { Feed } from '../../shared/relayProtocol'
 import type { HostSnapshot, RelaySettings, RelayStatus } from '../../shared/types'
 import { log } from '../log'
+import { paneTap } from '../paneTap'
 import { RelayLink, isKey, mintKey, normalizeRelayUrl } from '../relay'
 import { loadRelayKeyCiphertext, loadSettings, saveRelayKeyCiphertext } from '../store'
 import type { IpcCtx } from './index'
@@ -22,6 +23,8 @@ import type { IpcCtx } from './index'
  */
 
 let link: RelayLink | null = null
+/** paneId → stop streaming it; one entry per pane a phone is watching. */
+const watched = new Map<string, () => void>()
 let snapshot: HostSnapshot = { workspaces: [], updatedAt: 0 }
 let status: RelayStatus = { state: 'off', hostId: null, viewers: 0, keyPersisted: true }
 /** The key when it cannot be persisted; null while it can. */
@@ -75,6 +78,8 @@ function setStatus(ctx: IpcCtx, next: Omit<RelayStatus, 'keyPersisted'>): void {
 export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
   link?.close()
   link = null
+  for (const off of watched.values()) off()
+  watched.clear()
   if (!settings.enabled) {
     setStatus(ctx, { state: 'off', hostId: null, viewers: 0 })
     return
@@ -106,6 +111,24 @@ export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
         viewers: event.viewers,
         ...(event.error ? { error: event.error } : {})
       })
+    },
+    // A phone opened a pane: replay what is on screen, then stream what
+    // follows. Every watch gets a screen (a second phone needs its own), but
+    // the stream is wired once per pane.
+    onWatch: (paneId) => {
+      const screen = paneTap.screen(paneId)
+      if (!screen) return // not a live pane on this machine
+      link?.sendScreen({ paneId, ...screen })
+      if (!watched.has(paneId)) {
+        watched.set(paneId, paneTap.listen(paneId, (id, data) => link?.sendOutput(id, data)))
+      }
+    },
+    onUnwatch: (paneId) => {
+      watched.get(paneId)?.()
+      watched.delete(paneId)
+    },
+    onInput: ({ paneId, data }) => {
+      if (!paneTap.write(paneId, data)) log.warn(`relay: input for unknown pane ${paneId} dropped`)
     }
   })
 }

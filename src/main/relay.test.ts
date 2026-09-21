@@ -105,6 +105,40 @@ describe('RelayLink', () => {
     expect(received).toHaveLength(2)
   })
 
+  it('answers watch with a screen, streams output, and hands input over', async () => {
+    const events: LinkEvent[] = []
+    const seen: string[] = []
+    let hostSocket: import('socket.io').Socket | null = null
+    io.on('connection', (socket) => {
+      hostSocket = socket
+    })
+    link = new RelayLink({
+      url,
+      key: mintKey(),
+      name: 'office',
+      version: '1.0.0',
+      feed: () => feed,
+      onChange: (e) => events.push(e),
+      onWatch: (paneId) => {
+        seen.push(`watch ${paneId}`)
+        link?.sendScreen({ paneId, data: '$ ', cols: 100, rows: 30 })
+        link?.sendOutput(paneId, 'live')
+      },
+      onUnwatch: (paneId) => seen.push(`unwatch ${paneId}`),
+      onInput: (input) => seen.push(`input ${input.paneId} ${input.data}`)
+    })
+    await untilState(events, 'connected')
+    const gotScreen = new Promise<unknown>((resolve) => hostSocket!.once('screen', resolve))
+    const gotOutput = new Promise<unknown>((resolve) => hostSocket!.once('output', resolve))
+    hostSocket!.emit('watch', { paneId: 'p1' })
+    expect(await gotScreen).toEqual({ paneId: 'p1', data: '$ ', cols: 100, rows: 30 })
+    expect(await gotOutput).toEqual({ paneId: 'p1', data: 'live' })
+    hostSocket!.emit('input', { paneId: 'p1', data: 'ls\r' })
+    hostSocket!.emit('unwatch', { paneId: 'p1' })
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(seen).toEqual(['watch p1', 'input p1 ls\r', 'unwatch p1'])
+  })
+
   it('reads an unreachable relay as connecting with a message, not a crash', async () => {
     const events: LinkEvent[] = []
     link = new RelayLink({

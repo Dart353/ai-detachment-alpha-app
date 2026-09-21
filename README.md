@@ -126,14 +126,18 @@ connection to it and pushes what its panes are doing: every workspace and pane,
 the same `working · attention · idle · done · exited` pill the sidebar shows,
 the transcript's title or last prompt, and how long ago the pane last spoke.
 Nothing on this machine is exposed — no port, no tunnel — and it works from
-whichever network the machine is on. Read-only for now; prompting from the
-phone is the next step.
+whichever network the machine is on. Tap a pane on the phone and it opens: the
+recent output replays into a terminal at the desktop's size, output streams
+live, and a prompt box plus a key bar (Esc, arrows, Enter, Ctrl+C) type into
+that pane's PTY. The desktop keeps ownership of the terminal's size.
 
 Pairing: each machine has a **pairing key** (256 random bits, shown under
 Settings → Remote). The relay knows the machine only by the key's SHA-256; the
 phone opens the relay's page, adds the key once, and sees that machine — and
 every other machine it holds a key for — on one screen. **Rotate** revokes
-every phone. Run this on each machine you work from.
+every phone. Holding a key grants everything on that machine — seeing its panes
+and typing into them — so treat it like a password. Run this on each machine
+you work from.
 
 ## WSL mode
 

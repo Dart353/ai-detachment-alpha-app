@@ -13,9 +13,12 @@
  * nothing. The key crosses to the relay over TLS; it is the operator's own
  * server, and the design leaves room to encrypt payloads end to end with the
  * same key later without changing this handshake.
+ *
+ * Holding a machine's key grants everything on it: seeing its panes AND typing
+ * into them. There is no read-only key.
  */
 
-export const PROTOCOL_VERSION = 1
+export const PROTOCOL_VERSION = 2
 
 /** A 256-bit key as 64 lowercase hex chars — what the desktop shows and the phone types. */
 export const KEY_RE = /^[0-9a-f]{64}$/
@@ -53,6 +56,37 @@ export interface Feed {
   host: { name: string; version: string }
 }
 
+/* === watching a pane ======================================================== */
+
+/**
+ * What a viewer gets when it starts watching a pane: the recent raw terminal
+ * output, to replay into a terminal of the same size. The desktop owns the
+ * size — a phone renders at the desktop's columns and never resizes the PTY.
+ */
+export interface Screen {
+  paneId: string
+  data: string
+  cols: number
+  rows: number
+}
+
+/** A live chunk of a watched pane's output, raw bytes as the PTY produced them. */
+export interface Output {
+  paneId: string
+  data: string
+}
+
+/** Keystrokes for a pane, raw: the page appends `\r` to a prompt itself. */
+export interface Input {
+  paneId: string
+  data: string
+}
+
+/** The most a `screen` replay carries; the desktop trims its buffer to this. */
+export const SCREEN_MAX_CHARS = 256 * 1024
+/** The most one `input` may carry — a pasted prompt, never a file. */
+export const INPUT_MAX_CHARS = 16 * 1024
+
 /* === the handshake ========================================================== */
 
 /** `socket.io` `auth` payload, sent once per connection. */
@@ -81,12 +115,22 @@ export interface HostState {
 export interface HostToRelay {
   /** The desktop's latest picture; the relay keeps the last one for late viewers. */
   feed: (feed: Feed) => void
+  /** Answer to `watch`: the pane's recent output and size, for every watcher. */
+  screen: (screen: Screen) => void
+  /** Live output of a watched pane. */
+  output: (output: Output) => void
 }
 
 export interface RelayToHost {
   /** Registration succeeded; `viewers` is how many phones are watching right now. */
   registered: (info: { hostId: string; viewers: number }) => void
   authError: (error: AuthError) => void
+  /** A first viewer opened this pane: send a `screen`, then stream `output`. */
+  watch: (target: { paneId: string }) => void
+  /** The last viewer left this pane: stop streaming it. */
+  unwatch: (target: { paneId: string }) => void
+  /** A viewer typed into this pane. */
+  input: (input: Input) => void
 }
 
 export interface RelayToViewer {
@@ -95,9 +139,12 @@ export interface RelayToViewer {
   /** A fresh feed from a machine this viewer holds the key for. */
   hostFeed: (update: { hostId: string; feed: Feed }) => void
   authError: (error: AuthError) => void
+  screen: (update: { hostId: string } & Screen) => void
+  output: (update: { hostId: string } & Output) => void
 }
 
 export interface ViewerToRelay {
-  /** Nothing yet — chat arrives in the next protocol version. */
-  _reserved?: never
+  watch: (target: { hostId: string; paneId: string }) => void
+  unwatch: (target: { hostId: string; paneId: string }) => void
+  input: (input: { hostId: string } & Input) => void
 }
