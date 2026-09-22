@@ -115,6 +115,7 @@ export const CH = {
   relayPublish: 'relay:publish',
   relayChanged: 'relay:changed',
   relayCommand: 'relay:command',
+  relayDisconnectViewer: 'relay:disconnectViewer',
 
   // misc host services
   copyText: 'misc:copyText',
@@ -235,6 +236,8 @@ export interface Api {
   onRelayChanged(cb: (status: RelayStatus) => void): Unsubscribe
   /** A phone asked for a pane or a workspace; the renderer carries it out. */
   onRelayCommand(cb: (command: RelayCommand) => void): Unsubscribe
+  /** Drop one phone; it forgets this machine's key. Rotate the key to revoke a phone you cannot reach. */
+  disconnectRelayViewer(viewerId: string): void
 
   /* === misc host services === */
   copyText(text: string): void
@@ -317,6 +320,7 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   publishRelaySnapshot: true,
   onRelayChanged: true,
   onRelayCommand: true,
+  disconnectRelayViewer: true,
   copyText: true,
   revealPath: true,
   openExternal: true,

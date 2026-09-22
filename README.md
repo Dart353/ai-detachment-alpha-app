@@ -139,8 +139,11 @@ Settings → Remote). The relay knows the machine only by the key's SHA-256; the
 phone opens the relay's page, adds the key once, and sees that machine — and
 every other machine it holds a key for — on one screen. **Rotate** revokes
 every phone. Holding a key grants everything on that machine — seeing its panes
-and typing into them — so treat it like a password. Run this on each machine
-you work from.
+and typing into them — so treat it like a password. Settings → Remote lists the
+phones connected right now (device, address, how long, what they are watching)
+and can disconnect one, which makes that phone forget the key; a phone you no
+longer control is shut out by rotating the key. Run this on each machine you
+work from.
 
 ## WSL mode
 

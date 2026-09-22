@@ -660,7 +660,7 @@ async function startFakeRelay() {
   io.on('connection', (socket) => {
     const auth = socket.handshake.auth
     if (auth.role !== 'host' || !/^[0-9a-f]{64}$/.test(auth.key ?? '')) {
-      socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 3 })
+      socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 4 })
       setImmediate(() => socket.disconnect(true))
       return
     }

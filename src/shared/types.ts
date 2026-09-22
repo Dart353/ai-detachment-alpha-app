@@ -221,14 +221,28 @@ export type RelayCommand =
   | { type: 'addPane'; workspaceId: string; kind: 'claude' | 'terminal' }
   | { type: 'openWorkspace'; rootDir: string }
 
+/** One phone connected with this machine's key, as Settings lists it. */
+export interface RelayViewer {
+  /** The relay's id for the connection; changes on every reconnect. */
+  id: string
+  address: string
+  userAgent: string
+  /** epoch ms */
+  connectedAt: number
+  /** ids of the panes it has open */
+  watching: string[]
+}
+
 /** What Settings shows about the relay link. */
 export interface RelayStatus {
   /** 'off' while disabled; the rest follow the socket. */
   state: 'off' | 'connecting' | 'connected' | 'error'
   /** The relay's id for this machine: sha256(key). Never the key. */
   hostId: string | null
-  /** How many phones are watching, as of the last registration. */
+  /** How many phones are connected right now. */
   viewers: number
+  /** The phones themselves, as the relay last reported them. */
+  phones: RelayViewer[]
   /** The last refusal or transport error, for Settings to show. */
   error?: string
   /**

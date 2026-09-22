@@ -140,6 +140,34 @@ describe('RelayLink', () => {
     expect(seen).toEqual(['watch p1', 'input p1 ls\r', 'unwatch p1'])
   })
 
+  it('passes the viewer list through and asks the relay to drop one', async () => {
+    const events: LinkEvent[] = []
+    const lists: unknown[] = []
+    let hostSocket: import('socket.io').Socket | null = null
+    const dropped: unknown[] = []
+    io.on('connection', (socket) => {
+      hostSocket = socket
+      socket.on('disconnectViewer', (t) => dropped.push(t))
+    })
+    link = new RelayLink({
+      url,
+      key: mintKey(),
+      name: 'office',
+      version: '1.0.0',
+      feed: () => feed,
+      onChange: (e) => events.push(e),
+      onViewers: (list) => lists.push(list)
+    })
+    await untilState(events, 'connected')
+    const phone = { id: 'v1', address: '1.2.3.4', userAgent: 'iPhone', connectedAt: 5, watching: ['p1'] }
+    hostSocket!.emit('viewers', [phone])
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    expect(lists).toEqual([[phone]])
+    link.disconnectViewer('v1')
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    expect(dropped).toEqual([{ viewerId: 'v1' }])
+  })
+
   it('reads an unreachable relay as connecting with a message, not a crash', async () => {
     const events: LinkEvent[] = []
     link = new RelayLink({
