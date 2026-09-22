@@ -11,7 +11,8 @@ import {
   type Input,
   type OpenWorkspace,
   type RelayToHost,
-  type Screen
+  type Screen,
+  type ViewerInfo
 } from '../shared/relayProtocol'
 
 /**
@@ -85,6 +86,8 @@ export interface RelayLinkOpts {
   onAddPane?: (request: AddPane) => void
   /** A phone asked to open a folder as a workspace. */
   onOpenWorkspace?: (request: OpenWorkspace) => void
+  /** The phones holding this machine's key, whenever that set changes. */
+  onViewers?: (list: ViewerInfo[]) => void
 }
 
 export class RelayLink {
@@ -151,6 +154,11 @@ export class RelayLink {
         this.opts.onAddPane?.({ workspaceId: request.workspaceId, kind: request.kind })
       }
     })
+    this.socket.on('viewers', (list) => {
+      if (!Array.isArray(list)) return
+      this.viewers = list.length
+      this.opts.onViewers?.(list)
+    })
     this.socket.on('openWorkspace', (request) => {
       if (request && typeof request.rootDir === 'string' && request.rootDir.trim()) {
         this.opts.onOpenWorkspace?.({ rootDir: request.rootDir.trim() })
@@ -170,6 +178,11 @@ export class RelayLink {
 
   sendOutput(paneId: string, data: string): void {
     if (this.socket.connected) this.socket.emit('output', { paneId, data })
+  }
+
+  /** Drop one phone: the relay tells it to forget this machine and closes it. */
+  disconnectViewer(viewerId: string): void {
+    if (this.socket.connected) this.socket.emit('disconnectViewer', { viewerId })
   }
 
   close(): void {

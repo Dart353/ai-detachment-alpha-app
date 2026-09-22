@@ -18,7 +18,7 @@
  * into them. There is no read-only key.
  */
 
-export const PROTOCOL_VERSION = 3
+export const PROTOCOL_VERSION = 4
 
 /** A 256-bit key as 64 lowercase hex chars — what the desktop shows and the phone types. */
 export const KEY_RE = /^[0-9a-f]{64}$/
@@ -117,6 +117,22 @@ export const SCREEN_MAX_CHARS = 256 * 1024
 /** The most one `input` may carry — a pasted prompt, never a file. */
 export const INPUT_MAX_CHARS = 16 * 1024
 
+/* === who is watching ======================================================== */
+
+/** One phone connected with this machine's key, as the desktop lists it. */
+export interface ViewerInfo {
+  /** The relay's id for the connection; changes on every reconnect. */
+  id: string
+  /** The phone's address as the relay saw it (forwarded through the proxy). */
+  address: string
+  /** The browser's User-Agent, for a human label. */
+  userAgent: string
+  /** epoch ms the connection was made */
+  connectedAt: number
+  /** The panes on this machine it has open right now. */
+  watching: string[]
+}
+
 /* === the handshake ========================================================== */
 
 /** `socket.io` `auth` payload, sent once per connection. */
@@ -145,6 +161,12 @@ export interface HostState {
 export interface HostToRelay {
   /** The desktop's latest picture; the relay keeps the last one for late viewers. */
   feed: (feed: Feed) => void
+  /**
+   * Drop one phone: the relay tells it to forget this machine's key and closes
+   * its connection. Cooperative — a phone that keeps the key can pair again;
+   * rotating the key is the revoke that needs no cooperation.
+   */
+  disconnectViewer: (target: { viewerId: string }) => void
   /** Answer to `watch`: the pane's recent output and size, for every watcher. */
   screen: (screen: Screen) => void
   /** Live output of a watched pane. */
@@ -163,6 +185,8 @@ export interface RelayToHost {
   input: (input: Input) => void
   addPane: (request: AddPane) => void
   openWorkspace: (request: OpenWorkspace) => void
+  /** Every phone holding this machine's key, whenever that set changes. */
+  viewers: (list: ViewerInfo[]) => void
 }
 
 export interface RelayToViewer {
@@ -173,6 +197,8 @@ export interface RelayToViewer {
   authError: (error: AuthError) => void
   screen: (update: { hostId: string } & Screen) => void
   output: (update: { hostId: string } & Output) => void
+  /** The desktop dropped this phone: forget that machine's key. Sent right before the disconnect. */
+  kicked: (target: { hostId: string }) => void
 }
 
 export interface ViewerToRelay {

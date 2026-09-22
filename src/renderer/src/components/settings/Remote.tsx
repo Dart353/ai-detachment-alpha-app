@@ -5,6 +5,42 @@ import { SettingRow } from './SettingRow'
 import type { RelayStatus } from '../../../../shared/types'
 import './settings.css'
 
+/** "iPhone · Safari" from a User-Agent, or the raw string's start when it is nothing known. */
+function describeAgent(ua: string): string {
+  const device = /iPhone/.test(ua)
+    ? 'iPhone'
+    : /iPad/.test(ua)
+      ? 'iPad'
+      : /Android/.test(ua)
+        ? 'Android'
+        : /Macintosh/.test(ua)
+          ? 'Mac'
+          : /Windows/.test(ua)
+            ? 'Windows'
+            : /Linux/.test(ua)
+              ? 'Linux'
+              : null
+  const browser = /CriOS|Chrome/.test(ua)
+    ? 'Chrome'
+    : /FxiOS|Firefox/.test(ua)
+      ? 'Firefox'
+      : /Safari/.test(ua)
+        ? 'Safari'
+        : null
+  if (!device && !browser) return ua.slice(0, 40) || 'unknown device'
+  return [device, browser].filter(Boolean).join(' · ')
+}
+
+/** `"3m"` — how long a phone has been connected. */
+function since(at: number, now: number): string {
+  const s = Math.max(0, Math.round((now - at) / 1000))
+  if (s < 60) return `${s}s`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}m`
+  const h = Math.floor(m / 60)
+  return h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`
+}
+
 const STATE_LABEL: Record<RelayStatus['state'], string> = {
   off: 'Off',
   connecting: 'Connecting…',
@@ -26,6 +62,7 @@ export default function Remote(): JSX.Element {
     state: 'off',
     hostId: null,
     viewers: 0,
+    phones: [],
     keyPersisted: true
   })
   const [key, setKey] = useState<string | null>(null)
@@ -130,6 +167,53 @@ export default function Remote(): JSX.Element {
               onBlur={(event) => commitName(event.currentTarget.value)}
             />
           </SettingRow>
+        </div>
+
+        <div className="ada-set-card">
+          <div className="ada-set-card-head">
+            <span className="ada-set-card-title">Connected phones</span>
+            <span className="ada-set-item-name">
+              {status.state !== 'connected'
+                ? 'Not connected to the relay'
+                : status.phones.length === 0
+                  ? 'None right now'
+                  : `${status.phones.length} connected`}
+            </span>
+          </div>
+          {status.phones.length > 0 && (
+            <div className="ada-set-list">
+              {status.phones.map((phone) => (
+                <div key={phone.id} className="ada-set-item ada-set-item--active">
+                  <div>
+                    <div className="ada-set-item-name">{describeAgent(phone.userAgent)}</div>
+                    <div className="ada-set-mono">
+                      {phone.address} · connected {since(phone.connectedAt, Date.now())} ago
+                      {phone.watching.length > 0
+                        ? ` · watching ${phone.watching.length} ${phone.watching.length === 1 ? 'pane' : 'panes'}`
+                        : ''}
+                    </div>
+                  </div>
+                  <span className="ada-set-card-spacer" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    danger
+                    onClick={() => {
+                      window.api?.disconnectRelayViewer(phone.id)
+                      pushToast('Phone disconnected — it has forgotten this machine.')
+                    }}
+                  >
+                    Disconnect
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="ada-set-card-hint">
+            Disconnect drops a phone and makes it forget this machine&apos;s key; anyone who still
+            has the key can pair again. To shut out a phone you no longer control, rotate the
+            key below.
+          </div>
         </div>
 
         <div className="ada-set-card">

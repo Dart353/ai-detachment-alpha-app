@@ -2,7 +2,7 @@ import { app, ipcMain, safeStorage } from 'electron'
 import os from 'node:os'
 import { CH } from '../../shared/ipc'
 import type { Feed } from '../../shared/relayProtocol'
-import type { HostSnapshot, RelaySettings, RelayStatus } from '../../shared/types'
+import type { HostSnapshot, RelaySettings, RelayStatus, RelayViewer } from '../../shared/types'
 import { log } from '../log'
 import { paneTap } from '../paneTap'
 import { RelayLink, isKey, mintKey, normalizeRelayUrl } from '../relay'
@@ -26,7 +26,7 @@ let link: RelayLink | null = null
 /** paneId → stop streaming it; one entry per pane a phone is watching. */
 const watched = new Map<string, () => void>()
 let snapshot: HostSnapshot = { workspaces: [], recents: [], updatedAt: 0 }
-let status: RelayStatus = { state: 'off', hostId: null, viewers: 0, keyPersisted: true }
+let status: RelayStatus = { state: 'off', hostId: null, viewers: 0, phones: [], keyPersisted: true }
 /** The key when it cannot be persisted; null while it can. */
 let sessionKey: string | null = null
 
@@ -66,8 +66,11 @@ function feed(settings: RelaySettings): () => Feed {
   return () => ({ ...snapshot, host: { name, version: app.getVersion() } })
 }
 
-function setStatus(ctx: IpcCtx, next: Omit<RelayStatus, 'keyPersisted'>): void {
-  status = { ...next, keyPersisted: keyPersisted() }
+function setStatus(ctx: IpcCtx, next: Omit<RelayStatus, 'keyPersisted' | 'phones'> & { phones?: RelayViewer[] }): void {
+  // The phone list only changes when the relay says so; a link state change
+  // keeps it, and a link going away empties it.
+  const phones = next.phones ?? (next.state === 'connected' ? status.phones : [])
+  status = { ...next, phones, keyPersisted: keyPersisted() }
   ctx.send(CH.relayChanged, status)
 }
 
@@ -81,7 +84,7 @@ export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
   for (const off of watched.values()) off()
   watched.clear()
   if (!settings.enabled) {
-    setStatus(ctx, { state: 'off', hostId: null, viewers: 0 })
+    setStatus(ctx, { state: 'off', hostId: null, viewers: 0, phones: [] })
     return
   }
   const url = normalizeRelayUrl(settings.url)
@@ -132,7 +135,8 @@ export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
     },
     // The renderer owns the workspace tree: main only carries the ask across.
     onAddPane: ({ workspaceId, kind }) => ctx.send(CH.relayCommand, { type: 'addPane', workspaceId, kind }),
-    onOpenWorkspace: ({ rootDir }) => ctx.send(CH.relayCommand, { type: 'openWorkspace', rootDir })
+    onOpenWorkspace: ({ rootDir }) => ctx.send(CH.relayCommand, { type: 'openWorkspace', rootDir }),
+    onViewers: (list) => setStatus(ctx, { ...status, viewers: list.length, phones: list })
   })
 }
 
@@ -146,6 +150,10 @@ export function registerRelayIpc(ctx: IpcCtx): void {
     const key = writeKey(mintKey())
     applyRelaySettings(ctx, loadSettings().relay)
     return key
+  })
+
+  ipcMain.on(CH.relayDisconnectViewer, (_event, viewerId: string) => {
+    if (typeof viewerId === 'string' && viewerId) link?.disconnectViewer(viewerId)
   })
 
   ipcMain.on(CH.relayPublish, (_event, next: HostSnapshot) => {
