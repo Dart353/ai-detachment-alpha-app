@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.2.0...v1.2.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **terminal:** keep the last row inside the pane ([6487518](https://github.com/Dart353/ai-detachment-alpha-app/commit/64875187831daec511dff35dd6a50597aac38801))
+
 ## [1.2.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.1.0...v1.2.0) (2026-09-21)
 
 
