@@ -918,6 +918,41 @@ export function dropPaneOnZone(
   return { ...split.layout, assign: { ...split.layout.assign, [paneId]: split.newZoneId } }
 }
 
+// ---- span (shift-drop) -------------------------------------------------------
+
+/**
+ * The rect a shift-drop would produce: the dragged pane's own zone and the zone
+ * under the pointer joined into one, or null when they do not share a full edge
+ * (only such neighbours can join without leaving a hole or an overlap).
+ */
+export function spanPreview(layout: ZoneLayout, paneId: string, zoneId: string): Rect | null {
+  const fromId = zoneOfPane(layout, paneId)
+  if (!fromId || fromId === zoneId) return null
+  const from = zoneById(layout, fromId)
+  const to = zoneById(layout, zoneId)
+  if (!from || !to || !canMerge(from, to)) return null
+  const x = Math.min(from.x, to.x)
+  const y = Math.min(from.y, to.y)
+  return {
+    x: r4(x),
+    y: r4(y),
+    w: r4(Math.max(from.x + from.w, to.x + to.w) - x),
+    h: r4(Math.max(from.y + from.h, to.y + to.h) - y)
+  }
+}
+
+/**
+ * Apply a shift-drop: the pane's zone grows over the neighbour. The pane keeps
+ * its zone (and so its terminal, untouched); a pane that lived in the neighbour
+ * loses its zone and is re-placed by the next reconcile. Unchanged when the
+ * two do not share a full edge.
+ */
+export function spanPaneToZone(layout: ZoneLayout, paneId: string, zoneId: string): ZoneLayout {
+  const fromId = zoneOfPane(layout, paneId)
+  if (!fromId || fromId === zoneId) return layout
+  return mergeZones(layout, fromId, zoneId) ?? layout
+}
+
 // ---- snapping ----------------------------------------------------------------
 
 /** Every zone edge along an axis — the magnets an editor drag is pulled onto. */

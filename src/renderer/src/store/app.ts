@@ -51,7 +51,8 @@ import {
   splitForPane,
   zoneById,
   zonePaneIds,
-  type Dir
+  type Dir,
+  spanPaneToZone
 } from '../lib/zones'
 import { getFocusFn, useRuntime } from './runtime'
 
@@ -146,6 +147,8 @@ export interface AppState {
   applyPreset: (wsId: string, presetId: string) => void
   splitPane: (paneId: string, dir: 'right' | 'down', init?: Partial<PaneInit>) => string
   dropPane: (paneId: string, zoneId: string, side: Dir | null) => void
+  /** Shift-drop: the pane's zone grows over the neighbour under the pointer. */
+  spanPane: (paneId: string, zoneId: string) => void
   setExplorer: (wsId: string, partial: Partial<ExplorerState>) => void
 
   /* chrome */
@@ -738,6 +741,25 @@ export const useApp = create<AppState>()((set, get) => ({
         workspaces: mapWorkspace(state.workspaces, workspace.id, (current) => ({
           ...current,
           layout: dropPaneOnZone(current.layout, paneId, zoneId, side)
+        }))
+      }
+    })
+  },
+
+  spanPane: (paneId, zoneId) => {
+    set((state) => {
+      const workspace = workspaceOfPane(state.workspaces, paneId)
+      if (!workspace) return state
+      return {
+        workspaces: mapWorkspace(state.workspaces, workspace.id, (current) => ({
+          ...current,
+          // A pane the span unseated is placed again straight away, so no
+          // pane is ever left without a tile between two renders.
+          layout: reconcileZones(
+            spanPaneToZone(current.layout, paneId, zoneId),
+            current.panes.map((pane) => pane.id),
+            SINGLE_GRID
+          )
         }))
       }
     })
