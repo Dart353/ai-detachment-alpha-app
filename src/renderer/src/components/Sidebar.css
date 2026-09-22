@@ -179,11 +179,17 @@
    --ada-pane-color from the row's inline style. */
 .ada-sb-pane.has-color {
   box-shadow: inset 3px 0 0 var(--ada-pane-color);
+  /* the same translucent wash the pane header wears, a touch lighter here */
+  background: color-mix(in srgb, var(--ada-pane-color) 8%, transparent);
+}
+
+.ada-sb-pane.has-color:hover {
+  background: color-mix(in srgb, var(--ada-pane-color) 12%, transparent);
 }
 
 .ada-sb-pane--active.has-color,
 .ada-sb-pane--active.has-color:hover {
-  background: color-mix(in srgb, var(--ada-pane-color) 12%, transparent);
+  background: color-mix(in srgb, var(--ada-pane-color) 16%, transparent);
   border-color: color-mix(in srgb, var(--ada-pane-color) 45%, transparent);
 }
 
