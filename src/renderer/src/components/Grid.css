@@ -38,6 +38,12 @@
   pointer-events: none;
 }
 
+/* A span (shift held): the same rect language, dashed so it reads as "grow
+   over" rather than "move into". */
+.ada-grid-preview--span {
+  border-style: dashed;
+}
+
 /* One draggable handle per shared zone edge. The band is the whole gutter; the
    line inside it only appears on hover and while dragging. */
 .ada-grid-divider {
