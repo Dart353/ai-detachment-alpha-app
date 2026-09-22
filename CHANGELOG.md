@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.3.0...v1.4.0) (2026-09-22)
+
+
+### Features
+
+* **grid:** shift-drag a pane to span it over a neighbouring zone ([04366e5](https://github.com/Dart353/ai-detachment-alpha-app/commit/04366e565b5bd5864caa70e2b92600090fbe9a56))
+* **grid:** sixteen pane colours in two strengths ([4c7c645](https://github.com/Dart353/ai-detachment-alpha-app/commit/4c7c645bd8b6a1591b363026be592edd3a533f25))
+* **sidebar:** coloured pane rows wear a translucent wash of their colour ([635e4f1](https://github.com/Dart353/ai-detachment-alpha-app/commit/635e4f1b22688b12abea96e658944922ad0516b9))
+
+
+### Bug Fixes
+
+* **grid:** stop two panes trading focus every frame ([b7f1a58](https://github.com/Dart353/ai-detachment-alpha-app/commit/b7f1a58770e2a7d9eb7ea41ed773177dd849f5ba))
+
 ## [1.3.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.2.1...v1.3.0) (2026-09-22)
 
 
