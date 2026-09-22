@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.2.1...v1.3.0) (2026-09-22)
+
+
+### Features
+
+* **remote:** list the phones connected to this machine, and disconnect one ([4d9999c](https://github.com/Dart353/ai-detachment-alpha-app/commit/4d9999cae7589f9e38283ea49a997d671cbf5f22))
+
 ## [1.2.1](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.2.0...v1.2.1) (2026-09-22)
 
 
