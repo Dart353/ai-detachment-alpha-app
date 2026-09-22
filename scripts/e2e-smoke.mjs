@@ -306,6 +306,38 @@ function buildSteps(cdp, dirs) {
       }
     ],
     [
+      'every terminal row and column fits inside its pane body',
+      async (scratch) => {
+        // The fit must size the grid to the body's CONTENT box: a grid sized to
+        // the padded box hangs its last row (and its last columns) off the edge,
+        // where overflow:hidden clips them — the shell prompt goes missing.
+        await sleep(250)
+        const fits = await cdp.evaluate(
+          `const ids = ${json([scratch.paneOne, scratch.paneTwo])}
+           const panes = ids.map((id) => {
+             const body = document.querySelector('[data-pane-id="' + id + '"] .ada-pane-body')
+             const screen = body?.querySelector('.xterm-screen')
+             if (!body || !screen) return { id, missing: true }
+             const box = body.getBoundingClientRect()
+             const style = getComputedStyle(body)
+             const contentBottom = box.bottom - parseFloat(style.paddingBottom)
+             const contentRight = box.right - parseFloat(style.paddingRight)
+             const grid = screen.getBoundingClientRect()
+             return {
+               id,
+               overflowBottom: Math.round(grid.bottom - contentBottom),
+               overflowRight: Math.round(grid.right - contentRight)
+             }
+           })
+           return {
+             ok: panes.every((p) => !p.missing && p.overflowBottom <= 0 && p.overflowRight <= 0),
+             panes
+           }`
+        )
+        if (!fits.ok) throw new StepError('a terminal grid overflows its pane body', fits)
+      }
+    ],
+    [
       'maximize covers the canvas without unmounting the others',
       async (scratch) => {
         await cdp.evaluate(`${store}.toggleMaximize(${json(scratch.paneOne)})
