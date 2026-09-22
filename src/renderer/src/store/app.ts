@@ -680,9 +680,17 @@ export const useApp = create<AppState>()((set, get) => ({
     })
     useRuntime.getState().setUnseenDone(paneId, false)
     // The terminal has to be told to take the cursor, and only once the pane it
-    // lives in has actually been laid out — hence the next frame.
-    const focus = getFocusFn(paneId)
-    if (focus) onNextFrame(focus)
+    // lives in has actually been laid out — hence the next frame. By then a
+    // later call may have moved focus elsewhere, so the request is checked
+    // again before it fires: an out-of-date one that still ran would pull DOM
+    // focus onto its pane, whose focusin handler would call back in here and
+    // queue the other pane, and the two would trade the cursor once per frame
+    // for as long as the window stayed open.
+    onNextFrame(() => {
+      const current = workspaceOfPane(get().workspaces, paneId)
+      if (current?.focusedPaneId !== paneId) return
+      getFocusFn(paneId)?.()
+    })
   },
 
   toggleMaximize: (paneId) => {
