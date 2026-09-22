@@ -36,13 +36,15 @@
   background: color-mix(in srgb, var(--ada-pane-color) 16%, var(--ada-bg-pane-header));
 }
 
-/* The body is what FitAddon measures: its computed width/height resolve to the
-   content box, so the padding here is taken off the grid rather than overflowing
-   it. Never move this node — xterm paints into the element it was opened on. */
+/* The body is what FitAddon measures: it sizes the grid from this element's
+   computed width/height and never subtracts its padding. That only works under
+   content-box — with border-box, Chromium reports the padded box, and the grid
+   comes out a row and a few columns too big, its last line clipped at the bottom
+   edge. Never move this node — xterm paints into the element it was opened on. */
 .ada-pane-body {
   flex: 1;
   min-height: 0;
-  box-sizing: border-box;
+  box-sizing: content-box;
   padding: 10px 14px;
   overflow: hidden;
 }
