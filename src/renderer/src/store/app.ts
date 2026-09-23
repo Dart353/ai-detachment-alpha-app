@@ -126,6 +126,8 @@ export interface AppState {
   closeWorkspace: (id: string) => void
   renameWorkspace: (id: string, name: string) => void
   reorderWorkspaces: (from: number, to: number) => void
+  /** Sidebar order only: the grid mounts panes in creation order (see Grid). */
+  reorderPanes: (wsId: string, from: number, to: number) => void
   selectWorkspace: (id: string) => void
   toggleWorkspaceCollapsed: (id: string) => void
 
@@ -448,6 +450,19 @@ export const useApp = create<AppState>()((set, get) => ({
       const [moved] = workspaces.splice(from, 1)
       workspaces.splice(target, 0, moved)
       return { workspaces }
+    })
+  },
+
+  reorderPanes: (wsId, from, to) => {
+    set((state) => {
+      const workspace = state.workspaces.find((candidate) => candidate.id === wsId)
+      if (!workspace || from < 0 || from >= workspace.panes.length) return state
+      const target = Math.max(0, Math.min(workspace.panes.length - 1, to))
+      if (target === from) return state
+      const panes = [...workspace.panes]
+      const [moved] = panes.splice(from, 1)
+      panes.splice(target, 0, moved)
+      return { workspaces: mapWorkspace(state.workspaces, wsId, (current) => ({ ...current, panes })) }
     })
   },
 
