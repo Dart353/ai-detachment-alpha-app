@@ -36,6 +36,9 @@ import './Sidebar.css'
  */
 const WORKSPACE_ROW_MIME = 'application/x-ada-workspace-row'
 
+/** The same for a pane row, which reorders only within its own workspace. */
+const PANE_ROW_MIME = 'application/x-ada-pane-row'
+
 /** Icon size for every glyph in the sidebar (design: 12–14px, muted grey). */
 const ICON = 13
 
@@ -84,6 +87,7 @@ function SidebarTree(): JSX.Element {
   const closeWorkspace = useApp((state) => state.closeWorkspace)
   const renameWorkspace = useApp((state) => state.renameWorkspace)
   const reorderWorkspaces = useApp((state) => state.reorderWorkspaces)
+  const reorderPanes = useApp((state) => state.reorderPanes)
   const selectWorkspace = useApp((state) => state.selectWorkspace)
   const toggleWorkspaceCollapsed = useApp((state) => state.toggleWorkspaceCollapsed)
   const addPane = useApp((state) => state.addPane)
@@ -161,6 +165,62 @@ function SidebarTree(): JSX.Element {
   const onTreeDragLeave = (event: ReactDragEvent<HTMLDivElement>): void => {
     if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
     setDropIndex(null)
+  }
+
+  // --- pane rows: the same insertion-line reorder, confined to one workspace ---
+
+  /** Which edge of pane row `index` shows the drop line, if any. */
+  const paneDropEdge = (workspace: Workspace, index: number): 'before' | 'after' | null => {
+    if (paneDrag?.wsId !== workspace.id || paneDropIndex === null) return null
+    const from = workspace.panes.findIndex((candidate) => candidate.id === paneDrag.id)
+    if (paneDropIndex === from || paneDropIndex === from + 1) return null
+    if (paneDropIndex === index) return 'before'
+    if (paneDropIndex === workspace.panes.length && index === workspace.panes.length - 1) {
+      return 'after'
+    }
+    return null
+  }
+
+  const [paneDrag, setPaneDrag] = useState<{ wsId: string; id: string } | null>(null)
+  const [paneDropIndex, setPaneDropIndex] = useState<number | null>(null)
+
+  const clearPaneDrag = (): void => {
+    setPaneDrag(null)
+    setPaneDropIndex(null)
+  }
+
+  /** A pane drag this workspace's rows may take: it came from one of them. */
+  const isPaneDragFor = (event: ReactDragEvent, wsId: string): boolean =>
+    event.dataTransfer.types.includes(PANE_ROW_MIME) && paneDrag?.wsId === wsId
+
+  const onPaneDragOver = (
+    event: ReactDragEvent<HTMLElement>,
+    workspace: Workspace,
+    index: number
+  ): void => {
+    if (!isPaneDragFor(event, workspace.id)) return
+    event.preventDefault()
+    event.stopPropagation()
+    event.dataTransfer.dropEffect = 'move'
+    const to = edgeFor(event, index)
+    setPaneDropIndex((current) => (current === to ? current : to))
+  }
+
+  const onPaneDrop = (
+    event: ReactDragEvent<HTMLElement>,
+    workspace: Workspace,
+    index: number
+  ): void => {
+    if (!isPaneDragFor(event, workspace.id)) return
+    event.preventDefault()
+    event.stopPropagation()
+    const to = edgeFor(event, index)
+    const sourceId = event.dataTransfer.getData(PANE_ROW_MIME)
+    clearPaneDrag()
+    const from = workspace.panes.findIndex((candidate) => candidate.id === sourceId)
+    // Insertion index semantics as for workspaces: `from` and `from + 1` are no-ops.
+    if (from < 0 || to === from || to === from + 1) return
+    reorderPanes(workspace.id, from, to > from ? to - 1 : to)
   }
 
   const pickFolder = async (): Promise<void> => {
@@ -361,10 +421,20 @@ function SidebarTree(): JSX.Element {
 
               {!workspace.collapsed && (
                 <div className="ada-sb-children">
-                  {workspace.panes.map((pane) => (
+                  {workspace.panes.map((pane, paneIndex) => (
                     <PaneRow
                       key={pane.id}
                       pane={pane}
+                      dragging={paneDrag?.id === pane.id}
+                      dropEdge={paneDropEdge(workspace, paneIndex)}
+                      onDragStart={(event) => {
+                        event.dataTransfer.setData(PANE_ROW_MIME, pane.id)
+                        event.dataTransfer.effectAllowed = 'move'
+                        setPaneDrag({ wsId: workspace.id, id: pane.id })
+                      }}
+                      onDragEnd={clearPaneDrag}
+                      onDragOver={(event) => onPaneDragOver(event, workspace, paneIndex)}
+                      onDrop={(event) => onPaneDrop(event, workspace, paneIndex)}
                       active={active && workspace.focusedPaneId === pane.id}
                       renaming={renaming?.kind === 'pane' && renaming.id === pane.id}
                       onSelect={() => focusPane(pane.id)}
@@ -416,6 +486,12 @@ interface PaneRowProps {
   onCommitRename: (name: string) => void
   onCancelRename: () => void
   onContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => void
+  dragging: boolean
+  dropEdge: 'before' | 'after' | null
+  onDragStart: (event: ReactDragEvent<HTMLDivElement>) => void
+  onDragEnd: () => void
+  onDragOver: (event: ReactDragEvent<HTMLDivElement>) => void
+  onDrop: (event: ReactDragEvent<HTMLDivElement>) => void
 }
 
 /**
@@ -430,13 +506,21 @@ function PaneRow({
   onStartRename,
   onCommitRename,
   onCancelRename,
-  onContextMenu
+  onContextMenu,
+  dragging,
+  dropEdge,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop
 }: PaneRowProps): JSX.Element {
   const status = useRuntime((state) => state.status[pane.id]) ?? 'idle'
   const share = usePaneShare(pane.id)
 
   const classes = ['ada-sb-row', 'ada-sb-pane']
   if (active) classes.push('ada-sb-pane--active')
+  if (dragging) classes.push('ada-sb-row--dragging')
+  if (dropEdge) classes.push(`ada-sb-row--drop-${dropEdge}`)
 
   return (
     <div
@@ -444,6 +528,20 @@ function PaneRow({
       role="button"
       tabIndex={0}
       title={pane.name}
+      // Drag to reorder within the workspace — never while renaming, so the
+      // field keeps normal text selection.
+      draggable={!renaming}
+      onDragStart={(event) => {
+        // The workspace row's drag state must not see this one.
+        event.stopPropagation()
+        onDragStart(event)
+      }}
+      onDragEnd={(event) => {
+        event.stopPropagation()
+        onDragEnd()
+      }}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
       onClick={(event) => {
         if (event.detail > 1) return
         onSelect()

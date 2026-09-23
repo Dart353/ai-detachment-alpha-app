@@ -306,6 +306,35 @@ function buildSteps(cdp, dirs) {
       }
     ],
     [
+      'reordering panes in the sidebar never moves a terminal',
+      async (scratch) => {
+        const ids = [scratch.paneOne, scratch.paneTwo]
+        await cdp.evaluate(`${store}.reorderPanes(${json(scratch.wsA)}, 1, 0)
+                            return true`)
+        await sleep(250)
+        // A keyed React reorder MOVES nodes (the __mark would survive that), so
+        // the proof is the slots' document order, which must not follow the store.
+        const after = await cdp.evaluate(
+          `const ids = ${json(ids)}
+           const order = window.__ada.useApp.getState().workspaces
+             .find((ws) => ws.id === ${json(scratch.wsA)}).panes.map((pane) => pane.id)
+           const els = ids.map((id) => document.querySelector('[data-pane-id="' + id + '"]'))
+           const slotOrder = els[0] && els[1]
+             ? !!(els[0].compareDocumentPosition(els[1]) & Node.DOCUMENT_POSITION_FOLLOWING)
+             : false
+           const rows = els[0]?.querySelector('.xterm-rows')
+           const keptText = (rows?.innerText ?? '').includes('ada-ok-42')
+           return {
+             ok: order[0] === ids[1] && slotOrder && els.every((el) => el?.__mark === 1) && keptText,
+             order, slotOrder, keptText, marks: els.map((el) => el?.__mark ?? null)
+           }`
+        )
+        if (!after.ok) throw new StepError('a pane reorder disturbed the grid', after)
+        await cdp.evaluate(`${store}.reorderPanes(${json(scratch.wsA)}, 1, 0)
+                            return true`)
+      }
+    ],
+    [
       'maximize covers the canvas without unmounting the others',
       async (scratch) => {
         await cdp.evaluate(`${store}.toggleMaximize(${json(scratch.paneOne)})
