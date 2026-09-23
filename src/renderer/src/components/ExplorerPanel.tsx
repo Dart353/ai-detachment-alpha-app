@@ -44,7 +44,8 @@ import { iconForFile, iconForFolder } from '../lib/explorerIcons'
 import { treeRowIndentStyle } from '../lib/treeIndentGuides'
 import { baseName } from '../lib/ids'
 import { useApp } from '../store/app'
-import { useRuntime } from '../store/runtime'
+import { setPendingDraft, useRuntime } from '../store/runtime'
+import { fileMention } from '../lib/draftGate'
 import { Button, ContextMenu, Modal, type MenuItem } from './ui'
 import { revealLabel } from './paneMenu'
 import './ExplorerPanel.css'
@@ -473,6 +474,13 @@ export default function ExplorerPanel({ workspaceId }: ExplorerPanelProps): JSX.
   }
 
   /** Open a file in a viewer pane; the store focuses one that is already open. */
+  // A Claude pane at the workspace root (so the project's CLAUDE.md and settings
+  // apply) with `@file ` typed into its input, unsubmitted, once Claude is up.
+  const openInClaude = (path: string): void => {
+    const paneId = addPane(workspaceId, { kind: 'claude', name: baseName(path) })
+    if (paneId) setPendingDraft(paneId, fileMention(relativeToRoot(root, path)))
+  }
+
   const openFile = (path: string): void => {
     addPane(workspaceId, { kind: 'viewer', filePath: path })
   }
@@ -616,7 +624,10 @@ export default function ExplorerPanel({ workspaceId }: ExplorerPanelProps): JSX.
         { label: 'Open as workspace…', divider: true, onClick: () => openAddWorkspace(path) }
       )
     } else {
-      rows.push({ label: 'Open', onClick: () => openFile(path) })
+      rows.push(
+        { label: 'Open', onClick: () => openFile(path) },
+        { label: 'Open in Claude Code', onClick: () => openInClaude(path) }
+      )
     }
     rows.push({ label: 'Copy path', divider: true, onClick: () => window.api.copyText(path) })
     if (!open.isFolder) {
