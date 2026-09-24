@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.4.0...v1.5.0) (2026-09-24)
+
+
+### Features
+
+* **explorer:** open a file in a new Claude Code pane ([81c35c1](https://github.com/Dart353/ai-detachment-alpha-app/commit/81c35c1c9296cd2f3ca64b346bbd423d572bac0c))
+* **sidebar:** drag to reorder panes within a workspace ([6c55207](https://github.com/Dart353/ai-detachment-alpha-app/commit/6c55207cbe7cdac87d1a3af0de79e65bae8e270b))
+
 ## [1.4.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.3.0...v1.4.0) (2026-09-22)
 
 
