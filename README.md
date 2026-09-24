@@ -62,7 +62,21 @@ pnpm package:win
 The NSIS installer lands in `release\win\version_0_1_0\AI Detachment Alpha Setup 0.1.0.exe`
 (per-user, custom install dir). It is unsigned, so SmartScreen will warn on
 first launch; code signing is a later step. `pnpm package:mac` works the same
-way on a Mac (unsigned, unnotarized until certificates are added).
+way on a Mac (ad-hoc signed, unnotarized until certificates are added).
+
+### Installing on a Mac
+
+Every release carries two DMGs: `-arm64` for Apple Silicon and `-x64` for Intel.
+They are ad-hoc signed and not notarized, so the first open is blocked with
+"cannot be opened because the developer cannot be verified". Clear it once,
+either by right-clicking the app in Applications and choosing **Open**, or with:
+
+```sh
+xattr -dr com.apple.quarantine "/Applications/AI Detachment Alpha.app"
+```
+
+After that it opens normally. Auto-update is off on macOS until the app is
+signed with an Apple Developer identity; install new releases from the DMG.
 | `pnpm make:icon` | regenerate `build/icon.png` (already committed) |
 
 ### The end-to-end smoke test

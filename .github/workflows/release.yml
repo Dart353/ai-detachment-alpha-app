@@ -14,8 +14,10 @@
 # "Run workflow" with a tag rebuilds the installers for a release that already
 # exists and attaches them — for when a build job failed after the tag was cut.
 #
-# macOS is left out on purpose: an unsigned .dmg is refused by Gatekeeper, so
-# it only makes sense once there is a signing identity to add as a secret.
+# macOS builds are ad-hoc signed, not notarized: there is no Apple signing
+# identity yet. Gatekeeper blocks the first open of such an app until it is
+# cleared once (see README → Installing on a Mac); auto-update on macOS needs
+# a real signature and stays off until one is added as a secret.
 
 name: Release
 
@@ -68,6 +70,13 @@ jobs:
             artifacts: |
               release/linux/version_*/*.AppImage
               release/linux/version_*/latest-linux.yml
+          - platform: mac
+            os: macos-latest
+            artifacts: |
+              release/mac/version_*/*.dmg
+              release/mac/version_*/*.zip
+              release/mac/version_*/*.blockmap
+              release/mac/version_*/latest-mac.yml
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -87,9 +96,13 @@ jobs:
         run: pnpm typecheck && pnpm test
       # --publish never: electron-builder must not try to upload on its own when
       # it sees GH_TOKEN; the attach job below owns that.
+      # CSC_IDENTITY_AUTO_DISCOVERY=false: with no Apple certificate in the
+      # keychain, electron-builder would otherwise spend the job looking for
+      # one; it ad-hoc signs the macOS app instead.
       - run: pnpm package:${{ matrix.platform }} --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}
