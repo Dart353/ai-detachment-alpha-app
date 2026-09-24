@@ -370,3 +370,21 @@
   word-break: break-all;
   user-select: text;
 }
+
+/* The update block under the version. It sits inside the About card's column,
+   so it only has to set its own rhythm and keep the status line centred. */
+.ada-about-update {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 260px;
+}
+
+.ada-about-update-line {
+  font-size: 11.5px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ada-text-muted);
+}

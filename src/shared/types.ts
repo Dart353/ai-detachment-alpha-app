@@ -500,3 +500,34 @@ export interface AppNotification {
   paneId?: string
   silent?: boolean
 }
+
+/**
+ * Where the app is in the update cycle. One flat stage rather than a set of
+ * booleans: the About screen renders exactly one line, and the stage is what
+ * picks it.
+ *
+ * `unsupported` is a build that cannot update itself — a dev run, or a Linux
+ * tree that was not started from the AppImage — and is a statement of fact,
+ * not an error the user can act on.
+ */
+export type UpdateStage =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'downloading'
+  | 'ready'
+  | 'current'
+  | 'error'
+  | 'unsupported'
+
+export interface UpdateStatus {
+  stage: UpdateStage
+  /** The version behind the stage: what is offered, downloading, or ready. */
+  version: string | null
+  /** Download progress, 0–100; only meaningful while `downloading`. */
+  percent: number
+  /** Why the last check or download failed, in words a user can read. */
+  error?: string
+  /** epoch ms of the last completed check, null before the first one. */
+  checkedAt: number | null
+}

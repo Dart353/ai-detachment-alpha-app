@@ -22,6 +22,7 @@ import type {
   SessionInfo,
   Settings,
   SpawnOpts,
+  UpdateStatus,
   UsageSnapshot
 } from './types'
 
@@ -116,6 +117,12 @@ export const CH = {
   relayChanged: 'relay:changed',
   relayCommand: 'relay:command',
   relayDisconnectViewer: 'relay:disconnectViewer',
+
+  // updates (GitHub releases, via electron-updater)
+  updateGet: 'update:get',
+  updateCheck: 'update:check',
+  updateInstall: 'update:install',
+  updateChanged: 'update:changed',
 
   // misc host services
   copyText: 'misc:copyText',
@@ -239,6 +246,15 @@ export interface Api {
   /** Drop one phone; it forgets this machine's key. Rotate the key to revoke a phone you cannot reach. */
   disconnectRelayViewer(viewerId: string): void
 
+  /* === updates === */
+  /** The status main already holds; no network call. */
+  getUpdateStatus(): Promise<UpdateStatus>
+  /** Ask GitHub now. Resolves with the status the check produced. */
+  checkForUpdate(): Promise<UpdateStatus>
+  /** Quit and install a downloaded update. Only meaningful when `ready`. */
+  installUpdate(): void
+  onUpdateStatus(cb: (status: UpdateStatus) => void): Unsubscribe
+
   /* === misc host services === */
   copyText(text: string): void
   revealPath(path: string): Promise<void>
@@ -321,6 +337,10 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   onRelayChanged: true,
   onRelayCommand: true,
   disconnectRelayViewer: true,
+  getUpdateStatus: true,
+  checkForUpdate: true,
+  installUpdate: true,
+  onUpdateStatus: true,
   copyText: true,
   revealPath: true,
   openExternal: true,

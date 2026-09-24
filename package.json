@@ -23,6 +23,13 @@
   "build": {
     "appId": "io.dart353.ai-detachment-alpha",
     "productName": "AI Detachment Alpha",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Dart353",
+        "repo": "ai-detachment-alpha-app"
+      }
+    ],
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -74,6 +81,7 @@
     "@headless-tree/react": "^1.7.0",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
+    "electron-updater": "^6.8.9",
     "lucide-react": "^1.23.0",
     "node-pty": "^1.0.0",
     "react": "^18.3.1",

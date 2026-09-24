@@ -24,6 +24,7 @@ import type {
   SessionInfo,
   Settings,
   SpawnOpts,
+  UpdateStatus,
   UsageSnapshot
 } from '../shared/types'
 
@@ -164,6 +165,12 @@ const api: Api = {
   onRelayChanged: (cb: (status: RelayStatus) => void) => sub<RelayStatus>(CH.relayChanged, cb),
   onRelayCommand: (cb: (command: RelayCommand) => void) => sub<RelayCommand>(CH.relayCommand, cb),
   disconnectRelayViewer: (viewerId: string) => ipcRenderer.send(CH.relayDisconnectViewer, viewerId),
+
+  /* === updates === */
+  getUpdateStatus: () => ipcRenderer.invoke(CH.updateGet) as Promise<UpdateStatus>,
+  checkForUpdate: () => ipcRenderer.invoke(CH.updateCheck) as Promise<UpdateStatus>,
+  installUpdate: () => ipcRenderer.send(CH.updateInstall),
+  onUpdateStatus: (cb: (status: UpdateStatus) => void) => sub<UpdateStatus>(CH.updateChanged, cb),
 
   /* === misc host services === */
   copyText: (text: string) => ipcRenderer.send(CH.copyText, text),

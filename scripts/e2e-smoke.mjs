@@ -550,6 +550,27 @@ function buildSteps(cdp, dirs) {
       }
     ],
     [
+      'the updater answers, and says an unpacked build cannot update itself',
+      async () => {
+        // The whole update path in one call: preload → CH.updateGet → main's
+        // updater. The smoke app runs unpacked, which is exactly the case that
+        // must report `unsupported` instead of trying to reach GitHub.
+        const status = await cdp.evaluate(`return window.api.getUpdateStatus()`)
+        const ok =
+          status &&
+          status.stage === 'unsupported' &&
+          typeof status.error === 'string' &&
+          status.percent === 0
+        if (!ok) throw new StepError('the update status is not the unpacked one', status)
+
+        // Checking again must stay `unsupported` rather than throwing across IPC.
+        const rechecked = await cdp.evaluate(`return window.api.checkForUpdate()`)
+        if (!rechecked || rechecked.stage !== 'unsupported') {
+          throw new StepError('checking on an unpacked build did not stay unsupported', rechecked)
+        }
+      }
+    ],
+    [
       'settings and back leave the terminal untouched',
       async (scratch) => {
         await cdp.evaluate(
