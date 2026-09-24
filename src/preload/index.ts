@@ -11,12 +11,15 @@ import type {
   FileTreeEntry,
   GitStatus,
   HookEvent,
+  HostSnapshot,
   PaneReg,
   PendingMint,
   PersistedState,
   PtyDataEvent,
   PtyExitEvent,
   RecentWorkspace,
+  RelayCommand,
+  RelayStatus,
   SavedLayout,
   SessionInfo,
   Settings,
@@ -152,6 +155,15 @@ const api: Api = {
       CH.accountsMintDone,
       cb
     ),
+
+  /* === remote === */
+  relayStatus: () => ipcRenderer.invoke(CH.relayStatus) as Promise<RelayStatus>,
+  relayKey: () => ipcRenderer.invoke(CH.relayKey) as Promise<string>,
+  rotateRelayKey: () => ipcRenderer.invoke(CH.relayRotateKey) as Promise<string>,
+  publishRelaySnapshot: (snapshot: HostSnapshot) => ipcRenderer.send(CH.relayPublish, snapshot),
+  onRelayChanged: (cb: (status: RelayStatus) => void) => sub<RelayStatus>(CH.relayChanged, cb),
+  onRelayCommand: (cb: (command: RelayCommand) => void) => sub<RelayCommand>(CH.relayCommand, cb),
+  disconnectRelayViewer: (viewerId: string) => ipcRenderer.send(CH.relayDisconnectViewer, viewerId),
 
   /* === misc host services === */
   copyText: (text: string) => ipcRenderer.send(CH.copyText, text),

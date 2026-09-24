@@ -1,7 +1,7 @@
 {
   "name": "ai-detachment-alpha",
   "productName": "AI Detachment Alpha",
-  "version": "1.1.0",
+  "version": "1.4.0",
   "description": "A minimal Electron terminal multiplexer for Claude Code",
   "main": "./out/main/index.js",
   "private": true,
@@ -21,7 +21,7 @@
     "postinstall": "electron-rebuild -f -w node-pty"
   },
   "build": {
-    "appId": "io.redsky.ai-detachment-alpha",
+    "appId": "io.dart353.ai-detachment-alpha",
     "productName": "AI Detachment Alpha",
     "directories": {
       "output": "release",
@@ -81,6 +81,7 @@
     "react-markdown": "^10.1.0",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
+    "socket.io-client": "^4.8.3",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
@@ -92,6 +93,7 @@
     "electron": "^37.0.0",
     "electron-builder": "^26.16.1",
     "electron-vite": "^3.0.0",
+    "socket.io": "^4.8.3",
     "typescript": "^5.7.2",
     "vite": "^6.0.0",
     "vitest": "^3.0.0"

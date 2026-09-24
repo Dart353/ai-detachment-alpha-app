@@ -142,6 +142,16 @@ export interface Settings {
     attention: { banner: boolean; sound: boolean }
     done: { banner: boolean; sound: boolean }
   }
+  /** Remote: push this machine's pane statuses to the relay a phone watches. */
+  relay: RelaySettings
+}
+
+export interface RelaySettings {
+  enabled: boolean
+  /** The relay's origin, e.g. `https://ada.example.com`. */
+  url: string
+  /** How this machine is labelled on the phone; '' means the OS hostname. */
+  name: string
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -158,7 +168,88 @@ export const DEFAULT_SETTINGS: Settings = {
     muted: false,
     attention: { banner: true, sound: true },
     done: { banner: true, sound: true }
-  }
+  },
+  relay: { enabled: false, url: '', name: '' }
+}
+
+/* === Remote (the phone's view of this machine, via the relay) === */
+
+/**
+ * One pane as the phone shows it: the status pill and the transcript facts
+ * around it. Nothing here identifies a file or a process — the renderer
+ * publishes it, main relays it, and it goes over the network.
+ */
+export interface HostPane {
+  id: string
+  name: string
+  kind: PaneKind
+  status: PaneStatus
+  color?: string
+  /** `claude` panes: the transcript's title, last prompt and model when known. */
+  title: string | null
+  lastPrompt: string | null
+  model: string | null
+  /** epoch ms of the last PTY output, 0 if it never spoke */
+  lastActivity: number
+}
+
+export interface HostWorkspace {
+  id: string
+  name: string
+  rootDir: string
+  panes: HostPane[]
+}
+
+/**
+ * What the renderer hands main to publish; main stamps the machine on it and
+ * it becomes the relay protocol's `Feed` (see `relayProtocol.ts`, whose
+ * `FeedWorkspace`/`FeedPane` these match field for field).
+ */
+export interface HostSnapshot {
+  workspaces: HostWorkspace[]
+  /** Recent folders, most recent first, so the phone can open one. */
+  recents: { name: string; rootDir: string }[]
+  /** epoch ms the renderer built it */
+  updatedAt: number
+}
+
+/**
+ * Something a phone asked this machine to do, relayed by main to the renderer,
+ * which owns the workspace tree and does it exactly as a click would.
+ */
+export type RelayCommand =
+  | { type: 'addPane'; workspaceId: string; kind: 'claude' | 'terminal' }
+  | { type: 'openWorkspace'; rootDir: string }
+
+/** One phone connected with this machine's key, as Settings lists it. */
+export interface RelayViewer {
+  /** The relay's id for the connection; changes on every reconnect. */
+  id: string
+  address: string
+  userAgent: string
+  /** epoch ms */
+  connectedAt: number
+  /** ids of the panes it has open */
+  watching: string[]
+}
+
+/** What Settings shows about the relay link. */
+export interface RelayStatus {
+  /** 'off' while disabled; the rest follow the socket. */
+  state: 'off' | 'connecting' | 'connected' | 'error'
+  /** The relay's id for this machine: sha256(key). Never the key. */
+  hostId: string | null
+  /** How many phones are connected right now. */
+  viewers: number
+  /** The phones themselves, as the relay last reported them. */
+  phones: RelayViewer[]
+  /** The last refusal or transport error, for Settings to show. */
+  error?: string
+  /**
+   * False when the OS keychain is unavailable: the key then lives in memory
+   * for this launch only, and a phone pairs again after a relaunch.
+   */
+  keyPersisted: boolean
 }
 
 /* === Claude session transcripts === */

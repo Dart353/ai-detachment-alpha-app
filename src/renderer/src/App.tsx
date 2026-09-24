@@ -10,6 +10,7 @@ import SettingsView from './components/SettingsView'
 import RestorePreview from './components/RestorePreview'
 import { Toasts } from './components/ui'
 import { useStatusEngine } from './hooks/useStatusEngine'
+import { useHostPublisher } from './hooks/useHostPublisher'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
 import { selectActiveWorkspace, useApp } from './store/app'
 import { hydrate, startPersistence } from './store/persist'
@@ -39,6 +40,7 @@ export default function App(): JSX.Element {
   const booted = useRef(false)
 
   useStatusEngine()
+  useHostPublisher()
   useGlobalShortcuts()
 
   useEffect(() => {

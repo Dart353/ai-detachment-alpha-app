@@ -38,7 +38,7 @@ panes, PDF viewer, streamer mode, guided tour, grid→zone migration (`layout.ts
 - Stack: Electron 37, electron-vite 3, React 18, TypeScript strict, pnpm, node-pty 1, `@xterm/xterm` 5.5 +
   `@xterm/addon-fit`, **zustand** (state), `lucide-react` (icons), `@headless-tree/react` +`/core` (explorer),
   `react-markdown`+`remark-gfm`+`rehype-highlight` (viewer), `@fontsource/jetbrains-mono`, **vitest** (pure logic).
-- Identity: productName `AI Detachment Alpha`, appId `io.redsky.ai-detachment-alpha`, package name
+- Identity: productName `AI Detachment Alpha`, appId `io.dart353.ai-detachment-alpha`, package name
   `ai-detachment-alpha`. userData files: `ada-state.json`, `ada-settings.json`, `ada-archive.json`,
   `ada-recents.json`, `ada-accounts.json`, `ada-layouts.json`. Hook signal file `<claudeDir>/ada-hooks.jsonl`.
   File protocol `ada-file://`. Account config dirs `<userData>/claude-accounts/<id>`.

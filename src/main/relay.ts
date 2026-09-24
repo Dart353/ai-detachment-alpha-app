@@ -1,0 +1,205 @@
+import crypto from 'node:crypto'
+import { io, type Socket } from 'socket.io-client'
+import {
+  KEY_RE,
+  PROTOCOL_VERSION,
+  type AddPane,
+  type Auth,
+  type AuthError,
+  type Feed,
+  type HostToRelay,
+  type Input,
+  type OpenWorkspace,
+  type RelayToHost,
+  type Screen,
+  type ViewerInfo
+} from '../shared/relayProtocol'
+
+/**
+ * The link from this machine to the relay a phone watches it through.
+ *
+ * One outbound socket.io connection, registered as a host under the pairing
+ * key. It pushes the latest feed on every change and again on every
+ * reconnect, because the relay only remembers a feed while the socket that
+ * sent it is alive. Watching flows the other way: the relay says which pane a
+ * phone opened, the link answers with a screen and then streams that pane's
+ * output; input from the phone arrives here and goes to the PTY.
+ *
+ * socket.io owns the reconnect schedule; this class only turns its events
+ * into a status the Settings screen can show. Pure of Electron on purpose,
+ * so a vitest can run it against a real relay on a random port.
+ */
+
+/** 256 random bits as 64 hex chars — what the phone types. */
+export function mintKey(): string {
+  return crypto.randomBytes(32).toString('hex')
+}
+
+export function isKey(value: unknown): value is string {
+  return typeof value === 'string' && KEY_RE.test(value)
+}
+
+/** The relay's id for a key; shown in Settings so a user can match logs. */
+export function hostIdFor(key: string): string {
+  return crypto.createHash('sha256').update(key, 'utf8').digest('hex')
+}
+
+/** `https://ada.example.com/` and `ada.example.com` both mean the origin. */
+export function normalizeRelayUrl(input: string): string | null {
+  const trimmed = input.trim()
+  if (!trimmed) return null
+  const withScheme = /^[a-z]+:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+  try {
+    const url = new URL(withScheme)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+    return url.origin
+  } catch {
+    return null
+  }
+}
+
+export type LinkState = 'connecting' | 'connected' | 'error'
+
+export interface LinkEvent {
+  state: LinkState
+  hostId: string
+  viewers: number
+  error?: string
+}
+
+export interface RelayLinkOpts {
+  url: string
+  key: string
+  name: string
+  /** The app version, for the connection's User-Agent. */
+  version: string
+  /** What to send on connect and on every `publish`. */
+  feed: () => Feed
+  onChange: (event: LinkEvent) => void
+  /** A phone opened this pane: answer with `sendScreen`, then stream it. */
+  onWatch?: (paneId: string) => void
+  /** The last phone left this pane. */
+  onUnwatch?: (paneId: string) => void
+  /** A phone typed into this pane. */
+  onInput?: (input: Input) => void
+  /** A phone asked for a new pane in an open workspace. */
+  onAddPane?: (request: AddPane) => void
+  /** A phone asked to open a folder as a workspace. */
+  onOpenWorkspace?: (request: OpenWorkspace) => void
+  /** The phones holding this machine's key, whenever that set changes. */
+  onViewers?: (list: ViewerInfo[]) => void
+}
+
+export class RelayLink {
+  private readonly socket: Socket<RelayToHost, HostToRelay>
+  private readonly hostId: string
+  private viewers = 0
+
+  constructor(private readonly opts: RelayLinkOpts) {
+    this.hostId = hostIdFor(opts.key)
+    const auth: Auth = {
+      role: 'host',
+      protocolVersion: PROTOCOL_VERSION,
+      key: opts.key,
+      name: opts.name
+    }
+    this.socket = io(opts.url, {
+      auth,
+      // WebSocket first; polling only as the fallback for a hostile proxy.
+      transports: ['websocket', 'polling'],
+      reconnectionDelayMax: 30_000,
+      // Node's WebSocket client sends no User-Agent at all, and a reverse
+      // proxy that tarpits empty agents (a sensible default for a public
+      // server) would swallow the connection without a word.
+      extraHeaders: { 'User-Agent': `ai-detachment-alpha/${opts.version}` }
+    })
+
+    this.socket.on('registered', ({ viewers }) => {
+      this.viewers = viewers
+      this.emit('connected')
+      // The relay forgot our last feed when the previous socket died.
+      this.socket.emit('feed', this.opts.feed())
+    })
+    this.socket.on('authError', (error: AuthError) => {
+      // A refusal is final for this configuration: no point in retrying the
+      // same key or version every few seconds.
+      this.socket.io.reconnection(false)
+      this.emit('error', describeRefusal(error))
+    })
+    this.socket.on('disconnect', (reason) => {
+      if (reason === 'io client disconnect') return // we closed it
+      if (!this.socket.io.reconnection()) return // refused above; keep that message
+      this.emit('connecting', `disconnected: ${reason}`)
+    })
+    this.socket.on('connect_error', (err) => {
+      this.emit('connecting', err.message)
+    })
+    this.socket.on('watch', ({ paneId }) => {
+      if (typeof paneId === 'string') this.opts.onWatch?.(paneId)
+    })
+    this.socket.on('unwatch', ({ paneId }) => {
+      if (typeof paneId === 'string') this.opts.onUnwatch?.(paneId)
+    })
+    this.socket.on('input', (input) => {
+      if (input && typeof input.paneId === 'string' && typeof input.data === 'string') {
+        this.opts.onInput?.(input)
+      }
+    })
+    this.socket.on('addPane', (request) => {
+      if (
+        request &&
+        typeof request.workspaceId === 'string' &&
+        (request.kind === 'claude' || request.kind === 'terminal')
+      ) {
+        this.opts.onAddPane?.({ workspaceId: request.workspaceId, kind: request.kind })
+      }
+    })
+    this.socket.on('viewers', (list) => {
+      if (!Array.isArray(list)) return
+      this.viewers = list.length
+      this.opts.onViewers?.(list)
+    })
+    this.socket.on('openWorkspace', (request) => {
+      if (request && typeof request.rootDir === 'string' && request.rootDir.trim()) {
+        this.opts.onOpenWorkspace?.({ rootDir: request.rootDir.trim() })
+      }
+    })
+    this.emit('connecting')
+  }
+
+  /** Push the current feed; a no-op while disconnected (it goes on reconnect). */
+  publish(): void {
+    if (this.socket.connected) this.socket.emit('feed', this.opts.feed())
+  }
+
+  sendScreen(screen: Screen): void {
+    if (this.socket.connected) this.socket.emit('screen', screen)
+  }
+
+  sendOutput(paneId: string, data: string): void {
+    if (this.socket.connected) this.socket.emit('output', { paneId, data })
+  }
+
+  /** Drop one phone: the relay tells it to forget this machine and closes it. */
+  disconnectViewer(viewerId: string): void {
+    if (this.socket.connected) this.socket.emit('disconnectViewer', { viewerId })
+  }
+
+  close(): void {
+    this.socket.removeAllListeners()
+    this.socket.disconnect()
+  }
+
+  private emit(state: LinkState, error?: string): void {
+    this.opts.onChange({ state, hostId: this.hostId, viewers: this.viewers, error })
+  }
+}
+
+function describeRefusal(error: AuthError): string {
+  if (error.code === 'bad-version') {
+    return PROTOCOL_VERSION < error.protocolVersion
+      ? `The relay speaks protocol ${error.protocolVersion}; this app speaks ${PROTOCOL_VERSION}. Update the app.`
+      : `This app speaks protocol ${PROTOCOL_VERSION}; the relay speaks ${error.protocolVersion}. Update the relay.`
+  }
+  return error.message
+}

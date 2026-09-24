@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PersistedState } from '../../../shared/types'
 import { DEFAULT_SETTINGS } from '../../../shared/types'
 import { selectActiveWorkspace, useApp } from './app'
-import { useRuntime } from './runtime'
+import { registerFocusFn, useRuntime } from './runtime'
 import { hydrate, startPersistence } from './persist'
 
 /**
@@ -386,6 +386,32 @@ describe('focusPane and the sidebar', () => {
     const workspace = useApp.getState().workspaces[0]
     expect(workspace.collapsed).toBe(false)
     expect(workspace.focusedPaneId).toBe(paneId)
+  })
+
+  it('only hands the cursor to the pane that is still focused when the frame comes', () => {
+    // Two requests queued in one frame used to both fire; each pulled DOM focus
+    // onto its pane, whose focusin called focusPane again, and the two panes
+    // swapped the cursor every frame from then on (the header-button flicker).
+    const frames: FrameRequestCallback[] = []
+    vi.stubGlobal('requestAnimationFrame', (fn: FrameRequestCallback) => {
+      frames.push(fn)
+      return frames.length
+    })
+    const took: string[] = []
+    const state = useApp.getState()
+    state.openWorkspace('/tmp/frame')
+    const wsId = useApp.getState().activeWorkspaceId!
+    const a = state.addPane(wsId, { kind: 'terminal' })
+    const b = state.addPane(wsId, { kind: 'terminal' })
+    registerFocusFn(a, () => took.push(a))
+    registerFocusFn(b, () => took.push(b))
+    frames.length = 0
+    state.focusPane(a)
+    state.focusPane(b)
+    expect(frames).toHaveLength(2)
+    for (const frame of frames.splice(0)) frame(0)
+    expect(took).toEqual([b])
+    vi.unstubAllGlobals()
   })
 })
 
