@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.6.0...v1.7.0) (2026-09-24)
+
+
+### Features
+
+* **explorer:** start an agent or a terminal in a folder of the workspace ([8fc9958](https://github.com/Dart353/ai-detachment-alpha-app/commit/8fc99588b897b6c8e3c101bc2cad0d6149926004))
+* **sidebar:** switching to a workspace unfolds its panes ([ac3f8ab](https://github.com/Dart353/ai-detachment-alpha-app/commit/ac3f8ab430ec9abdb086546297948ab5e444ae98))
+
 ## [1.6.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.5.0...v1.6.0) (2026-09-24)
 
 
