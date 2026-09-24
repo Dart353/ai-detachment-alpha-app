@@ -16,7 +16,7 @@
  */
 import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -667,13 +667,13 @@ function buildSteps(cdp, dirs) {
             PTY_WAIT_MS
           )
           if (!typed) throw new StepError('the attached picture was never typed into the pane', relay.outputs.slice(-5))
-          const typedPath = /'([^']*ada-attachments[^']*)'/.exec(relay.outputs.slice(marker).join(''))?.[1]
-          if (!typedPath || !typedPath.endsWith('.png')) {
-            throw new StepError('the typed attachment path is not a quoted .png path', { typedPath })
-          }
-          const saved = await readFile(typedPath).catch(() => null)
+          // The echo wraps at the pane's width, so the file is found where main
+          // saves it rather than read back off the screen.
+          const attachDir = path.join(tmpdir(), 'ada-attachments')
+          const savedName = (await readdir(attachDir)).filter((name) => name.endsWith('-smoke-dot.png')).sort().at(-1)
+          const saved = savedName ? await readFile(path.join(attachDir, savedName)).catch(() => null) : null
           if (!saved || !saved.equals(PNG_1X1)) {
-            throw new StepError('the attachment on disk is not the picture the phone sent', { typedPath })
+            throw new StepError('the attachment on disk is not the picture the phone sent', { attachDir, savedName })
           }
           relay.input(scratch.paneOne, '\x15') // clear the line the path was typed on
 
