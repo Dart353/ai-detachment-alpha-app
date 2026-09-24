@@ -472,7 +472,16 @@ export const useApp = create<AppState>()((set, get) => ({
     })
   },
 
-  selectWorkspace: (id) => set({ activeWorkspaceId: id, view: 'grid' }),
+  // Switching to a workspace also unfolds it: the panes you are about to look
+  // at should be in the sidebar too, not behind a chevron.
+  selectWorkspace: (id) =>
+    set((state) => ({
+      activeWorkspaceId: id,
+      view: 'grid',
+      workspaces: mapWorkspace(state.workspaces, id, (workspace) =>
+        workspace.collapsed ? { ...workspace, collapsed: false } : workspace
+      )
+    })),
 
   toggleWorkspaceCollapsed: (id) => {
     set((state) => ({
