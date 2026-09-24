@@ -619,6 +619,17 @@ export default function ExplorerPanel({ workspaceId }: ExplorerPanelProps): JSX.
       rows.push(
         { label: 'New file…', onClick: () => startCreate('file', path, true) },
         { label: 'New folder…', onClick: () => startCreate('dir', path, true) },
+        // A pane in THIS workspace, started in the folder: a sub-project's
+        // agent or shell without making the folder a workspace of its own.
+        {
+          label: 'New agent here',
+          divider: true,
+          onClick: () => addPane(workspaceId, { kind: 'claude', name: baseName(path), cwd: path })
+        },
+        {
+          label: 'New terminal here',
+          onClick: () => addPane(workspaceId, { kind: 'terminal', name: baseName(path), cwd: path })
+        },
         // A folder in the tree is one step from being its own workspace: hand it
         // to the Add screen with the folder already filled in.
         { label: 'Open as workspace…', divider: true, onClick: () => openAddWorkspace(path) }
