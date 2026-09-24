@@ -375,6 +375,19 @@ describe('persistence', () => {
 })
 
 describe('focusPane and the sidebar', () => {
+  it('selecting a workspace unfolds it', () => {
+    const state = useApp.getState()
+    state.openWorkspace('/tmp/one')
+    const one = useApp.getState().activeWorkspaceId!
+    state.openWorkspace('/tmp/two')
+    state.toggleWorkspaceCollapsed(one)
+    expect(useApp.getState().workspaces.find((ws) => ws.id === one)!.collapsed).toBe(true)
+    state.selectWorkspace(one)
+    const after = useApp.getState()
+    expect(after.activeWorkspaceId).toBe(one)
+    expect(after.workspaces.find((ws) => ws.id === one)!.collapsed).toBe(false)
+  })
+
   it('unfolds a collapsed workspace so the focused row is visible', () => {
     const state = useApp.getState()
     state.openWorkspace('/tmp/fold')
