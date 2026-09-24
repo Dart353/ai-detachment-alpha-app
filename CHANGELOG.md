@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.7.0...v1.7.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **mac:** ad-hoc sign the app so the DMG opens on Apple Silicon ([33c6c98](https://github.com/Dart353/ai-detachment-alpha-app/commit/33c6c98d14dd5833aa15c4874546d6210ed846da))
+
 ## [1.7.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.6.0...v1.7.0) (2026-09-24)
 
 
