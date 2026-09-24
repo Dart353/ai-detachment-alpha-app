@@ -6,11 +6,19 @@ import Terminal from './settings/Terminal'
 import Agents from './settings/Agents'
 import Accounts from './settings/Accounts'
 import Workspaces from './settings/Workspaces'
+import Remote from './settings/Remote'
 import About from './settings/About'
 import './SettingsView.css'
 
 /** The sections, in nav order. */
-type SectionId = 'appearance' | 'terminal' | 'agents' | 'accounts' | 'workspaces' | 'about'
+type SectionId =
+  | 'appearance'
+  | 'terminal'
+  | 'agents'
+  | 'accounts'
+  | 'workspaces'
+  | 'remote'
+  | 'about'
 
 const SECTIONS: { id: SectionId; label: string; render: () => JSX.Element }[] = [
   { id: 'appearance', label: 'Appearance', render: () => <Appearance /> },
@@ -18,6 +26,7 @@ const SECTIONS: { id: SectionId; label: string; render: () => JSX.Element }[] = 
   { id: 'agents', label: 'Agents', render: () => <Agents /> },
   { id: 'accounts', label: 'Accounts', render: () => <Accounts /> },
   { id: 'workspaces', label: 'Workspaces', render: () => <Workspaces /> },
+  { id: 'remote', label: 'Remote', render: () => <Remote /> },
   { id: 'about', label: 'About', render: () => <About /> }
 ]
 

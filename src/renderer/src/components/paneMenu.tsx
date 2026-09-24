@@ -35,21 +35,40 @@ function ClaudeGlyph({ muted }: { muted?: boolean }): JSX.Element {
   )
 }
 
-/** The eight pane hues, as the swatch row draws them. */
+/**
+ * The pane hues, in wheel order and skipping pure red (the palette has none):
+ * the swatch grid draws each one twice, vivid and soft.
+ */
 const PANE_HUES: readonly { hue: number; label: string }[] = [
   { hue: 16, label: 'Ember' },
+  { hue: 28, label: 'Copper' },
   { hue: 40, label: 'Amber' },
+  { hue: 55, label: 'Gold' },
   { hue: 80, label: 'Moss' },
+  { hue: 115, label: 'Leaf' },
   { hue: 150, label: 'Jade' },
+  { hue: 172, label: 'Sea' },
   { hue: 190, label: 'Teal' },
+  { hue: 205, label: 'Sky' },
   { hue: 220, label: 'Steel' },
+  { hue: 242, label: 'Cobalt' },
   { hue: 265, label: 'Iris' },
-  { hue: 320, label: 'Plum' }
+  { hue: 290, label: 'Violet' },
+  { hue: 320, label: 'Plum' },
+  { hue: 342, label: 'Rose' }
 ]
 
+/** Two strengths of every hue. Vivid is the original eight's, so saved colours still match a swatch. */
+const PANE_TONES: readonly { tone: PaneTone; label: string }[] = [
+  { tone: 'vivid', label: '' },
+  { tone: 'soft', label: 'soft' }
+]
+
+export type PaneTone = 'vivid' | 'soft'
+
 /** A pane colour is stored as the CSS the header paints with, hue and all. */
-export function paneColor(hue: number): string {
-  return `hsl(${hue} 70% 60%)`
+export function paneColor(hue: number, tone: PaneTone = 'vivid'): string {
+  return tone === 'soft' ? `hsl(${hue} 45% 74%)` : `hsl(${hue} 70% 60%)`
 }
 
 /* === quick spawn (design 1c) ================================================ */
@@ -170,21 +189,24 @@ function colorSubmenu(ctx: PaneMenuContext): MenuItem[] {
       label: 'Swatches',
       content: (
         <div className="ada-pane-swatches">
-          {PANE_HUES.map(({ hue, label }) => {
-            const color = paneColor(hue)
-            return (
-              <button
-                key={hue}
-                type="button"
-                className={`ada-pane-swatch${chosen === color ? ' is-on' : ''}`}
-                style={{ background: color }}
-                title={label}
-                aria-label={label}
-                aria-pressed={chosen === color}
-                onClick={() => ctx.onSetColor(color)}
-              />
-            )
-          })}
+          {PANE_TONES.flatMap(({ tone, label: toneLabel }) =>
+            PANE_HUES.map(({ hue, label }) => {
+              const color = paneColor(hue, tone)
+              const name = toneLabel ? `${label} (${toneLabel})` : label
+              return (
+                <button
+                  key={`${tone}-${hue}`}
+                  type="button"
+                  className={`ada-pane-swatch${chosen === color ? ' is-on' : ''}`}
+                  style={{ background: color }}
+                  title={name}
+                  aria-label={name}
+                  aria-pressed={chosen === color}
+                  onClick={() => ctx.onSetColor(color)}
+                />
+              )
+            })
+          )}
         </div>
       )
     },

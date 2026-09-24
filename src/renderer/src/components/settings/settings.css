@@ -363,3 +363,10 @@
 .ada-mint-paste-toggle:hover {
   color: var(--ada-text-primary);
 }
+
+/* The 64-character pairing key: let it wrap rather than push the buttons off. */
+.ada-set-key {
+  max-width: 280px;
+  word-break: break-all;
+  user-select: text;
+}

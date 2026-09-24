@@ -12,9 +12,11 @@
   color: var(--ada-text-muted);
 }
 
+/* 16 hues × 2 strengths: a fixed eight-wide grid, so each hue sits above its
+   soft twin two rows down and the rows never rewrap with the menu width. */
 .ada-pane-swatches {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(8, 18px);
   gap: 6px;
   padding: 4px 6px;
 }

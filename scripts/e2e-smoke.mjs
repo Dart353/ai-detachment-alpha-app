@@ -335,6 +335,38 @@ function buildSteps(cdp, dirs) {
       }
     ],
     [
+      'every terminal row and column fits inside its pane body',
+      async (scratch) => {
+        // The fit must size the grid to the body's CONTENT box: a grid sized to
+        // the padded box hangs its last row (and its last columns) off the edge,
+        // where overflow:hidden clips them — the shell prompt goes missing.
+        await sleep(250)
+        const fits = await cdp.evaluate(
+          `const ids = ${json([scratch.paneOne, scratch.paneTwo])}
+           const panes = ids.map((id) => {
+             const body = document.querySelector('[data-pane-id="' + id + '"] .ada-pane-body')
+             const screen = body?.querySelector('.xterm-screen')
+             if (!body || !screen) return { id, missing: true }
+             const box = body.getBoundingClientRect()
+             const style = getComputedStyle(body)
+             const contentBottom = box.bottom - parseFloat(style.paddingBottom)
+             const contentRight = box.right - parseFloat(style.paddingRight)
+             const grid = screen.getBoundingClientRect()
+             return {
+               id,
+               overflowBottom: Math.round(grid.bottom - contentBottom),
+               overflowRight: Math.round(grid.right - contentRight)
+             }
+           })
+           return {
+             ok: panes.every((p) => !p.missing && p.overflowBottom <= 0 && p.overflowRight <= 0),
+             panes
+           }`
+        )
+        if (!fits.ok) throw new StepError('a terminal grid overflows its pane body', fits)
+      }
+    ],
+    [
       'maximize covers the canvas without unmounting the others',
       async (scratch) => {
         await cdp.evaluate(`${store}.toggleMaximize(${json(scratch.paneOne)})
@@ -543,8 +575,161 @@ function buildSteps(cdp, dirs) {
         )
         if (!back.ok) throw new StepError('the terminal was remounted by the detour', back)
       }
+    ],
+    [
+      'remote registers with a relay and publishes the pane list',
+      async (scratch) => {
+        // A stand-in relay in this process: the real one lives in its own repo
+        // and has its own tests. This one speaks just enough of the handshake
+        // to register a host and collect what it publishes.
+        const relay = await startFakeRelay()
+        try {
+          await cdp.evaluate(
+            `${store}.updateSettings({ relay: { enabled: true, url: ${json(relay.url)}, name: 'smoke' } })
+             return true`
+          )
+          await waitFor(
+            cdp,
+            'the relay link to report itself connected',
+            `const status = await window.api.relayStatus()
+             return { ok: status.state === 'connected' && !!status.hostId, ...status }`
+          )
+          const key = await cdp.evaluate(`return window.api.relayKey()`)
+          if (!/^[0-9a-f]{64}$/.test(key ?? '')) {
+            throw new StepError('the pairing key is not 64 hex chars', { key })
+          }
+          if (relay.auth.key !== key) {
+            throw new StepError('the app registered with a different key than it shows', {
+              shown: key,
+              sent: relay.auth.key
+            })
+          }
+
+          // The publisher debounces, so the first feed after enabling may be empty.
+          const deadline = Date.now() + WAIT_MS
+          let feed = null
+          while (Date.now() < deadline) {
+            feed = relay.feeds.at(-1) ?? null
+            if (feed?.workspaces.some((ws) => ws.panes.some((pane) => pane.id === scratch.paneOne))) break
+            await sleep(250)
+          }
+          const pane = feed?.workspaces.flatMap((ws) => ws.panes).find((p) => p.id === scratch.paneOne)
+          if (!pane || !pane.status || feed.host?.name !== 'smoke') {
+            throw new StepError('the relay never received the terminal pane', feed)
+          }
+
+          // Watch the pane as a phone would. The restored shell may still be
+          // starting: wait for its prompt on the desktop first, so the screen
+          // replay has something to carry — a phone that opens a pane earlier
+          // correctly gets an empty screen and then the prompt as live output.
+          await waitFor(
+            cdp,
+            'the restored shell prompt',
+            `const rows = document.querySelector('[data-pane-id="' + ${json(scratch.paneOne)} + '"] .xterm-rows')
+             const text = (rows?.innerText ?? '').trim()
+             return { ok: text.length > 0, text }`,
+            PTY_WAIT_MS
+          )
+          const screen = await relay.watch(scratch.paneOne)
+          if (typeof screen.data !== 'string' || screen.data.length === 0 || !(screen.cols > 0)) {
+            throw new StepError('the screen replay was empty', screen)
+          }
+          relay.input(scratch.paneOne, 'echo smoke-$((40+2))\r')
+          const echoed = await relay.outputUntil((text) => text.includes('smoke-42'), PTY_WAIT_MS)
+          if (!echoed) throw new StepError('typed input never produced output', relay.outputs.slice(-5))
+
+          // A phone can add a pane: the workspace gains one and the next feed says so.
+          const before = await cdp.evaluate(
+            `return ${store}.workspaces.find((ws) => ws.id === ${json(scratch.wsA)}).panes.length`
+          )
+          relay.addPane(scratch.wsA, 'terminal')
+          const grew = await waitFor(
+            cdp,
+            'the workspace to gain the pane the relay asked for',
+            `const ws = ${store}.workspaces.find((ws) => ws.id === ${json(scratch.wsA)})
+             return { ok: ws.panes.length === ${before} + 1, panes: ws.panes.length }`
+          )
+          const announced = Date.now() + WAIT_MS
+          let listed = false
+          while (Date.now() < announced && !listed) {
+            const latest = relay.feeds.at(-1)
+            listed = latest?.workspaces.find((ws) => ws.id === scratch.wsA)?.panes.length === grew.panes
+            if (!listed) await sleep(250)
+          }
+          if (!listed) throw new StepError('the feed never listed the added pane', relay.feeds.at(-1))
+
+          await cdp.evaluate(
+            `${store}.updateSettings({ relay: { enabled: false, url: ${json(relay.url)}, name: 'smoke' } })
+             return true`
+          )
+          await waitFor(
+            cdp,
+            'the relay link to close',
+            `const status = await window.api.relayStatus()
+             return { ok: status.state === 'off', ...status }`
+          )
+        } finally {
+          await relay.close()
+        }
+      }
     ]
   ]
+}
+
+/**
+ * The relay's host-side handshake, minus everything the phone side needs:
+ * accept a host with a well-formed key, say `registered`, keep its feeds.
+ */
+async function startFakeRelay() {
+  const { createServer } = await import('node:http')
+  const { Server } = require('socket.io')
+  const server = createServer()
+  const io = new Server(server)
+  const state = { auth: null, feeds: [], outputs: [], socket: null }
+  io.on('connection', (socket) => {
+    const auth = socket.handshake.auth
+    if (auth.role !== 'host' || !/^[0-9a-f]{64}$/.test(auth.key ?? '')) {
+      socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 4 })
+      setImmediate(() => socket.disconnect(true))
+      return
+    }
+    state.auth = auth
+    state.socket = socket
+    socket.on('feed', (feed) => state.feeds.push(feed))
+    socket.on('output', (output) => state.outputs.push(output.data))
+    socket.emit('registered', { hostId: 'smoke', viewers: 0 })
+  })
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+  return {
+    url: `http://127.0.0.1:${server.address().port}`,
+    get auth() {
+      return state.auth
+    },
+    feeds: state.feeds,
+    outputs: state.outputs,
+    /** Ask the host to stream a pane; resolves with its screen replay. */
+    watch: (paneId) =>
+      new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new StepError('no screen for the watched pane', null)), WAIT_MS)
+        state.socket.once('screen', (screen) => {
+          clearTimeout(timer)
+          resolve(screen)
+        })
+        state.socket.emit('watch', { paneId })
+      }),
+    input: (paneId, data) => state.socket.emit('input', { paneId, data }),
+    addPane: (workspaceId, kind) => state.socket.emit('addPane', { workspaceId, kind }),
+    /** Wait until the streamed output, joined, satisfies `test`. */
+    outputUntil: async (test, timeoutMs) => {
+      const deadline = Date.now() + timeoutMs
+      while (Date.now() < deadline) {
+        if (test(state.outputs.join(''))) return true
+        await sleep(100)
+      }
+      return false
+    },
+    close: () => new Promise((resolve) => io.close(() => resolve()))
+  }
 }
 
 /* === the run ================================================================ */

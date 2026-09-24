@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.4.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.3.0...v1.4.0) (2026-09-22)
+
+
+### Features
+
+* **grid:** shift-drag a pane to span it over a neighbouring zone ([04366e5](https://github.com/Dart353/ai-detachment-alpha-app/commit/04366e565b5bd5864caa70e2b92600090fbe9a56))
+* **grid:** sixteen pane colours in two strengths ([4c7c645](https://github.com/Dart353/ai-detachment-alpha-app/commit/4c7c645bd8b6a1591b363026be592edd3a533f25))
+* **sidebar:** coloured pane rows wear a translucent wash of their colour ([635e4f1](https://github.com/Dart353/ai-detachment-alpha-app/commit/635e4f1b22688b12abea96e658944922ad0516b9))
+
+
+### Bug Fixes
+
+* **grid:** stop two panes trading focus every frame ([b7f1a58](https://github.com/Dart353/ai-detachment-alpha-app/commit/b7f1a58770e2a7d9eb7ea41ed773177dd849f5ba))
+
+## [1.3.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.2.1...v1.3.0) (2026-09-22)
+
+
+### Features
+
+* **remote:** list the phones connected to this machine, and disconnect one ([4d9999c](https://github.com/Dart353/ai-detachment-alpha-app/commit/4d9999cae7589f9e38283ea49a997d671cbf5f22))
+
+## [1.2.1](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.2.0...v1.2.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **terminal:** keep the last row inside the pane ([6487518](https://github.com/Dart353/ai-detachment-alpha-app/commit/64875187831daec511dff35dd6a50597aac38801))
+
+## [1.2.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.1.0...v1.2.0) (2026-09-21)
+
+
+### Features
+
+* **remote:** let the phone add panes and open folders ([cbad6ca](https://github.com/Dart353/ai-detachment-alpha-app/commit/cbad6cae4cc12d81570351ef9fdb9ba65f0ea751))
+* **remote:** open a pane from the phone and type into it ([855c809](https://github.com/Dart353/ai-detachment-alpha-app/commit/855c809003113aa09dbee0da4817df3395eb973c))
+* **remote:** publish pane statuses to a relay for the phone ([e7b7e97](https://github.com/Dart353/ai-detachment-alpha-app/commit/e7b7e972467718cb63596d0ada2ea3926142dad2))
+
+
+### Bug Fixes
+
+* **remote:** send a User-Agent on the relay connection ([6c6448c](https://github.com/Dart353/ai-detachment-alpha-app/commit/6c6448c3c5f4e1549b0e099a7355c1f5c9fe30ae))
+
 ## [1.1.0](https://github.com/Dart353/ai-detachment-alpha/compare/v1.0.0...v1.1.0) (2026-09-18)
 
 

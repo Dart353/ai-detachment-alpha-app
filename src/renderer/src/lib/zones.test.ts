@@ -8,6 +8,8 @@ import {
   computeZoneRects,
   deleteZone,
   dropPaneOnZone,
+  spanPaneToZone,
+  spanPreview,
   hasOverlap,
   makeGridZones,
   matchPreset,
@@ -246,5 +248,46 @@ describe('deleteZone', () => {
   it('keeps the last zone', () => {
     const layout = zonesFromRects([{ x: 0, y: 0, w: 100, h: 100 }], [], DEFAULT_GRID)
     expect(deleteZone(layout, layout.zones[0].id)).toBe(layout)
+  })
+})
+
+describe('span (shift-drop)', () => {
+  const layout = {
+    v: 2 as const,
+    snap: { cols: 12, rows: 12 },
+    zones: [
+      { id: 'top', x: 0, y: 0, w: 50, h: 50 },
+      { id: 'bottom', x: 0, y: 50, w: 50, h: 50 },
+      { id: 'side', x: 50, y: 0, w: 50, h: 100 }
+    ],
+    assign: { a: 'top', b: 'side' }
+  }
+
+  it('previews the union of the pane zone and a full-edge neighbour', () => {
+    expect(spanPreview(layout, 'a', 'bottom')).toEqual({ x: 0, y: 0, w: 50, h: 100 })
+  })
+
+  it('offers nothing for a zone that shares no full edge, or the pane own zone', () => {
+    // `side` is twice as tall as `top`: the edge they share is not `top`'s whole edge.
+    expect(spanPreview(layout, 'a', 'side')).toBeNull()
+    expect(spanPreview(layout, 'a', 'top')).toBeNull()
+    expect(spanPreview(layout, 'nobody', 'bottom')).toBeNull()
+  })
+
+  it('grows the pane zone over an empty neighbour and keeps the pane in it', () => {
+    const after = spanPaneToZone(layout, 'a', 'bottom')
+    expect(after.zones.map((zone) => zone.id).sort()).toEqual(['side', 'top'])
+    expect(after.zones.find((zone) => zone.id === 'top')).toEqual({ id: 'top', x: 0, y: 0, w: 50, h: 100 })
+    expect(after.assign).toEqual({ a: 'top', b: 'side' })
+  })
+
+  it('unseats a pane living in the neighbour, for the reconcile to re-place', () => {
+    const occupied = { ...layout, assign: { a: 'top', c: 'bottom', b: 'side' } }
+    const after = spanPaneToZone(occupied, 'a', 'bottom')
+    expect(after.assign).toEqual({ a: 'top', b: 'side' })
+  })
+
+  it('leaves the layout alone when the two cannot join', () => {
+    expect(spanPaneToZone(layout, 'a', 'side')).toBe(layout)
   })
 })

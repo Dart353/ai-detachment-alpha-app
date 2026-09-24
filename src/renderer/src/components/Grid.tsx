@@ -37,7 +37,8 @@ import {
   type Dir,
   type Rect,
   type ZoneEdge,
-  type ZoneLayout
+  type ZoneLayout,
+  spanPreview
 } from '../lib/zones'
 import { Button, ContextMenu, Modal, TextInput, type MenuItem } from './ui'
 import { PANE_DND_TYPE, TerminalPane, type TerminalPaneProps } from './TerminalPane'
@@ -68,6 +69,8 @@ type GridMenu =
 interface DragHint {
   zoneId: string
   side: Dir | null
+  /** Shift held: the pane's zone grows over this one instead of moving into it. */
+  span: boolean
 }
 
 /** A percent rect, inset by half the gap so neighbours sit a whole gap apart. */
@@ -142,6 +145,7 @@ export default function Grid({ workspaceId, active }: GridProps): JSX.Element | 
   const applyLayout = useApp((state) => state.applyLayout)
   const splitPane = useApp((state) => state.splitPane)
   const dropPane = useApp((state) => state.dropPane)
+  const spanPane = useApp((state) => state.spanPane)
 
   const remountKeys = useRuntime((state) => state.remountKey)
   const accounts = useRuntime((state) => state.accounts)
@@ -291,18 +295,23 @@ export default function Grid({ workspaceId, active }: GridProps): JSX.Element | 
       setDragHint(null)
       return
     }
-    const side = zoneSide(zone, x, y)
+    const dragged = draggingPaneRef.current
+    // Shift turns the drop into a span: the pane's zone joins the one under
+    // the pointer, whole, whichever part of it the pointer is over. Only a
+    // neighbour sharing a full edge can join; over anything else the gesture
+    // falls back to a plain drop, and the preview says which it will be.
+    const span = event.shiftKey && !!dragged && spanPreview(layout, dragged, zone.id) !== null
+    const side = span ? null : zoneSide(zone, x, y)
     // A pane dropped on its own zone's centre goes nowhere; do not draw a
     // preview promising a move that will not happen.
-    const dragged = draggingPaneRef.current
-    if (dragged && side === null && zoneOfPane(layout, dragged) === zone.id) {
+    if (dragged && !span && side === null && zoneOfPane(layout, dragged) === zone.id) {
       setDragHint(null)
       return
     }
     setDragHint((current) =>
-      current && current.zoneId === zone.id && current.side === side
+      current && current.zoneId === zone.id && current.side === side && current.span === span
         ? current
-        : { zoneId: zone.id, side }
+        : { zoneId: zone.id, side, span }
     )
   }
 
@@ -319,6 +328,11 @@ export default function Grid({ workspaceId, active }: GridProps): JSX.Element | 
     setDragHint(null)
     draggingPaneRef.current = null
     if (!paneId || !hint || maximizedPaneId) return
+    if (hint.span) {
+      spanPane(paneId, hint.zoneId)
+      focusPane(paneId)
+      return
+    }
     if (hint.side === null && zoneOfPane(layout, paneId) === hint.zoneId) return
     dropPane(paneId, hint.zoneId, hint.side)
     focusPane(paneId)
@@ -371,7 +385,15 @@ export default function Grid({ workspaceId, active }: GridProps): JSX.Element | 
 
   /* === render ============================================================== */
 
-  const preview = dragHint ? zoneDragPreview(layout, dragHint.zoneId, dragHint.side) : null
+  const spanRect =
+    dragHint?.span && draggingPaneRef.current
+      ? spanPreview(layout, draggingPaneRef.current, dragHint.zoneId)
+      : null
+  const preview = spanRect
+    ? { rect: spanRect, kind: 'span' as const }
+    : dragHint
+      ? zoneDragPreview(layout, dragHint.zoneId, dragHint.side)
+      : null
 
   return (
     <div
@@ -435,7 +457,11 @@ export default function Grid({ workspaceId, active }: GridProps): JSX.Element | 
           side the drop applies, so the outline can never promise a rectangle
           the drop does not produce. */}
       {!maximizedPaneId && preview && (
-        <div className="ada-grid-preview" style={rectStyle(preview.rect)} aria-hidden />
+        <div
+          className={`ada-grid-preview${preview.kind === 'span' ? ' ada-grid-preview--span' : ''}`}
+          style={rectStyle(preview.rect)}
+          aria-hidden
+        />
       )}
 
       {/* One handle per shared boundary, spanning only the run it divides.
