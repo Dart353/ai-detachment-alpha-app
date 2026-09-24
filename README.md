@@ -67,15 +67,21 @@ way on a Mac (ad-hoc signed, unnotarized until certificates are added).
 ### Installing on a Mac
 
 Every release carries two DMGs: `-arm64` for Apple Silicon and `-x64` for Intel.
-They are ad-hoc signed and not notarized, so the first open is blocked with
-"cannot be opened because the developer cannot be verified". Clear it once,
-either by right-clicking the app in Applications and choosing **Open**, or with:
+They are ad-hoc signed and not notarized, so the first open is blocked: macOS
+says it "could not verify" the app (or, on older versions, that the developer
+cannot be verified). Clear it once with either of:
 
-```sh
-xattr -dr com.apple.quarantine "/Applications/AI Detachment Alpha.app"
-```
+- open it, dismiss the dialog, then **System Settings → Privacy & Security**,
+  scroll to the message about the app and click **Open Anyway**; or
+- in Terminal, after dragging the app to Applications:
 
-After that it opens normally. Auto-update is off on macOS until the app is
+  ```sh
+  xattr -dr com.apple.quarantine "/Applications/AI Detachment Alpha.app"
+  ```
+
+After that it opens normally. If macOS instead says the app "is damaged", the
+build was not signed at all — that was the case for v1.7.0's DMG; use a later
+release. Auto-update is off on macOS until the app is
 signed with an Apple Developer identity; install new releases from the DMG.
 | `pnpm make:icon` | regenerate `build/icon.png` (already committed) |
 

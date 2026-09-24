@@ -21,6 +21,7 @@
     "postinstall": "electron-rebuild -f -w node-pty"
   },
   "build": {
+    "afterSign": "scripts/adhoc-sign.cjs",
     "appId": "io.dart353.ai-detachment-alpha",
     "productName": "AI Detachment Alpha",
     "publish": [
