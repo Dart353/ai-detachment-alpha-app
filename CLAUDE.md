@@ -15,7 +15,7 @@ for what it does and how to run it; this file is the map and the house rules.
 | **archive** | the snapshot a closed workspace leaves behind, offered back on reopen |
 
 There are no butlers, estates or floors here — that is the Claudler ancestor
-(`/home/me/redsky/claudler/claudler`, read-only reference), whose modules
+(a read-only reference checkout outside this repo), whose modules
 this app ports with their reasoning comments and neutral vocabulary.
 
 ## Architecture
