@@ -3,7 +3,7 @@ import { CH } from '../../shared/ipc'
 import type { AppNotification, CliProbe } from '../../shared/types'
 import { probeCli } from '../cliPath'
 import { logsDir } from '../log'
-import { listDistros } from '../platform'
+import { listDistros, toHost } from '../platform'
 import type { IpcCtx } from './index'
 
 /**
@@ -19,8 +19,12 @@ export function registerMiscIpc(ctx: IpcCtx): void {
     if (typeof text === 'string') clipboard.writeText(text)
   })
 
+  // The renderer holds stored (Linux, in WSL mode) paths; the file manager we
+  // hand this to is the host's, and Explorer cannot open '/home/...'. Translate
+  // the way every other path that leaves main does — without it the item is
+  // silently never shown, since showItemInFolder reports nothing back.
   ipcMain.handle(CH.revealPath, (_event, path: string) => {
-    if (typeof path === 'string' && path) shell.showItemInFolder(path)
+    if (typeof path === 'string' && path) shell.showItemInFolder(toHost(path))
   })
 
   ipcMain.on(CH.openExternal, (_event, url: string) => {
