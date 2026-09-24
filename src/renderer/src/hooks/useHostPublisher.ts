@@ -71,7 +71,13 @@ export function useHostPublisher(): void {
       const app = useApp.getState()
       if (command.type === 'addPane') {
         if (app.workspaces.some((workspace) => workspace.id === command.workspaceId)) {
-          app.addPane(command.workspaceId, { kind: command.kind })
+          app.addPane(command.workspaceId, {
+            kind: command.kind,
+            ...(command.name ? { name: command.name } : {}),
+            ...(command.model ? { model: command.model } : {}),
+            ...(command.effort ? { effort: command.effort } : {}),
+            ...(command.planMode ? { planMode: true } : {})
+          })
         }
         return
       }

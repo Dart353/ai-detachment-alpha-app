@@ -11,8 +11,9 @@
  * they are woven in. A value that does not is left out rather than quoted: a
  * resume flag is optional, and a host that cannot be trusted is no launch.
  */
+import { EFFORTS, MODEL_RE } from '../../../shared/relayProtocol'
 import type { Pane } from '../../../shared/types'
-import { shellQuote } from './shellQuote'
+import { shellQuote } from '../../../shared/shellQuote'
 
 /** A Claude transcript uuid: hex and dashes, long enough to be one. */
 const SESSION_ID_RE = /^[0-9a-fA-F-]{8,}$/
@@ -47,6 +48,12 @@ function claudeCommand(pane: Pane, opts: LaunchOpts): string {
     command += ` --resume ${pane.sessionId}`
   }
   if (pane.planMode) command += ' --permission-mode plan'
+  // Both are typed into a shell: a value that is not the plain token the CLI
+  // takes is left out, like a session id that is not one.
+  if (pane.model && MODEL_RE.test(pane.model)) command += ` --model ${pane.model}`
+  if (pane.effort && (EFFORTS as readonly string[]).includes(pane.effort)) {
+    command += ` --effort ${pane.effort}`
+  }
   return command
 }
 

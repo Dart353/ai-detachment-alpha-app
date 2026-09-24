@@ -18,7 +18,7 @@
  * into them. There is no read-only key.
  */
 
-export const PROTOCOL_VERSION = 4
+export const PROTOCOL_VERSION = 5
 
 /** A 256-bit key as 64 lowercase hex chars — what the desktop shows and the phone types. */
 export const KEY_RE = /^[0-9a-f]{64}$/
@@ -26,7 +26,8 @@ export const KEY_RE = /^[0-9a-f]{64}$/
 /* === what a host publishes ================================================== */
 
 export type PaneKind = 'claude' | 'terminal' | 'ssh' | 'viewer'
-export type PaneStatus = 'working' | 'attention' | 'idle' | 'done' | 'exited'
+/** `starting` is a fresh agent that has not shown its first prompt yet. */
+export type PaneStatus = 'starting' | 'working' | 'attention' | 'idle' | 'done' | 'exited'
 
 export interface FeedPane {
   id: string
@@ -37,6 +38,8 @@ export interface FeedPane {
   title: string | null
   lastPrompt: string | null
   model: string | null
+  /** One line for the list: what the agent is on, or what it wants. */
+  summary: string | null
   /** epoch ms of the pane's last output, 0 if it never spoke */
   lastActivity: number
 }
@@ -61,7 +64,12 @@ export interface Feed {
   recents: FeedRecent[]
   /** epoch ms the desktop built it */
   updatedAt: number
-  host: { name: string; version: string }
+  host: {
+    name: string
+    version: string
+    /** Model aliases the machine's Claude Code offers, as `--model` takes them. */
+    models: string[]
+  }
 }
 
 /* === acting on the desktop ================================================== */
@@ -69,10 +77,23 @@ export interface Feed {
 /** The pane kinds a phone may add; ssh and viewer panes need a desktop. */
 export type AddablePaneKind = 'claude' | 'terminal'
 
+/** `--effort` as Claude Code takes it. */
+export const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'] as const
+export type Effort = (typeof EFFORTS)[number]
+/** A model alias or id as `--model` takes it. */
+export const MODEL_RE = /^[a-z0-9][a-z0-9.-]{0,63}$/
+export const PANE_NAME_MAX_CHARS = 64
+
 /** Add a pane to an open workspace; the desktop places it as a split would. */
 export interface AddPane {
   workspaceId: string
   kind: AddablePaneKind
+  /** Blank means the desktop's default name. */
+  name?: string
+  /** `claude` panes: one of the feed's `host.models`, or any id `--model` takes. */
+  model?: string
+  effort?: Effort
+  planMode?: boolean
 }
 
 /**
@@ -116,6 +137,34 @@ export interface Input {
 export const SCREEN_MAX_CHARS = 256 * 1024
 /** The most one `input` may carry — a pasted prompt, never a file. */
 export const INPUT_MAX_CHARS = 16 * 1024
+
+/* === attaching a picture ==================================================== */
+
+/**
+ * An image for a pane, sent as bytes. The desktop saves it to a temp folder
+ * and types the file's path into the pane, the way a drag-drop does, so the
+ * agent reads it as a local file. Nothing is stored anywhere else.
+ */
+export interface Attach {
+  paneId: string
+  /** The file's name on the phone, for the saved file's name (sanitised there). */
+  name: string
+  mime: string
+  data: ArrayBuffer
+}
+
+/** The phone re-encodes to JPEG before sending; this is the ceiling after that. */
+export const ATTACH_MAX_BYTES = 10 * 1024 * 1024
+export const ATTACH_MIME_RE = /^image\/(png|jpeg|gif|webp)$/
+/** Attaches one viewer may send per minute. */
+export const ATTACH_PER_MINUTE = 6
+
+/** The relay's answer to an `attach`: forwarded, or why not. */
+export interface Attached {
+  paneId: string
+  ok: boolean
+  error?: string
+}
 
 /* === who is watching ======================================================== */
 
@@ -183,6 +232,8 @@ export interface RelayToHost {
   unwatch: (target: { paneId: string }) => void
   /** A viewer typed into this pane. */
   input: (input: Input) => void
+  /** A viewer sent a picture for this pane. */
+  attach: (attach: Attach) => void
   addPane: (request: AddPane) => void
   openWorkspace: (request: OpenWorkspace) => void
   /** Every phone holding this machine's key, whenever that set changes. */
@@ -199,12 +250,15 @@ export interface RelayToViewer {
   output: (update: { hostId: string } & Output) => void
   /** The desktop dropped this phone: forget that machine's key. Sent right before the disconnect. */
   kicked: (target: { hostId: string }) => void
+  /** Whether an `attach` reached the machine. */
+  attached: (result: { hostId: string } & Attached) => void
 }
 
 export interface ViewerToRelay {
   watch: (target: { hostId: string; paneId: string }) => void
   unwatch: (target: { hostId: string; paneId: string }) => void
   input: (input: { hostId: string } & Input) => void
+  attach: (attach: { hostId: string } & Attach) => void
   addPane: (request: { hostId: string } & AddPane) => void
   openWorkspace: (request: { hostId: string } & OpenWorkspace) => void
 }

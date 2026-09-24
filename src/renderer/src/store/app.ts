@@ -17,6 +17,7 @@
  * context menu or a hotkey.
  */
 import { create } from 'zustand'
+import type { Effort } from '../../../shared/relayProtocol'
 import type {
   ArchiveEntry,
   ExplorerState,
@@ -68,6 +69,8 @@ export interface PaneInit {
   planMode?: boolean
   accountId?: string
   cwd?: string
+  model?: string
+  effort?: Effort
 }
 
 /** Everything the Add workspace screen decides; the store turns it into a workspace. */
@@ -509,6 +512,8 @@ export const useApp = create<AppState>()((set, get) => ({
     if (init.filePath !== undefined) pane.filePath = init.filePath
     if (init.planMode !== undefined) pane.planMode = init.planMode
     if (init.accountId !== undefined) pane.accountId = init.accountId
+    if (init.model !== undefined) pane.model = init.model
+    if (init.effort !== undefined) pane.effort = init.effort
 
     const panes = [...workspace.panes, pane]
     const targetZone = zoneId ? zoneById(workspace.layout, zoneId) : undefined

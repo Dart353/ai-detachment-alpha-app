@@ -102,6 +102,8 @@ function copyPane(pane: Pane): Pane {
   if (pane.sessionId !== undefined) copy.sessionId = pane.sessionId
   if (pane.accountId !== undefined) copy.accountId = pane.accountId
   if (pane.planMode !== undefined) copy.planMode = pane.planMode
+  if (pane.model !== undefined) copy.model = pane.model
+  if (pane.effort !== undefined) copy.effort = pane.effort
   if (pane.color !== undefined) copy.color = pane.color
   return copy
 }

@@ -16,7 +16,7 @@
  */
 import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -658,6 +658,25 @@ function buildSteps(cdp, dirs) {
           }
           if (!listed) throw new StepError('the feed never listed the added pane', relay.feeds.at(-1))
 
+          // A phone can send a picture: it lands in a temp folder and its quoted
+          // path is typed into the pane, where the shell echoes it back.
+          const marker = relay.outputs.length
+          relay.attach(scratch.paneOne, 'smoke dot.png', 'image/png', PNG_1X1)
+          const typed = await relay.outputUntil(
+            (text) => /ada-attachments/.test(text.slice(relay.outputs.slice(0, marker).join('').length)),
+            PTY_WAIT_MS
+          )
+          if (!typed) throw new StepError('the attached picture was never typed into the pane', relay.outputs.slice(-5))
+          const typedPath = /'([^']*ada-attachments[^']*)'/.exec(relay.outputs.slice(marker).join(''))?.[1]
+          if (!typedPath || !typedPath.endsWith('.png')) {
+            throw new StepError('the typed attachment path is not a quoted .png path', { typedPath })
+          }
+          const saved = await readFile(typedPath).catch(() => null)
+          if (!saved || !saved.equals(PNG_1X1)) {
+            throw new StepError('the attachment on disk is not the picture the phone sent', { typedPath })
+          }
+          relay.input(scratch.paneOne, '\x15') // clear the line the path was typed on
+
           await cdp.evaluate(
             `${store}.updateSettings({ relay: { enabled: false, url: ${json(relay.url)}, name: 'smoke' } })
              return true`
@@ -680,6 +699,12 @@ function buildSteps(cdp, dirs) {
  * The relay's host-side handshake, minus everything the phone side needs:
  * accept a host with a well-formed key, say `registered`, keep its feeds.
  */
+/** The smallest PNG there is: one transparent pixel. */
+const PNG_1X1 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+  'base64'
+)
+
 async function startFakeRelay() {
   const { createServer } = await import('node:http')
   const { Server } = require('socket.io')
@@ -689,7 +714,7 @@ async function startFakeRelay() {
   io.on('connection', (socket) => {
     const auth = socket.handshake.auth
     if (auth.role !== 'host' || !/^[0-9a-f]{64}$/.test(auth.key ?? '')) {
-      socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 4 })
+      socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 5 })
       setImmediate(() => socket.disconnect(true))
       return
     }
@@ -718,6 +743,7 @@ async function startFakeRelay() {
         state.socket.emit('watch', { paneId })
       }),
     input: (paneId, data) => state.socket.emit('input', { paneId, data }),
+    attach: (paneId, name, mime, data) => state.socket.emit('attach', { paneId, name, mime, data }),
     addPane: (workspaceId, kind) => state.socket.emit('addPane', { workspaceId, kind }),
     /** Wait until the streamed output, joined, satisfies `test`. */
     outputUntil: async (test, timeoutMs) => {

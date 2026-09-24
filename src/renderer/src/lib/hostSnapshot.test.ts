@@ -62,8 +62,46 @@ describe('buildHostSnapshot', () => {
       title: 'Fix the login bug',
       lastPrompt: 'why does login 500',
       model: 'opus',
+      summary: 'Needs your answer',
       lastActivity: 90
     })
+  })
+
+  it('summarises a working agent by its title, falling back to the last prompt', () => {
+    const build = (status: 'working' | 'done', over: Partial<SessionInfo>): string | null =>
+      buildHostSnapshot({
+        workspaces: [workspace],
+        recents: [],
+        status: { p1: status },
+        sessions: { p1: { ...session, ...over } },
+        lastActivity: {},
+        now: 100
+      }).workspaces[0].panes[0].summary
+    expect(build('working', {})).toBe('Fix the login bug')
+    expect(build('done', { title: null })).toBe('why does login 500')
+    expect(build('working', { title: null, lastPrompt: null })).toBeNull()
+  })
+
+  it('reads a fresh agent with no transcript as starting, briefly', () => {
+    const fresh: Workspace = {
+      ...workspace,
+      panes: [{ id: 'p3', name: 'new', kind: 'claude', cwd: '/x', createdAt: 1000, model: 'sonnet' }]
+    }
+    const at = (now: number, status: 'idle' | 'working' | 'attention'): { status: string; summary: string | null; model: string | null } => {
+      const pane = buildHostSnapshot({
+        workspaces: [fresh],
+        recents: [],
+        status: { p3: status },
+        sessions: {},
+        lastActivity: {},
+        now
+      }).workspaces[0].panes[0]
+      return { status: pane.status, summary: pane.summary, model: pane.model }
+    }
+    expect(at(2000, 'idle')).toEqual({ status: 'starting', summary: 'Starting up', model: 'sonnet' })
+    expect(at(2000, 'working').status).toBe('starting')
+    expect(at(2000, 'attention').status).toBe('attention')
+    expect(at(1000 + 60_000, 'idle').status).toBe('idle')
   })
 
   it('defaults an unresolved pane to idle and never drops it', () => {
@@ -75,7 +113,8 @@ describe('buildHostSnapshot', () => {
       lastActivity: {},
       now: 1
     })
-    expect(snapshot.workspaces[0].panes.map((pane) => pane.status)).toEqual(['idle', 'idle'])
+    // p1 is a claude pane made a moment ago with no transcript yet: starting.
+    expect(snapshot.workspaces[0].panes.map((pane) => pane.status)).toEqual(['starting', 'idle'])
     expect(snapshot.workspaces[0].panes[1]).toEqual({
       id: 'p2',
       name: 'shell',
@@ -84,6 +123,7 @@ describe('buildHostSnapshot', () => {
       title: null,
       lastPrompt: null,
       model: null,
+      summary: null,
       lastActivity: 0
     })
   })
