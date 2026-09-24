@@ -34,7 +34,7 @@ import {
 import { BLOCKING_PROMPT_MARKERS } from '../lib/status'
 import { draftDecision } from '../lib/draftGate'
 import { buildLaunchCommand } from '../lib/launch'
-import { shellQuote } from '../lib/shellQuote'
+import { shellQuote } from '../../../shared/shellQuote'
 import { useTerminalPane } from '../hooks/useTerminalPane'
 import { PaneHeader, type MenuAnchor } from './PaneHeader'
 import { paneColorVars } from './paneColor'

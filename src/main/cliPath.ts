@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
+import { isWsl, wslDistro } from './platform'
 import { loadSettings } from './store'
 import type { CliProbe } from '../shared/types'
 
@@ -126,6 +127,44 @@ export async function probeCli(candidate?: string): Promise<CliProbe> {
 
   cached = { command: found, source: 'login-shell' }
   return { ok: true, command: found, source: 'login-shell', version: await readVersion(found) }
+}
+
+/** What `--model` takes when the CLI cannot be asked. */
+const FALLBACK_MODELS = ['fable', 'opus', 'sonnet']
+let cachedModels: string[] | null = null
+
+/**
+ * The model aliases this machine's Claude Code offers, read off its `--help`
+ * ("an alias for the latest model (e.g. 'fable', 'opus', or 'sonnet')"), so
+ * the phone's New agent sheet lists whatever the installed CLI knows rather
+ * than a list baked into the app. One probe per session; a CLI that will not
+ * answer gets the fallback. In WSL mode the CLI lives in the distro, so the
+ * question is asked in there.
+ */
+export async function probeModels(): Promise<string[]> {
+  if (cachedModels) return cachedModels
+  let out = ''
+  if (isWsl()) {
+    const distro = wslDistro()
+    out = await runProbe('wsl.exe', [...(distro ? ['-d', distro] : []), '-e', 'bash', '-lic', `${CLI_NAME} --help`])
+  } else {
+    const { command } = await resolveCli()
+    out = await runProbe(command, ['--help'], false)
+  }
+  const models = parseModelAliases(out)
+  if (models.length > 0) cachedModels = models
+  return models.length > 0 ? models : FALLBACK_MODELS
+}
+
+/** The quoted aliases in the `--model` help text, in the order given. */
+export function parseModelAliases(help: string): string[] {
+  const match = /alias for the latest model\s*\(e\.g\.\s*([^)]*)\)/.exec(help.replace(/\s+/g, ' '))
+  if (!match) return []
+  const found: string[] = []
+  for (const [, alias] of match[1].matchAll(/'([a-z0-9][a-z0-9.-]*)'/g)) {
+    if (alias && !found.includes(alias)) found.push(alias)
+  }
+  return found
 }
 
 /**

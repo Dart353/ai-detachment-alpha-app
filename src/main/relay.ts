@@ -1,9 +1,13 @@
 import crypto from 'node:crypto'
 import { io, type Socket } from 'socket.io-client'
 import {
+  EFFORTS,
   KEY_RE,
+  MODEL_RE,
+  PANE_NAME_MAX_CHARS,
   PROTOCOL_VERSION,
   type AddPane,
+  type Attach,
   type Auth,
   type AuthError,
   type Feed,
@@ -82,6 +86,8 @@ export interface RelayLinkOpts {
   onUnwatch?: (paneId: string) => void
   /** A phone typed into this pane. */
   onInput?: (input: Input) => void
+  /** A phone sent a picture for this pane. */
+  onAttach?: (attach: Attach) => void
   /** A phone asked for a new pane in an open workspace. */
   onAddPane?: (request: AddPane) => void
   /** A phone asked to open a folder as a workspace. */
@@ -147,11 +153,36 @@ export class RelayLink {
     })
     this.socket.on('addPane', (request) => {
       if (
-        request &&
-        typeof request.workspaceId === 'string' &&
-        (request.kind === 'claude' || request.kind === 'terminal')
+        !request ||
+        typeof request.workspaceId !== 'string' ||
+        (request.kind !== 'claude' && request.kind !== 'terminal')
       ) {
-        this.opts.onAddPane?.({ workspaceId: request.workspaceId, kind: request.kind })
+        return
+      }
+      // The relay cleans these too; checked again here because the values end
+      // up on a command line, and a link trusts nothing it did not verify.
+      const clean: AddPane = { workspaceId: request.workspaceId, kind: request.kind }
+      if (typeof request.name === 'string' && request.name.trim()) {
+        clean.name = request.name.trim().slice(0, PANE_NAME_MAX_CHARS)
+      }
+      if (request.kind === 'claude') {
+        if (typeof request.model === 'string' && MODEL_RE.test(request.model)) clean.model = request.model
+        if (typeof request.effort === 'string' && (EFFORTS as readonly string[]).includes(request.effort)) {
+          clean.effort = request.effort
+        }
+        if (request.planMode === true) clean.planMode = true
+      }
+      this.opts.onAddPane?.(clean)
+    })
+    this.socket.on('attach', (attach) => {
+      if (
+        attach &&
+        typeof attach.paneId === 'string' &&
+        typeof attach.name === 'string' &&
+        typeof attach.mime === 'string' &&
+        (attach.data instanceof ArrayBuffer || ArrayBuffer.isView(attach.data))
+      ) {
+        this.opts.onAttach?.(attach)
       }
     })
     this.socket.on('viewers', (list) => {

@@ -5,6 +5,7 @@
  * no class instances, no Dates, no functions. Epoch milliseconds stand in
  * for timestamps throughout.
  */
+import type { Effort } from './relayProtocol'
 
 /** What a pane runs. `viewer` is a read-only file pane, not a process. */
 export type PaneKind = 'claude' | 'terminal' | 'ssh' | 'viewer'
@@ -36,6 +37,10 @@ export interface Pane {
   accountId?: string
   /** `claude` panes only: spawn with plan mode enabled. */
   planMode?: boolean
+  /** `claude` panes only: `--model`, an alias or id as the CLI takes it. */
+  model?: string
+  /** `claude` panes only: `--effort`. */
+  effort?: Effort
   /** Optional accent colour for the pane header, chosen by the user. */
   color?: string
 }
@@ -183,12 +188,15 @@ export interface HostPane {
   id: string
   name: string
   kind: PaneKind
-  status: PaneStatus
+  /** The engine's verdict, plus `starting` for a fresh agent before its first prompt. */
+  status: PaneStatus | 'starting'
   color?: string
   /** `claude` panes: the transcript's title, last prompt and model when known. */
   title: string | null
   lastPrompt: string | null
   model: string | null
+  /** One line for the phone's list: what the agent is on, or what it wants. */
+  summary: string | null
   /** epoch ms of the last PTY output, 0 if it never spoke */
   lastActivity: number
 }
@@ -218,7 +226,15 @@ export interface HostSnapshot {
  * which owns the workspace tree and does it exactly as a click would.
  */
 export type RelayCommand =
-  | { type: 'addPane'; workspaceId: string; kind: 'claude' | 'terminal' }
+  | {
+      type: 'addPane'
+      workspaceId: string
+      kind: 'claude' | 'terminal'
+      name?: string
+      model?: string
+      effort?: Effort
+      planMode?: boolean
+    }
   | { type: 'openWorkspace'; rootDir: string }
 
 /** One phone connected with this machine's key, as Settings lists it. */

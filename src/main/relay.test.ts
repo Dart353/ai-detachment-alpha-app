@@ -9,7 +9,7 @@ const feed: Feed = {
   workspaces: [],
   recents: [],
   updatedAt: 1,
-  host: { name: 'office', version: '1.0.0' }
+  host: { name: 'office', version: '1.0.0', models: ['opus'] }
 }
 
 describe('keys and urls', () => {
@@ -138,6 +138,41 @@ describe('RelayLink', () => {
     hostSocket!.emit('unwatch', { paneId: 'p1' })
     await new Promise((resolve) => setTimeout(resolve, 50))
     expect(seen).toEqual(['watch p1', 'input p1 ls\r', 'unwatch p1'])
+  })
+
+  it('cleans a new-agent request and hands a picture over as bytes', async () => {
+    const events: LinkEvent[] = []
+    const added: unknown[] = []
+    const attached: { paneId: string; name: string; mime: string; data: unknown }[] = []
+    let hostSocket: import('socket.io').Socket | null = null
+    io.on('connection', (socket) => {
+      hostSocket = socket
+    })
+    link = new RelayLink({
+      url,
+      key: mintKey(),
+      name: 'office',
+      version: '1.0.0',
+      feed: () => feed,
+      onChange: (e) => events.push(e),
+      onAddPane: (request) => added.push(request),
+      onAttach: (attach) => attached.push(attach)
+    })
+    await untilState(events, 'connected')
+    hostSocket!.emit('addPane', { workspaceId: 'w', kind: 'claude', name: ' Fixer ', model: 'sonnet', effort: 'max', planMode: true })
+    hostSocket!.emit('addPane', { workspaceId: 'w', kind: 'claude', model: 'no spaces', effort: 'nope', planMode: 'yes' })
+    hostSocket!.emit('addPane', { workspaceId: 'w', kind: 'terminal', model: 'opus', name: 'sh' })
+    hostSocket!.emit('attach', { paneId: 'p1', name: 'a.png', mime: 'image/png', data: Buffer.from([1, 2, 3]) })
+    hostSocket!.emit('attach', { paneId: 'p1', name: 'a.png', mime: 'image/png', data: 'text' })
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(added).toEqual([
+      { workspaceId: 'w', kind: 'claude', name: 'Fixer', model: 'sonnet', effort: 'max', planMode: true },
+      { workspaceId: 'w', kind: 'claude' },
+      { workspaceId: 'w', kind: 'terminal', name: 'sh' }
+    ])
+    expect(attached).toHaveLength(1)
+    expect(attached[0]).toMatchObject({ paneId: 'p1', name: 'a.png', mime: 'image/png' })
+    expect(Buffer.from(attached[0].data as Uint8Array)).toEqual(Buffer.from([1, 2, 3]))
   })
 
   it('passes the viewer list through and asks the relay to drop one', async () => {

@@ -1,10 +1,15 @@
 import { app, ipcMain, safeStorage } from 'electron'
+import fs from 'node:fs'
 import os from 'node:os'
+import path from 'node:path'
 import { CH } from '../../shared/ipc'
-import type { Feed } from '../../shared/relayProtocol'
+import { ATTACH_MAX_BYTES, ATTACH_MIME_RE, type Attach, type Feed } from '../../shared/relayProtocol'
+import { shellQuote } from '../../shared/shellQuote'
 import type { HostSnapshot, RelaySettings, RelayStatus, RelayViewer } from '../../shared/types'
+import { probeModels } from '../cliPath'
 import { log } from '../log'
 import { paneTap } from '../paneTap'
+import { isWsl, toHost } from '../platform'
 import { RelayLink, isKey, mintKey, normalizeRelayUrl } from '../relay'
 import { loadRelayKeyCiphertext, loadSettings, saveRelayKeyCiphertext } from '../store'
 import type { IpcCtx } from './index'
@@ -29,6 +34,86 @@ let snapshot: HostSnapshot = { workspaces: [], recents: [], updatedAt: 0 }
 let status: RelayStatus = { state: 'off', hostId: null, viewers: 0, phones: [], keyPersisted: true }
 /** The key when it cannot be persisted; null while it can. */
 let sessionKey: string | null = null
+/** What `--model` takes here, probed once the link is first opened. */
+let models: string[] = []
+
+/** Attachments older than this are swept at launch. */
+const ATTACH_KEEP_MS = 7 * 24 * 3600_000
+const MIME_EXT: Record<string, string> = {
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/gif': '.gif',
+  'image/webp': '.webp'
+}
+
+/**
+ * Where a phone's pictures land. Panes in WSL mode run inside the distro, so
+ * the file goes into the distro's /tmp (written through the share path) and
+ * the pane is handed the Linux path; elsewhere it is the OS temp folder.
+ */
+function attachDir(): { stored: string; host: string } {
+  const stored = isWsl() ? '/tmp/ada-attachments' : path.join(app.getPath('temp'), 'ada-attachments')
+  return { stored, host: toHost(stored) }
+}
+
+/**
+ * Save a phone's picture and type its path into the pane, followed by a space,
+ * exactly as dropping the file on the pane would — the agent reads it as a
+ * local file. The name is reduced to a safe stem; the extension comes from the
+ * mime type, never from the phone.
+ */
+function receiveAttachment(attach: Attach): void {
+  const ext = ATTACH_MIME_RE.test(attach.mime) ? MIME_EXT[attach.mime] : undefined
+  const bytes = attach.data instanceof ArrayBuffer ? Buffer.from(attach.data) : Buffer.from(attach.data as Uint8Array)
+  if (!ext || bytes.length === 0 || bytes.length > ATTACH_MAX_BYTES) {
+    log.warn(`relay: attachment for ${attach.paneId} refused (${attach.mime}, ${bytes.length} bytes)`)
+    return
+  }
+  if (!paneTap.has(attach.paneId)) {
+    log.warn(`relay: attachment for unknown pane ${attach.paneId} dropped`)
+    return
+  }
+  const stem =
+    path
+      .basename(attach.name)
+      .replace(/\.[^.]*$/, '')
+      .replace(/[^A-Za-z0-9._-]+/g, '-')
+      .replace(/^[.-]+|[.-]+$/g, '')
+      .slice(0, 48) || 'image'
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..*$/, '').replace('T', '-')
+  const file = `${stamp}-${stem}${ext}`
+  const dir = attachDir()
+  try {
+    fs.mkdirSync(dir.host, { recursive: true })
+    fs.writeFileSync(path.join(dir.host, file), bytes)
+  } catch (err) {
+    log.warn(`relay: could not save attachment: ${String(err)}`)
+    return
+  }
+  const stored = isWsl() ? `${dir.stored}/${file}` : path.join(dir.stored, file)
+  paneTap.write(attach.paneId, shellQuote(stored) + ' ')
+  log.info(`relay: attached ${file} to ${attach.paneId}`)
+}
+
+/** Drop pictures nobody will look at again. */
+function sweepAttachments(): void {
+  const dir = attachDir().host
+  let names: string[]
+  try {
+    names = fs.readdirSync(dir)
+  } catch {
+    return
+  }
+  const cutoff = Date.now() - ATTACH_KEEP_MS
+  for (const name of names) {
+    const file = path.join(dir, name)
+    try {
+      if (fs.statSync(file).mtimeMs < cutoff) fs.unlinkSync(file)
+    } catch {
+      /* gone already */
+    }
+  }
+}
 
 function keyPersisted(): boolean {
   return safeStorage.isEncryptionAvailable()
@@ -63,7 +148,7 @@ function writeKey(key: string): string {
 
 function feed(settings: RelaySettings): () => Feed {
   const name = settings.name.trim() || os.hostname()
-  return () => ({ ...snapshot, host: { name, version: app.getVersion() } })
+  return () => ({ ...snapshot, host: { name, version: app.getVersion(), models } })
 }
 
 function setStatus(ctx: IpcCtx, next: Omit<RelayStatus, 'keyPersisted' | 'phones'> & { phones?: RelayViewer[] }): void {
@@ -99,6 +184,14 @@ export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
   }
   const key = readKey()
   log.info(`relay: connecting to ${url}`)
+  // The phone's New agent sheet lists this machine's model aliases; they are
+  // read once and go out with the next feed after the probe answers.
+  if (models.length === 0) {
+    void probeModels().then((list) => {
+      models = list
+      link?.publish()
+    })
+  }
   link = new RelayLink({
     url,
     key,
@@ -133,6 +226,7 @@ export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
     onInput: ({ paneId, data }) => {
       if (!paneTap.write(paneId, data)) log.warn(`relay: input for unknown pane ${paneId} dropped`)
     },
+    onAttach: receiveAttachment,
     // The renderer owns the workspace tree: main only carries the ask across.
     onAddPane: ({ workspaceId, kind }) => ctx.send(CH.relayCommand, { type: 'addPane', workspaceId, kind }),
     onOpenWorkspace: ({ rootDir }) => ctx.send(CH.relayCommand, { type: 'openWorkspace', rootDir }),
@@ -163,6 +257,7 @@ export function registerRelayIpc(ctx: IpcCtx): void {
   })
 
   applyRelaySettings(ctx, loadSettings().relay)
+  sweepAttachments()
   app.on('will-quit', () => {
     link?.close()
     link = null

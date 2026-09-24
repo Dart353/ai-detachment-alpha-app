@@ -31,6 +31,23 @@ describe('buildLaunchCommand — claude', () => {
     )
   })
 
+  it('passes model and effort through, and drops ones the CLI would not take', () => {
+    expect(
+      buildLaunchCommand(pane('claude', { model: 'sonnet', effort: 'max', planMode: true }), {
+        hasTranscript: false
+      })
+    ).toBe('claude --permission-mode plan --model sonnet --effort max')
+    expect(buildLaunchCommand(pane('claude', { model: 'claude-opus-5' }), { hasTranscript: false })).toBe(
+      'claude --model claude-opus-5'
+    )
+    for (const model of ['opus; rm -rf /', 'Opus', ' sonnet', '']) {
+      expect(buildLaunchCommand(pane('claude', { model }), { hasTranscript: false })).toBe('claude')
+    }
+    expect(
+      buildLaunchCommand(pane('claude', { effort: 'turbo' as unknown as 'max' }), { hasTranscript: false })
+    ).toBe('claude')
+  })
+
   it('omits the resume flag for a session id that is not one', () => {
     for (const sessionId of ['../../etc/passwd', 'abc; rm -rf /', 'short', '']) {
       expect(buildLaunchCommand(pane('claude', { sessionId }), { hasTranscript: true })).toBe(
