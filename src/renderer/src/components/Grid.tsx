@@ -74,6 +74,18 @@ interface DragHint {
 }
 
 /** A percent rect, inset by half the gap so neighbours sit a whole gap apart. */
+/**
+ * The order slots are rendered in: creation order, never `workspace.panes`
+ * order. The sidebar reorders that array, and a reordered keyed list makes React
+ * move the DOM nodes — which blanks a terminal just as a reparent would. Slots
+ * are absolutely positioned, so their document order changes nothing visible.
+ */
+function mountOrder(panes: Pane[]): Pane[] {
+  return [...panes].sort(
+    (a, b) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  )
+}
+
 function rectStyle(rect: Rect): CSSProperties {
   return {
     left: `calc(${rect.x}% + ${GAP / 2}px)`,
@@ -391,7 +403,7 @@ export default function Grid({ workspaceId, active }: GridProps): JSX.Element | 
       onDragLeave={onGridDragLeave}
       onDrop={onGridDrop}
     >
-      {workspace.panes.map((pane) => (
+      {mountOrder(workspace.panes).map((pane) => (
         // Keyed by pane id and NOTHING else: a layout change restyles this
         // wrapper, it never reparents or remounts what is inside it.
         <div key={pane.id} className="ada-grid-slot" style={slotStyle(pane.id)}>

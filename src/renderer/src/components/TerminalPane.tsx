@@ -23,13 +23,16 @@ import type { Terminal } from '@xterm/xterm'
 import { DEFAULT_ACCOUNT_ID, type Pane, type SpawnOpts } from '../../../shared/types'
 import { useApp } from '../store/app'
 import {
+  getLastActivity,
   registerFocusFn,
   registerPromptProbe,
   registerSelectionFn,
+  takePendingDraft,
   useRuntime,
   type RuntimeState
 } from '../store/runtime'
 import { BLOCKING_PROMPT_MARKERS } from '../lib/status'
+import { draftDecision } from '../lib/draftGate'
 import { buildLaunchCommand } from '../lib/launch'
 import { shellQuote } from '../lib/shellQuote'
 import { useTerminalPane } from '../hooks/useTerminalPane'
@@ -47,6 +50,21 @@ export const PANE_DND_TYPE = 'application/x-ada-pane'
 
 /** How many visible rows the blocking-prompt probe reads. */
 const PROMPT_PROBE_ROWS = 12
+
+/** How often a pending draft re-checks whether Claude's input box is up. */
+const DRAFT_POLL_MS = 250
+
+/** The rows currently on screen, as plain text. */
+function visibleRows(term: Terminal, count = term.rows): string[] {
+  const buffer = term.buffer.active
+  const from = Math.max(buffer.viewportY, buffer.viewportY + term.rows - count)
+  const rows: string[] = []
+  for (let row = from; row < buffer.viewportY + term.rows; row++) {
+    const line = buffer.getLine(row)
+    if (line) rows.push(line.translateToString(true))
+  }
+  return rows
+}
 
 export interface TerminalPaneProps {
   workspaceId: string
@@ -140,17 +158,30 @@ export function TerminalPane({
       // but NEVER written to the transcript, so the transcript watcher cannot see
       // them. Report one by scanning the tail of the visible viewport.
       const offProbe = isClaude
-        ? registerPromptProbe(paneId, () => {
-            const buffer = term.buffer.active
-            const from = Math.max(buffer.viewportY, buffer.viewportY + term.rows - PROMPT_PROBE_ROWS)
-            const rows: string[] = []
-            for (let row = from; row < buffer.viewportY + term.rows; row++) {
-              const line = buffer.getLine(row)
-              if (line) rows.push(line.translateToString(true))
-            }
-            return BLOCKING_PROMPT_MARKERS.test(rows.join('\n'))
-          })
+        ? registerPromptProbe(paneId, () =>
+            BLOCKING_PROMPT_MARKERS.test(visibleRows(term, PROMPT_PROBE_ROWS).join('\n'))
+          )
         : null
+
+      // A draft left by the explorer ("Open in Claude Code") is typed into the
+      // input, unsubmitted, once Claude has drawn it — see lib/draftGate.
+      const draft = isClaude ? takePendingDraft(paneId) : undefined
+      let draftTimer: ReturnType<typeof setInterval> | null = null
+      if (draft) {
+        const startedAt = Date.now()
+        draftTimer = setInterval(() => {
+          const decision = draftDecision({
+            rows: visibleRows(term),
+            now: Date.now(),
+            startedAt,
+            lastOutputAt: getLastActivity(paneId)
+          })
+          if (decision === 'wait') return
+          if (draftTimer) clearInterval(draftTimer)
+          draftTimer = null
+          if (decision === 'write') window.api.writePty(paneId, draft)
+        }, DRAFT_POLL_MS)
+      }
 
       term.attachCustomKeyEventHandler((event) => {
         // App chords belong to the window listener, not to the shell.
@@ -193,6 +224,7 @@ export function TerminalPane({
         offFocus()
         offSelection()
         offProbe?.()
+        if (draftTimer) clearInterval(draftTimer)
         window.api.unregisterSession(paneId)
         terminalRef.current = null
       }

@@ -179,6 +179,19 @@ describe('workspace lifecycle', () => {
 })
 
 describe('panes', () => {
+  it('reorders a workspace\'s panes without touching its layout', () => {
+    const wsId = openRoot()
+    const first = useApp.getState().addPane(wsId, { kind: 'claude' })
+    const second = useApp.getState().addPane(wsId, { kind: 'claude' })
+    const third = useApp.getState().addPane(wsId, { kind: 'terminal' })
+    const layout = workspaceById(wsId).layout
+
+    useApp.getState().reorderPanes(wsId, 2, 0)
+
+    expect(workspaceById(wsId).panes.map((pane) => pane.id)).toEqual([third, first, second])
+    expect(workspaceById(wsId).layout).toBe(layout)
+  })
+
   it('numbers default names and reuses gaps', () => {
     const wsId = openRoot()
     const first = useApp.getState().addPane(wsId, { kind: 'claude' })

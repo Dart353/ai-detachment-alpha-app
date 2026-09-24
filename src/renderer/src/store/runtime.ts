@@ -109,6 +109,23 @@ export function getSelectionFn(paneId: string): (() => string) | undefined {
   return selectionFns.get(paneId)
 }
 
+const pendingDrafts = new Map<string, string>()
+
+/**
+ * Leave text for a Claude pane to type into its input once Claude is ready
+ * (see `lib/draftGate`). Set right after `addPane`, before the pane mounts; the
+ * pane takes it exactly once, so a remount or a restored pane never re-types it.
+ */
+export function setPendingDraft(paneId: string, text: string): void {
+  pendingDrafts.set(paneId, text)
+}
+
+export function takePendingDraft(paneId: string): string | undefined {
+  const text = pendingDrafts.get(paneId)
+  pendingDrafts.delete(paneId)
+  return text
+}
+
 /** The exact epoch ms of a pane's last PTY output, or 0 if it never spoke. */
 export function getLastActivity(paneId: string): number {
   return activityAt.get(paneId) ?? 0
@@ -193,6 +210,7 @@ export const useRuntime = create<RuntimeState>()((set, get) => ({
   },
 
   forgetPane: (paneId) => {
+    pendingDrafts.delete(paneId)
     activityAt.delete(paneId)
     publishedAt.delete(paneId)
     set((state) => ({
