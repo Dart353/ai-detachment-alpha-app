@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.5.0...v1.6.0) (2026-09-24)
+
+
+### Features
+
+* **remote:** pictures from the phone, and agents with a model and effort ([88b18b4](https://github.com/Dart353/ai-detachment-alpha-app/commit/88b18b43bbae75292c8baa5632010bf1b706c0d2))
+
+
+### Bug Fixes
+
+* **explorer:** reveal a WSL path in the host's file manager ([00141cf](https://github.com/Dart353/ai-detachment-alpha-app/commit/00141cfefd80c63674d0310292a82c687bebbfcd))
+
 ## [1.5.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.4.0...v1.5.0) (2026-09-24)
 
 
