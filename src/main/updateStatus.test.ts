@@ -63,6 +63,20 @@ describe('what an update failure says', () => {
     expect(friendlyUpdateError(new Error('HttpError: 404 Not Found'))).toMatch(/no published/i)
   })
 
+  it('tells a failed download apart from an empty releases list', () => {
+    // Same 404, opposite meaning: this one came after a release was found, so
+    // it is the installer that is missing, not the release.
+    expect(friendlyUpdateError(new Error('HttpError: 404 Not Found'), 'downloading')).toMatch(
+      /could not be downloaded/i
+    )
+    expect(friendlyUpdateError(new Error('HttpError: 404 Not Found'), 'available')).toMatch(
+      /could not be downloaded/i
+    )
+    expect(friendlyUpdateError(new Error('HttpError: 404 Not Found'), 'checking')).toMatch(
+      /no published/i
+    )
+  })
+
   it('keeps an unfamiliar message instead of hiding it', () => {
     expect(friendlyUpdateError(new Error('signature verification failed'))).toBe(
       'signature verification failed'

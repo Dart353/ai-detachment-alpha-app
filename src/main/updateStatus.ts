@@ -1,4 +1,4 @@
-import type { UpdateStatus } from '../shared/types'
+import type { UpdateStage, UpdateStatus } from '../shared/types'
 
 /**
  * The pure half of the updater: what the status starts as, whether this build
@@ -40,14 +40,19 @@ export function progressPercent(raw: unknown): number {
  * network or GitHub produced, so the common ones are named and anything else
  * falls back to its own message rather than a generic "update failed".
  */
-export function friendlyUpdateError(err: unknown): string {
+export function friendlyUpdateError(err: unknown, stage?: UpdateStage): string {
   const text = err instanceof Error ? err.message : String(err ?? '')
   if (/ENOTFOUND|EAI_AGAIN|ENETUNREACH|ETIMEDOUT|ECONNREFUSED/i.test(text)) {
     return 'Could not reach GitHub — check your connection.'
   }
-  // A repo with no published release yet, or assets that were never attached.
+  // A 404 means two different things either side of finding a release, and
+  // saying "no release yet" about a download that failed sent us looking in the
+  // wrong place once already: the release was there, its installer was just
+  // named differently than the feed claimed.
   if (/404|No published versions|Cannot find channel/i.test(text)) {
-    return 'No published release to update to yet.'
+    return stage === 'available' || stage === 'downloading'
+      ? 'The release is published but its installer could not be downloaded.'
+      : 'No published release to update to yet.'
   }
   if (/rate limit/i.test(text)) return 'GitHub rate-limited the check — try again later.'
   return text.trim() || 'The update check failed.'

@@ -85,7 +85,7 @@ function updater(): any {
     })
     autoUpdater.on('error', (err: Error) => {
       log.error('update failed', err)
-      set({ stage: 'error', error: friendlyUpdateError(err), checkedAt: Date.now() })
+      set({ stage: 'error', error: friendlyUpdateError(err, status.stage), checkedAt: Date.now() })
     })
   }
   return autoUpdater
