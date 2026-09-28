@@ -550,6 +550,37 @@ function buildSteps(cdp, dirs) {
       }
     ],
     [
+      'hiding the workspace tabs leaves the rest of the title bar in place',
+      async () => {
+        const rightOf = `const bar = document.querySelector('.ada-titlebar')
+           const controls = bar?.querySelector('.ada-usage-pill, .ada-titlebar-wide')
+           return {
+             tabs: !!bar?.querySelector('.ada-ws-tabs'),
+             barWidth: Math.round(bar?.getBoundingClientRect().width ?? 0),
+             controlsRight: Math.round(controls?.getBoundingClientRect().right ?? 0)
+           }`
+        const shown = await cdp.evaluate(rightOf)
+        if (!shown.tabs) throw new StepError('the tabs are missing before the setting is touched', shown)
+
+        await cdp.evaluate(`${store}.updateSettings({ showWorkspaceTabs: false })
+           return true`)
+        await sleep(200)
+        const hidden = await cdp.evaluate(rightOf)
+        // The strip carried flex:1, so without a stand-in everything to its
+        // right would slide left and land on the logo.
+        const held = Math.abs(hidden.controlsRight - shown.controlsRight) <= 2
+        if (hidden.tabs || !held) {
+          throw new StepError('hiding the tabs did not leave the bar intact', { shown, hidden })
+        }
+
+        await cdp.evaluate(`${store}.updateSettings({ showWorkspaceTabs: true })
+           return true`)
+        await sleep(200)
+        const restored = await cdp.evaluate(rightOf)
+        if (!restored.tabs) throw new StepError('the tabs did not come back', restored)
+      }
+    ],
+    [
       'the updater answers, and says an unpacked build cannot update itself',
       async () => {
         // The whole update path in one call: preload → CH.updateGet → main's

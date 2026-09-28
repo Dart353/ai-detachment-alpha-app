@@ -135,6 +135,8 @@ export interface Settings {
   wsl: { enabled: boolean; distro?: string }
   /** Explicit CLI locations, for when the login shell cannot find them. */
   cliPaths: { claude?: string }
+  /** Show the workspace tabs in the title bar; the sidebar switches either way. */
+  showWorkspaceTabs: boolean
   /** Give full-screen TUIs the alternate screen buffer instead of scrollback. */
   fullscreenTui: boolean
   /** Reopening a folder restores its archived panes without asking. */
@@ -165,6 +167,7 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultPaneKind: 'claude',
   wsl: { enabled: false },
   cliPaths: {},
+  showWorkspaceTabs: true,
   fullscreenTui: true,
   restoreArchivesAutomatically: false,
   warnAtPct: 80,

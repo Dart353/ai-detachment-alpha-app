@@ -1,5 +1,5 @@
 import type { JSX } from 'react'
-import { Select, type SelectOption } from '../ui'
+import { Select, Toggle, type SelectOption } from '../ui'
 import { useApp } from '../../store/app'
 import { SettingRow, Stepper } from './SettingRow'
 import './settings.css'
@@ -55,6 +55,19 @@ export default function Appearance(): JSX.Element {
           >
             {PREVIEW_TEXT}
           </div>
+        </div>
+
+        <div className="ada-set-card">
+          <SettingRow
+            label="Workspace tabs"
+            description="Show the workspace strip in the title bar. The sidebar switches workspaces either way."
+          >
+            <Toggle
+              checked={settings.showWorkspaceTabs}
+              ariaLabel="Workspace tabs"
+              onChange={(checked) => updateSettings({ showWorkspaceTabs: checked })}
+            />
+          </SettingRow>
         </div>
       </div>
     </>

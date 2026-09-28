@@ -43,6 +43,7 @@ export default function Titlebar({ variant }: TitlebarProps): JSX.Element {
   const isMac = platform === 'darwin'
 
   const sidebarCollapsed = useApp((state) => state.sidebarCollapsed)
+  const showTabs = useApp((state) => state.settings.showWorkspaceTabs)
   const toggleSidebar = useApp((state) => state.toggleSidebar)
   const setExplorer = useApp((state) => state.setExplorer)
   const setView = useApp((state) => state.setView)
@@ -97,7 +98,9 @@ export default function Titlebar({ variant }: TitlebarProps): JSX.Element {
           >
             <FolderTree size={ICON} />
           </Button>
-          <WorkspaceTabs />
+          {/* Hidden by the setting, the tabs' flex:1 goes with them — the spacer
+              keeps everything to their right where it was. */}
+          {showTabs ? <WorkspaceTabs /> : <div className="ada-titlebar-spacer" />}
           <UsagePill />
           <Button
             ref={pickerAnchor}
