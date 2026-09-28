@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.7.2...v1.8.0) (2026-09-28)
+
+
+### Features
+
+* **titlebar:** hide the workspace tabs ([3219e8c](https://github.com/Dart353/ai-detachment-alpha-app/commit/3219e8c3a8e1da2160e501e63863192237bcf57f))
+
+
+### Bug Fixes
+
+* **update:** name the installers so the update feed can find them ([fec86a2](https://github.com/Dart353/ai-detachment-alpha-app/commit/fec86a2213560413213a44a6cbca684b8f7253a5))
+
 ## [1.7.2](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.7.1...v1.7.2) (2026-09-28)
 
 
