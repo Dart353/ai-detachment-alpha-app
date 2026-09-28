@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.7.1...v1.7.2) (2026-09-28)
+
+
+### Bug Fixes
+
+* **remote:** replay what the desktop terminal shows, not the raw output tail ([8158f73](https://github.com/Dart353/ai-detachment-alpha-app/commit/8158f73714a23d4dd435dbf0798eb0f823a045c0))
+
 ## [1.7.1](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.7.0...v1.7.1) (2026-09-24)
 
 
