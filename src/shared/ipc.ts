@@ -17,6 +17,8 @@ import type {
   PtyExitEvent,
   RecentWorkspace,
   RelayCommand,
+  RelayScreenReply,
+  RelayScreenRequest,
   RelayStatus,
   SavedLayout,
   SessionInfo,
@@ -117,6 +119,8 @@ export const CH = {
   relayChanged: 'relay:changed',
   relayCommand: 'relay:command',
   relayDisconnectViewer: 'relay:disconnectViewer',
+  relayScreenRequest: 'relay:screenRequest',
+  relayScreenReply: 'relay:screenReply',
 
   // updates (GitHub releases, via electron-updater)
   updateGet: 'update:get',
@@ -245,6 +249,13 @@ export interface Api {
   onRelayCommand(cb: (command: RelayCommand) => void): Unsubscribe
   /** Drop one phone; it forgets this machine's key. Rotate the key to revoke a phone you cannot reach. */
   disconnectRelayViewer(viewerId: string): void
+  /**
+   * A phone opened a pane: main asks for what the desktop's terminal shows,
+   * serialised, since the raw output tail only carries partial frames of a
+   * fullscreen UI. Answer with `replyRelayScreen`, `null` for a pane not here.
+   */
+  onRelayScreenRequest(cb: (request: RelayScreenRequest) => void): Unsubscribe
+  replyRelayScreen(reply: RelayScreenReply): void
 
   /* === updates === */
   /** The status main already holds; no network call. */
@@ -337,6 +348,8 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   onRelayChanged: true,
   onRelayCommand: true,
   disconnectRelayViewer: true,
+  onRelayScreenRequest: true,
+  replyRelayScreen: true,
   getUpdateStatus: true,
   checkForUpdate: true,
   installUpdate: true,

@@ -98,6 +98,21 @@ export function getPromptProbe(paneId: string): (() => boolean) | undefined {
  * itself and keeps it out of the document, so `window.getSelection()` reports
  * nothing for a terminal pane; only the terminal instance knows.
  */
+/** What a pane's terminal shows, serialised with its size; for the phone's replay. */
+export type ScreenFn = () => { data: string; cols: number; rows: number }
+const screenFns = new Map<string, ScreenFn>()
+
+export function registerScreenFn(paneId: string, fn: ScreenFn): () => void {
+  screenFns.set(paneId, fn)
+  return () => {
+    if (screenFns.get(paneId) === fn) screenFns.delete(paneId)
+  }
+}
+
+export function getScreenFn(paneId: string): ScreenFn | undefined {
+  return screenFns.get(paneId)
+}
+
 export function registerSelectionFn(paneId: string, fn: () => string): () => void {
   selectionFns.set(paneId, fn)
   return () => {

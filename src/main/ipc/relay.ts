@@ -5,7 +5,7 @@ import path from 'node:path'
 import { CH } from '../../shared/ipc'
 import { ATTACH_MAX_BYTES, ATTACH_MIME_RE, type Attach, type Feed } from '../../shared/relayProtocol'
 import { shellQuote } from '../../shared/shellQuote'
-import type { HostSnapshot, RelaySettings, RelayStatus, RelayViewer } from '../../shared/types'
+import type { HostSnapshot, RelayScreenReply, RelaySettings, RelayStatus, RelayViewer } from '../../shared/types'
 import { probeModels } from '../cliPath'
 import { log } from '../log'
 import { paneTap } from '../paneTap'
@@ -36,6 +36,31 @@ let status: RelayStatus = { state: 'off', hostId: null, viewers: 0, phones: [], 
 let sessionKey: string | null = null
 /** What `--model` takes here, probed once the link is first opened. */
 let models: string[] = []
+/** Screen requests out to the renderer, by id, waiting for their reply. */
+const screenWaits = new Map<string, (reply: RelayScreenReply | null) => void>()
+let screenSeq = 0
+/** How long the renderer gets to serialise a screen before the raw tail goes instead. */
+const SCREEN_WAIT_MS = 1500
+
+/**
+ * What the desktop's terminal shows for a pane, from the renderer, or null
+ * when it does not answer in time (a window that is closed, or busy).
+ */
+function askRendererForScreen(ctx: IpcCtx, paneId: string): Promise<RelayScreenReply | null> {
+  return new Promise((resolve) => {
+    const requestId = `s${++screenSeq}`
+    const timer = setTimeout(() => {
+      screenWaits.delete(requestId)
+      resolve(null)
+    }, SCREEN_WAIT_MS)
+    screenWaits.set(requestId, (reply) => {
+      clearTimeout(timer)
+      screenWaits.delete(requestId)
+      resolve(reply)
+    })
+    ctx.send(CH.relayScreenRequest, { requestId, paneId })
+  })
+}
 
 /** Attachments older than this are swept at launch. */
 const ATTACH_KEEP_MS = 7 * 24 * 3600_000
@@ -212,12 +237,21 @@ export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
     // follows. Every watch gets a screen (a second phone needs its own), but
     // the stream is wired once per pane.
     onWatch: (paneId) => {
-      const screen = paneTap.screen(paneId)
-      if (!screen) return // not a live pane on this machine
-      link?.sendScreen({ paneId, ...screen })
-      if (!watched.has(paneId)) {
-        watched.set(paneId, paneTap.listen(paneId, (id, data) => link?.sendOutput(id, data)))
-      }
+      if (!paneTap.has(paneId)) return // not a live pane on this machine
+      // The renderer's terminal is the picture the operator sees; its
+      // serialisation is a complete frame. The tap's raw tail is the fallback
+      // when the renderer cannot answer.
+      void askRendererForScreen(ctx, paneId).then((reply) => {
+        if (reply && reply.data !== null && reply.cols > 0) {
+          link?.sendScreen({ paneId, data: reply.data, cols: reply.cols, rows: reply.rows })
+        } else {
+          const screen = paneTap.screen(paneId)
+          if (screen) link?.sendScreen({ paneId, ...screen })
+        }
+        if (!watched.has(paneId)) {
+          watched.set(paneId, paneTap.listen(paneId, (id, data) => link?.sendOutput(id, data)))
+        }
+      })
     },
     onUnwatch: (paneId) => {
       watched.get(paneId)?.()
@@ -228,7 +262,7 @@ export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
     },
     onAttach: receiveAttachment,
     // The renderer owns the workspace tree: main only carries the ask across.
-    onAddPane: ({ workspaceId, kind }) => ctx.send(CH.relayCommand, { type: 'addPane', workspaceId, kind }),
+    onAddPane: (request) => ctx.send(CH.relayCommand, { type: 'addPane', ...request }),
     onOpenWorkspace: ({ rootDir }) => ctx.send(CH.relayCommand, { type: 'openWorkspace', rootDir }),
     onViewers: (list) => setStatus(ctx, { ...status, viewers: list.length, phones: list })
   })
@@ -244,6 +278,11 @@ export function registerRelayIpc(ctx: IpcCtx): void {
     const key = writeKey(mintKey())
     applyRelaySettings(ctx, loadSettings().relay)
     return key
+  })
+
+  ipcMain.on(CH.relayScreenReply, (_event, reply: RelayScreenReply) => {
+    if (!reply || typeof reply.requestId !== 'string') return
+    screenWaits.get(reply.requestId)?.(reply)
   })
 
   ipcMain.on(CH.relayDisconnectViewer, (_event, viewerId: string) => {

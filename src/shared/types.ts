@@ -237,6 +237,20 @@ export type RelayCommand =
     }
   | { type: 'openWorkspace'; rootDir: string }
 
+/** Main asking the renderer for a pane's screen, for a phone that just opened it. */
+export interface RelayScreenRequest {
+  requestId: string
+  paneId: string
+}
+
+/** The screen as the desktop's terminal shows it; `data` null when the pane is not mounted here. */
+export interface RelayScreenReply {
+  requestId: string
+  data: string | null
+  cols: number
+  rows: number
+}
+
 /** One phone connected with this machine's key, as Settings lists it. */
 export interface RelayViewer {
   /** The relay's id for the connection; changes on every reconnect. */

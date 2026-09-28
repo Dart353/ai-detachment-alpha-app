@@ -19,6 +19,8 @@ import type {
   PtyExitEvent,
   RecentWorkspace,
   RelayCommand,
+  RelayScreenReply,
+  RelayScreenRequest,
   RelayStatus,
   SavedLayout,
   SessionInfo,
@@ -165,6 +167,9 @@ const api: Api = {
   onRelayChanged: (cb: (status: RelayStatus) => void) => sub<RelayStatus>(CH.relayChanged, cb),
   onRelayCommand: (cb: (command: RelayCommand) => void) => sub<RelayCommand>(CH.relayCommand, cb),
   disconnectRelayViewer: (viewerId: string) => ipcRenderer.send(CH.relayDisconnectViewer, viewerId),
+  onRelayScreenRequest: (cb: (request: RelayScreenRequest) => void) =>
+    sub<RelayScreenRequest>(CH.relayScreenRequest, cb),
+  replyRelayScreen: (reply: RelayScreenReply) => ipcRenderer.send(CH.relayScreenReply, reply),
 
   /* === updates === */
   getUpdateStatus: () => ipcRenderer.invoke(CH.updateGet) as Promise<UpdateStatus>,

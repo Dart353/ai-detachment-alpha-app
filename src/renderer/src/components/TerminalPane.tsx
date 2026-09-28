@@ -19,12 +19,14 @@ import {
   type JSX,
   type MouseEvent as ReactMouseEvent
 } from 'react'
+import { SerializeAddon } from '@xterm/addon-serialize'
 import type { Terminal } from '@xterm/xterm'
 import { DEFAULT_ACCOUNT_ID, type Pane, type SpawnOpts } from '../../../shared/types'
 import { useApp } from '../store/app'
 import {
   getLastActivity,
   registerFocusFn,
+  registerScreenFn,
   registerPromptProbe,
   registerSelectionFn,
   takePendingDraft,
@@ -153,6 +155,16 @@ export function TerminalPane({
       // The pane menu's Copy row asks here: xterm's selection lives in the
       // terminal, not in the document, so nothing else can see it.
       const offSelection = registerSelectionFn(paneId, () => term.getSelection())
+      // A phone opening this pane gets what THIS terminal shows, not the raw
+      // output tail: a fullscreen UI repaints only what changed, so the tail
+      // alone draws a mostly blank screen until the next full repaint.
+      const serializer = new SerializeAddon()
+      term.loadAddon(serializer)
+      const offScreen = registerScreenFn(paneId, () => ({
+        data: serializer.serialize({ scrollback: 200 }),
+        cols: term.cols,
+        rows: term.rows
+      }))
 
       // Blocking prompts (permission / trust / plan approval) are drawn on screen
       // but NEVER written to the transcript, so the transcript watcher cannot see
@@ -222,6 +234,7 @@ export function TerminalPane({
 
       return () => {
         offFocus()
+        offScreen()
         offSelection()
         offProbe?.()
         if (draftTimer) clearInterval(draftTimer)

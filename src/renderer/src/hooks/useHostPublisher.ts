@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useApp } from '../store/app'
 import { useRuntime } from '../store/runtime'
 import { buildHostSnapshot } from '../lib/hostSnapshot'
+import { getScreenFn } from '../store/runtime'
 
 /** Bursts of status ticks and activity stamps collapse into one publish. */
 const PUBLISH_DEBOUNCE_MS = 400
@@ -85,10 +86,19 @@ export function useHostPublisher(): void {
       if (useApp.getState().pendingRestore) useApp.getState().confirmRestore('restore')
     })
 
+    // A phone opened a pane: answer with what its terminal shows here.
+    const offScreen = window.api?.onRelayScreenRequest(({ requestId, paneId }) => {
+      const screen = getScreenFn(paneId)?.()
+      window.api?.replyRelayScreen(
+        screen ? { requestId, ...screen } : { requestId, data: null, cols: 0, rows: 0 }
+      )
+    })
+
     return () => {
       offApp()
       offRuntime()
       offCommand?.()
+      offScreen?.()
       if (timer !== null) clearTimeout(timer)
     }
   }, [])
