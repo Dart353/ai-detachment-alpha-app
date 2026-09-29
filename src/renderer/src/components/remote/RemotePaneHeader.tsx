@@ -1,32 +1,31 @@
 /**
- * The slim bar over a remote pane: what it is, where it lives, the size the
- * remote renders it at, and the three things you can do to it from here.
- * Styled as the local pane header so both read as the same kind of object.
+ * The bar over one remote pane in the canvas. It reads as the local pane header
+ * does — dot, name, model, status, and actions that appear on hover or focus —
+ * because it is the same kind of object, seen from another machine.
  */
 import type { JSX } from 'react'
-import { Paperclip, RefreshCw, X } from 'lucide-react'
-import { Button } from '../ui'
+import { Maximize2, Minimize2, Paperclip, RefreshCw } from 'lucide-react'
 import { shortModel } from '../PaneHeader'
 import { useApp } from '../../store/app'
-import type { RemoteMachine } from '../../../../shared/types'
-import type { FeedPane, FeedWorkspace } from '../../../../shared/relayProtocol'
-import { dotStatus, machineName } from './remoteHelpers'
+import { STATUS_LABEL } from '../../lib/status'
+import type { FeedPane } from '../../../../shared/relayProtocol'
+import { dotStatus, kindLabel } from './remoteHelpers'
 import '../PaneHeader.css'
-import '../Sidebar.css'
 import './remote.css'
 
 /** Icon size (design: 12–14px, muted grey). */
 const ICON = 13
 
 export interface RemotePaneHeaderProps {
-  machine: RemoteMachine
-  workspace: FeedWorkspace
+  hostId: string
   pane: FeedPane
+  focused: boolean
+  maximized: boolean
   /** The remote's grid size, once its first screen has arrived. */
   cols: number | null
   rows: number | null
   onRefresh: () => void
-  onClose: () => void
+  onToggleMaximize: () => void
 }
 
 function attachMessage(result: { ok: boolean; error?: string }): string {
@@ -36,61 +35,70 @@ function attachMessage(result: { ok: boolean; error?: string }): string {
 }
 
 export function RemotePaneHeader({
-  machine,
-  workspace,
+  hostId,
   pane,
+  focused,
+  maximized,
   cols,
   rows,
   onRefresh,
-  onClose
+  onToggleMaximize
 }: RemotePaneHeaderProps): JSX.Element {
   const pushToast = useApp((state) => state.pushToast)
+  const status = dotStatus(pane.status)
 
   function sendPicture(): void {
     void window.api
-      .attachToRemotePane(machine.hostId, pane.id)
+      .attachToRemotePane(hostId, pane.id)
       .then((result) => pushToast(attachMessage(result)))
       .catch(() => pushToast('Could not send the picture.'))
   }
 
   return (
-    <div className="ada-pane-header is-focused">
-      <span className={`ada-sb-dot ada-sb-dot--${dotStatus(pane.status)}`} aria-hidden="true" />
-      <strong className="ada-pane-name">{pane.name}</strong>
-      {pane.model && <span className="ada-pane-kind">{shortModel(pane.model)}</span>}
-      <span className="ada-remote-crumb">
-        {machineName(machine)} · {workspace.name}
+    <div className={`ada-pane-header${focused ? ' is-focused' : ''}`}>
+      <span className={`ada-pane-dot ada-pane-dot-${status}`} title={STATUS_LABEL[status]} />
+      <span className="ada-pane-name" title={pane.summary ?? pane.name}>
+        {pane.name}
       </span>
+      <span className="ada-pane-kind">{pane.model ? shortModel(pane.model) : kindLabel(pane.kind)}</span>
       <span className="ada-pane-spacer" />
       {cols !== null && rows !== null && (
-        <span className="ada-remote-chip">
+        <span className="ada-pane-share" title="The size this pane has on its own machine">
           {cols}×{rows}
         </span>
       )}
-      <Button
-        variant="icon"
-        size="sm"
-        icon={<RefreshCw size={ICON} />}
-        aria-label="Reload the screen from the machine"
-        title="Reload the screen from the machine"
-        onClick={onRefresh}
-      />
-      <Button
-        variant="icon"
-        size="sm"
-        icon={<Paperclip size={ICON} />}
-        aria-label="Send a picture to this pane"
-        title="Send a picture to this pane"
-        onClick={sendPicture}
-      />
-      <Button
-        variant="icon"
-        size="sm"
-        icon={<X size={ICON} />}
-        aria-label="Close"
-        title="Close"
-        onClick={onClose}
-      />
+      <span className={`ada-pane-status ada-pane-status-${status}`}>
+        {pane.status === 'starting' ? 'Starting' : STATUS_LABEL[status]}
+      </span>
+      <span className="ada-pane-actions">
+        <button
+          type="button"
+          className="ada-pane-action"
+          title="Reload the screen from the machine"
+          aria-label="Reload the screen from the machine"
+          onClick={onRefresh}
+        >
+          <RefreshCw size={ICON} />
+        </button>
+        <button
+          type="button"
+          className="ada-pane-action"
+          title="Send a picture to this pane"
+          aria-label="Send a picture to this pane"
+          onClick={sendPicture}
+        >
+          <Paperclip size={ICON} />
+        </button>
+        <button
+          type="button"
+          className="ada-pane-action"
+          title={maximized ? 'Restore' : 'Maximize'}
+          aria-label={maximized ? 'Restore' : 'Maximize'}
+          onClick={onToggleMaximize}
+        >
+          {maximized ? <Minimize2 size={ICON} /> : <Maximize2 size={ICON} />}
+        </button>
+      </span>
     </div>
   )
 }

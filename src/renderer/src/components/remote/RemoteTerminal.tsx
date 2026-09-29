@@ -3,10 +3,13 @@
  *
  * CLAUDE.md hard rule 3 (fit the terminal, then send the new cols/rows to the
  * PTY) deliberately does not apply here: the remote desktop owns the PTY and its
- * size. This terminal has no fit addon, no ResizeObserver and never resizes a
- * PTY — it renders at whatever cols/rows the remote reports in each
- * `remote:screen`, and the surrounding box scrolls when that grid is larger
- * than the space it has.
+ * size. This terminal has no fit addon and never resizes a PTY — it renders at
+ * whatever cols/rows the remote reports in each `remote:screen`.
+ *
+ * What it fits instead is the TYPE: the font is scaled until that grid fills
+ * the tile it was given, so a pane that is 140 columns wide over there is 140
+ * columns wide here, larger or smaller as the tile allows. The box is watched
+ * for that alone.
  *
  * The terminal is created once per host/pane, so the parent should key this
  * component by `${hostId}/${paneId}`.
@@ -29,6 +32,41 @@ export interface RemoteTerminalProps {
   onFocus: () => void
   /** Bump to re-watch: the remote answers with a fresh screen at its current size. */
   refreshToken?: number
+  /** The remote's grid, each time a screen says what it is. */
+  onSize?: (cols: number, rows: number) => void
+}
+
+/** The type never gets smaller or larger than this, whatever the tile. */
+const MIN_FONT = 6
+const MAX_FONT = 28
+/** Room kept between the grid and the tile's edge, per side. */
+const PAD = 6
+
+/**
+ * Scale the font so the terminal's grid fills `box`. The rendered size of the
+ * grid is proportional to the font, so one measurement gives the factor; cell
+ * sizes round to whole pixels, so the result is then walked down until it
+ * really fits.
+ */
+function fitFont(term: Terminal, host: HTMLElement, box: HTMLElement, fontFamily: string): void {
+  const screen = host.querySelector<HTMLElement>('.xterm-screen')
+  const availW = box.clientWidth - PAD * 2
+  const availH = box.clientHeight - PAD * 2
+  if (!screen || screen.offsetWidth === 0 || screen.offsetHeight === 0 || availW <= 0 || availH <= 0) return
+
+  const apply = (size: number): void => {
+    term.options.fontSize = size
+    term.options.lineHeight = rowLineHeight(size, fontFamily)
+  }
+  const current = term.options.fontSize ?? MIN_FONT
+  const factor = Math.min(availW / screen.offsetWidth, availH / screen.offsetHeight)
+  let size = Math.min(MAX_FONT, Math.max(MIN_FONT, Math.floor(current * factor * 2) / 2))
+  if (size !== current) apply(size)
+  for (let step = 0; step < 8 && size > MIN_FONT; step++) {
+    if (screen.offsetWidth <= availW && screen.offsetHeight <= availH) break
+    size -= 0.5
+    apply(size)
+  }
 }
 
 const INITIAL_COLS = 80
@@ -105,17 +143,20 @@ export function RemoteTerminal({
   fontFamily,
   focused,
   onFocus,
-  refreshToken
+  refreshToken,
+  onSize
 }: RemoteTerminalProps): JSX.Element {
+  const boxRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
   // Read through refs so a re-render never tears the terminal down.
-  const propsRef = useRef({ fontSize, fontFamily, focused, onFocus })
-  propsRef.current = { fontSize, fontFamily, focused, onFocus }
+  const propsRef = useRef({ fontSize, fontFamily, focused, onFocus, onSize })
+  propsRef.current = { fontSize, fontFamily, focused, onFocus, onSize }
 
   useEffect(() => {
     const element = containerRef.current
-    if (!element) return
+    const box = boxRef.current
+    if (!element || !box) return
     const initial = propsRef.current
 
     const term = new Terminal({
@@ -132,10 +173,25 @@ export function RemoteTerminal({
     termRef.current = term
     attachKeyHandler(term, hostId, paneId)
 
+    // One fit per frame at most: a burst of box changes is one new size.
+    let fitQueued = 0
+    const queueFit = (): void => {
+      if (fitQueued) return
+      fitQueued = requestAnimationFrame(() => {
+        fitQueued = 0
+        fitFont(term, element, box, propsRef.current.fontFamily)
+      })
+    }
+
     const offScreen = window.api.onRemoteScreen((screen) => {
       if (screen.hostId !== hostId || screen.paneId !== paneId) return
       paintScreen(term, screen.data, screen.cols, screen.rows)
+      propsRef.current.onSize?.(screen.cols, screen.rows)
+      queueFit()
     })
+    // The tile changing size changes the type, never the remote's grid.
+    const observer = new ResizeObserver(queueFit)
+    observer.observe(box)
     const offOutput = window.api.onRemoteOutput((output) => {
       if (output.hostId !== hostId || output.paneId !== paneId) return
       term.write(output.data)
@@ -153,6 +209,8 @@ export function RemoteTerminal({
     element.addEventListener('focusin', handleFocusIn)
 
     return () => {
+      observer.disconnect()
+      if (fitQueued) cancelAnimationFrame(fitQueued)
       window.api.unwatchRemotePane(hostId, paneId)
       element.removeEventListener('focusin', handleFocusIn)
       offScreen()
@@ -176,23 +234,27 @@ export function RemoteTerminal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshToken])
 
-  // The caret says which pane the keyboard is pointed at, without a remount.
-  useEffect(() => {
-    const term = termRef.current
-    if (term) term.options.theme = termTheme(focused)
-  }, [focused])
-
-  // Typography follows the settings; the grid stays at the remote's cols/rows.
+  // The caret says which pane the keyboard is pointed at, without a remount;
+  // picking the pane in the list puts the keyboard in it too.
   useEffect(() => {
     const term = termRef.current
     if (!term) return
-    term.options.fontSize = fontSize
+    term.options.theme = termTheme(focused)
+    if (focused) term.focus()
+  }, [focused])
+
+  // The face follows the settings; its size follows the tile.
+  useEffect(() => {
+    const term = termRef.current
+    const element = containerRef.current
+    const box = boxRef.current
+    if (!term || !element || !box) return
     term.options.fontFamily = fontStack(fontFamily)
-    term.options.lineHeight = rowLineHeight(fontSize, fontFamily)
+    fitFont(term, element, box, fontFamily)
   }, [fontSize, fontFamily])
 
   return (
-    <div className="ada-remote-term">
+    <div className="ada-remote-term" ref={boxRef}>
       <div className="ada-remote-term-inner" ref={containerRef} />
     </div>
   )

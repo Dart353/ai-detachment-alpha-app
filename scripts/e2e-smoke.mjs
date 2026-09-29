@@ -752,7 +752,7 @@ function buildSteps(cdp, dirs) {
         // needs only the relay's address — publishing this machine stays off.
         const relay = await startFakeRelay()
         const remote = 'window.__ada.remote.getState()'
-        const remoteRows = `document.querySelector('.ada-remote .xterm-rows')`
+        const remoteRows = `document.querySelector('[data-remote-pane-id="pR"] .xterm-rows')`
         try {
           const settings = await cdp.evaluate(
             `${store}.updateSettings({ relay: { enabled: false, url: ${json(relay.url)}, name: 'smoke' } })
@@ -801,6 +801,44 @@ function buildSteps(cdp, dirs) {
             `const text = ${remoteRows}?.innerText ?? ''
              return { ok: text.includes('fake $'), text: text.slice(0, 400) }`
           )
+          // The whole workspace is on the canvas, laid out as its own desktop has
+          // it: three tiles where the feed's zones say, each one's terminal scaled
+          // so the machine's grid fills the tile instead of sitting small in it.
+          const canvas = await waitFor(
+            cdp,
+            'every remote pane to fill its tile',
+            `const grid = document.querySelector('.ada-remote .ada-grid')
+             const box = grid?.getBoundingClientRect()
+             const tiles = [...document.querySelectorAll('.ada-remote [data-remote-pane-id]')].map((el) => {
+               const slot = el.closest('.ada-grid-slot').getBoundingClientRect()
+               const body = el.querySelector('.ada-remote-term')?.getBoundingClientRect()
+               const screen = el.querySelector('.xterm-screen')?.getBoundingClientRect()
+               return {
+                 id: el.getAttribute('data-remote-pane-id'),
+                 x: Math.round(((slot.left - box.left) / box.width) * 100),
+                 y: Math.round(((slot.top - box.top) / box.height) * 100),
+                 w: Math.round((slot.width / box.width) * 100),
+                 h: Math.round((slot.height / box.height) * 100),
+                 fillW: body && screen ? +(screen.width / body.width).toFixed(2) : 0,
+                 fillH: body && screen ? +(screen.height / body.height).toFixed(2) : 0,
+                 text: (el.querySelector('.xterm-rows')?.innerText ?? '').trim().length
+               }
+             })
+             const filled = tiles.every((t) => t.text > 0 && Math.max(t.fillW, t.fillH) >= 0.8 && t.fillW <= 1 && t.fillH <= 1)
+             return { ok: tiles.length === 3 && filled, tiles }`
+          )
+          const near = (value, target) => Math.abs(value - target) <= 3
+          for (const [id, zone] of Object.entries(FAKE_REMOTE_ZONES)) {
+            const tile = canvas.tiles.find((candidate) => candidate.id === id)
+            if (!tile || !near(tile.x, zone.x) || !near(tile.y, zone.y) || !near(tile.w, zone.w) || !near(tile.h, zone.h)) {
+              throw new StepError('a remote pane is not where its desktop has it', { id, zone, tile })
+            }
+          }
+          if (process.env.ADA_SMOKE_SHOTS) {
+            const shot = await cdp.send('Page.captureScreenshot', { format: 'png' })
+            await writeFile(path.join(process.env.ADA_SMOKE_SHOTS, 'remote-canvas.png'), Buffer.from(shot.data, 'base64'))
+          }
+
           // The local grids are hidden behind the remote view, never unmounted.
           const grids = await cdp.evaluate(`return document.querySelectorAll('.ada-app-grid').length`)
           if (!(grids > 0)) throw new StepError('remote mode unmounted the local grids', { grids })
@@ -923,7 +961,8 @@ async function startFakeRelay() {
     viewer.userAgent = socket.handshake.headers['user-agent'] ?? null
     socket.on('watch', (request) => {
       viewer.watches.push(request)
-      socket.emit('screen', { hostId: request.hostId, paneId: request.paneId, data: 'fake $ ', cols: 60, rows: 20 })
+      const size = FAKE_REMOTE_SIZES[request.paneId] ?? { cols: 60, rows: 20 }
+      socket.emit('screen', { hostId: request.hostId, paneId: request.paneId, data: fakeScreen(size), ...size })
     })
     socket.on('unwatch', (request) => viewer.unwatches.push(request))
     socket.on('input', (request) => viewer.inputs.push(request))
@@ -990,6 +1029,32 @@ function isViewerKeys(keys) {
 }
 
 /** What a paired machine publishes: one workspace holding one idle Claude pane. */
+/** The fake machine's canvas: two tiles over one wide one, as percentages. */
+const FAKE_REMOTE_ZONES = {
+  pR: { x: 0, y: 0, w: 60, h: 55 },
+  pS: { x: 60, y: 0, w: 40, h: 55 },
+  pT: { x: 0, y: 55, w: 100, h: 45 }
+}
+/** The grid each pane has over there; none of them is this window's shape. */
+const FAKE_REMOTE_SIZES = {
+  pR: { cols: 100, rows: 30 },
+  pS: { cols: 60, rows: 30 },
+  pT: { cols: 160, rows: 24 }
+}
+
+/** A full screen of numbered lines ending at a prompt, so a tile has something to show. */
+function fakeScreen({ cols, rows }) {
+  const lines = []
+  for (let row = 1; row < rows; row++) {
+    lines.push(`${String(row).padStart(3, ' ')} ${'·'.repeat(Math.max(0, cols - 5))}`)
+  }
+  return `${lines.join('\r\n')}\r\nfake $ `
+}
+
+function fakeRemotePane(id, name, kind) {
+  return { id, name, kind, status: 'idle', title: null, lastPrompt: null, model: kind === 'claude' ? 'opus' : null, summary: null, lastActivity: 0 }
+}
+
 function fakeRemoteFeed() {
   return {
     updatedAt: Date.now(),
@@ -1001,18 +1066,15 @@ function fakeRemoteFeed() {
         name: 'remote-ws',
         rootDir: '/tmp/remote-ws',
         panes: [
-          {
-            id: 'pR',
-            name: 'Remote Agent',
-            kind: 'claude',
-            status: 'idle',
-            title: null,
-            lastPrompt: null,
-            model: 'opus',
-            summary: 'Idle',
-            lastActivity: 0
-          }
-        ]
+          fakeRemotePane('pR', 'Remote Agent', 'claude'),
+          fakeRemotePane('pS', 'Terminal 1', 'terminal'),
+          fakeRemotePane('pT', 'Relay', 'claude')
+        ],
+        layout: {
+          zones: Object.entries(FAKE_REMOTE_ZONES).map(([id, zone]) => ({ id: `z-${id}`, ...zone })),
+          assign: { pR: 'z-pR', pS: 'z-pS', pT: 'z-pT' },
+          focusedPaneId: 'pR'
+        }
       }
     ]
   }

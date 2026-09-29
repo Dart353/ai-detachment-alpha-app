@@ -4,7 +4,9 @@
  * THIS FILE IS A VERBATIM COPY of the relay repo's `src/protocol.ts` — edit it there, copy it here.
  * Bump `PROTOCOL_VERSION` on any change to an event or payload; a peer on a
  * different version is refused at auth with a message that says so, instead of
- * two sides silently disagreeing about a field.
+ * two sides silently disagreeing about a field. The one exception is a new
+ * OPTIONAL field in the feed: the relay forwards a feed as it came and a reader
+ * that does not know the field ignores it, so nothing can disagree.
  *
  * Trust model: a machine is identified by the SHA-256 of a 256-bit pairing key
  * the desktop generated. The desktop presents the key to register; a phone
@@ -44,11 +46,34 @@ export interface FeedPane {
   lastActivity: number
 }
 
+/** One tile of a workspace's canvas; x/y/w/h are percentages of it, 0–100. */
+export interface FeedZone {
+  id: string
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+/**
+ * How the desktop lays a workspace's panes out, so a viewer with room for it
+ * (another desktop) can draw the same picture. Optional: a desktop that
+ * predates it sends none, and a phone has no use for it.
+ */
+export interface FeedLayout {
+  zones: FeedZone[]
+  /** paneId → zoneId; a pane with no entry is not on the canvas. */
+  assign: Record<string, string>
+  focusedPaneId?: string
+  maximizedPaneId?: string
+}
+
 export interface FeedWorkspace {
   id: string
   name: string
   rootDir: string
   panes: FeedPane[]
+  layout?: FeedLayout
 }
 
 /** A folder the desktop has opened before, offered on the phone for reopening. */

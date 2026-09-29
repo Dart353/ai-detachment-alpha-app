@@ -1,21 +1,32 @@
-/* A remote pane's terminal renders at the remote's cols/rows, not the box's:
-   a narrower one sits left-aligned, a wider or taller one scrolls. */
+/* A remote pane's terminal keeps the remote's cols/rows; its type is scaled so
+   that grid fills this box (see RemoteTerminal), so nothing here scrolls. */
 .ada-remote-term {
   flex: 1;
+  min-width: 0;
   min-height: 0;
-  overflow: auto;
-  padding: 8px;
+  overflow: hidden;
+  padding: 6px;
   background: var(--ada-bg-term);
 }
 
 .ada-remote-term-inner {
   display: inline-block;
-  min-width: 100%;
+}
+
+/* The canvas the tiles are placed on, as `.ada-app-grid` is for a local one. */
+.ada-remote-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
 }
 
 /* === the Remote view ======================================================== */
 
+/* The app layer it sits in is a flex row: without `flex: 1` this sized to its
+   content and left the rest of the window empty. */
 .ada-remote {
+  flex: 1;
+  min-width: 0;
   display: flex;
   height: 100%;
   min-height: 0;

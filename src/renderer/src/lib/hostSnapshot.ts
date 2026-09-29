@@ -1,3 +1,4 @@
+import type { FeedLayout } from '../../../shared/relayProtocol'
 import type {
   HostPane,
   HostSnapshot,
@@ -44,6 +45,7 @@ export function buildHostSnapshot(inputs: HostSnapshotInputs): HostSnapshot {
       id: workspace.id,
       name: workspace.name,
       rootDir: workspace.rootDir,
+      layout: wireLayout(workspace),
       panes: workspace.panes.map((pane) => {
         const session = inputs.sessions[pane.id]
         const status = wireStatus(pane, inputs.status[pane.id] ?? 'idle', session, inputs.now)
@@ -61,6 +63,30 @@ export function buildHostSnapshot(inputs: HostSnapshotInputs): HostSnapshot {
         }
       })
     }))
+  }
+}
+
+/**
+ * The canvas, reduced to what a viewer needs to draw it: where each tile is and
+ * which pane sits in it. Assignments to panes or zones that no longer exist are
+ * dropped, so the reader never has to defend against them.
+ */
+function wireLayout(workspace: Workspace): FeedLayout {
+  const zoneIds = new Set(workspace.layout.zones.map((zone) => zone.id))
+  const paneIds = new Set(workspace.panes.map((pane) => pane.id))
+  const assign: Record<string, string> = {}
+  for (const [paneId, zoneId] of Object.entries(workspace.layout.assign)) {
+    if (paneIds.has(paneId) && zoneIds.has(zoneId)) assign[paneId] = zoneId
+  }
+  return {
+    zones: workspace.layout.zones.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })),
+    assign,
+    ...(workspace.focusedPaneId && paneIds.has(workspace.focusedPaneId)
+      ? { focusedPaneId: workspace.focusedPaneId }
+      : {}),
+    ...(workspace.maximizedPaneId && paneIds.has(workspace.maximizedPaneId)
+      ? { maximizedPaneId: workspace.maximizedPaneId }
+      : {})
   }
 }
 

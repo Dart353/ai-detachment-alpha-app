@@ -8,12 +8,12 @@
  * Reuses the local sidebar's row classes so both trees read as the same thing.
  */
 import { useState, type JSX, type MouseEvent as ReactMouseEvent } from 'react'
-import { ChevronDown, ChevronRight, Ellipsis, Folder, Plus } from 'lucide-react'
+import { ChevronDown, ChevronRight, Ellipsis, Plus } from 'lucide-react'
 import { Button, ContextMenu, Modal, type MenuItem } from '../ui'
 import { useRemote, waitingCount } from '../../store/remote'
 import type { RemoteMachine } from '../../../../shared/types'
 import type { FeedPane, FeedWorkspace } from '../../../../shared/relayProtocol'
-import { dotStatus, machineName } from './remoteHelpers'
+import { dotStatus, kindLabel, machineName } from './remoteHelpers'
 import { RemoteNewAgent } from './RemoteNewAgent'
 import { RemoteOpenWorkspace } from './RemoteOpenWorkspace'
 import '../Sidebar.css'
@@ -22,8 +22,6 @@ import './remote.css'
 /** Icon size for every glyph in the tree (design: 12–14px, muted grey). */
 const ICON = 13
 
-const MACHINE_INDENT = 22
-const PANE_INDENT = 40
 
 type MenuAnchor =
   | { kind: 'machine'; hostId: string; x: number; y: number }
@@ -153,12 +151,9 @@ interface MachineNodeProps {
 function MachineNode({ machine, onMachineMenu, onWorkspaceMenu }: MachineNodeProps): JSX.Element {
   const folded = useRemote((state) => state.folded[machine.hostId] === true)
   const toggleFold = useRemote((state) => state.toggleFold)
-  const selected = useRemote((state) => state.selected)
   const allPanes = machinePanes(machine)
   const waiting = waitingCount(allPanes)
-  const active = selected?.hostId === machine.hostId && allPanes.some((pane) => pane.id === selected.paneId)
   const rowClasses = ['ada-sb-row', 'ada-sb-ws']
-  if (active) rowClasses.push('ada-sb-ws--active')
 
   return (
     <div className="ada-sb-node" style={machine.online ? undefined : { opacity: 0.55 }}>
@@ -219,18 +214,33 @@ function WorkspaceNode({ hostId, workspace, onMenu }: WorkspaceNodeProps): JSX.E
   const toggleFold = useRemote((state) => state.toggleFold)
   const selected = useRemote((state) => state.selected)
   const select = useRemote((state) => state.select)
+  const selectWorkspace = useRemote((state) => state.selectWorkspace)
   const waiting = waitingCount(workspace.panes)
   const showWaiting = folded && waiting > 0
+  const active = selected?.hostId === hostId && selected.workspaceId === workspace.id
+
+  // Picking a workspace shows its canvas and unfolds its panes, as it does locally.
+  const open = (): void => {
+    selectWorkspace(hostId, workspace.id)
+    if (folded) toggleFold(foldKey)
+  }
 
   return (
     <div className="ada-sb-node">
       <div
-        className="ada-sb-row ada-sb-ws"
-        style={{ paddingLeft: MACHINE_INDENT }}
+        className={`ada-sb-row ada-sb-ws${active ? ' ada-sb-ws--active' : ''}`}
         title={workspace.rootDir}
+        role="button"
+        tabIndex={0}
+        onClick={open}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            open()
+          }
+        }}
       >
         <FoldChevron folded={folded} noun="workspace" onToggle={() => toggleFold(foldKey)} />
-        <Folder size={ICON} className="ada-remote-icon" aria-hidden="true" />
         <span className="ada-sb-ws-name">{workspace.name}</span>
         {showWaiting ? (
           <span className="ada-sb-count" title="waiting for you">
@@ -259,7 +269,7 @@ function WorkspaceNode({ hostId, workspace, onMenu }: WorkspaceNodeProps): JSX.E
               key={pane.id}
               pane={pane}
               active={selected?.hostId === hostId && selected.paneId === pane.id}
-              onSelect={() => select({ hostId, paneId: pane.id })}
+              onSelect={() => select({ hostId, workspaceId: workspace.id, paneId: pane.id })}
             />
           ))}
         </div>
@@ -286,7 +296,6 @@ function PaneRow({ pane, active, onSelect }: PaneRowProps): JSX.Element {
   return (
     <div
       className={classes.join(' ')}
-      style={{ paddingLeft: PANE_INDENT }}
       title={pane.name}
       role={selectable ? 'button' : undefined}
       tabIndex={selectable ? 0 : undefined}
@@ -303,7 +312,9 @@ function PaneRow({ pane, active, onSelect }: PaneRowProps): JSX.Element {
       <span className={`ada-sb-dot ada-sb-dot--${dotStatus(pane.status)}`} aria-hidden="true" />
       <span className="ada-sb-label">
         <span className="ada-sb-pane-name">{pane.name}</span>
-        <span className="ada-sb-sub">{pane.summary ?? pane.model ?? pane.kind}</span>
+        <span className="ada-sb-sub">
+          {kindLabel(pane.kind)} · {pane.status === 'attention' ? 'waiting' : pane.status}
+        </span>
       </span>
     </div>
   )

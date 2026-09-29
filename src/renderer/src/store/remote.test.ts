@@ -144,8 +144,60 @@ describe('setStatus', () => {
     useRemote.getState().select(selection)
     const offline = makeStatus([makeMachine('host-1', workspaces, false)])
     useRemote.getState().setStatus(offline)
-    expect(useRemote.getState().selected).toEqual(selection)
+    expect(useRemote.getState().selected).toEqual({ ...selection, workspaceId: 'ws-1' })
     expect(useRemote.getState().status).toBe(offline)
+  })
+})
+
+describe('selecting', () => {
+  const viewer: FeedPane = { ...makePane('file'), kind: 'viewer' }
+  const workspaces: FeedWorkspace[] = [
+    {
+      ...makeWorkspace('ws-1', [viewer, makePane('pane-a'), makePane('pane-b')]),
+      layout: { zones: [], assign: {}, focusedPaneId: 'pane-b' }
+    },
+    makeWorkspace('ws-2', [makePane('pane-c')]),
+    makeWorkspace('ws-empty', [])
+  ]
+
+  beforeEach(() => {
+    useRemote.getState().setStatus(makeStatus([makeMachine('host-1', workspaces)]))
+  })
+
+  it('finds the workspace a picked pane lives in', () => {
+    useRemote.getState().select({ hostId: 'host-1', paneId: 'pane-c' })
+    expect(useRemote.getState().selected).toEqual({
+      hostId: 'host-1',
+      workspaceId: 'ws-2',
+      paneId: 'pane-c'
+    })
+  })
+
+  it('ignores a pane the feed does not list', () => {
+    useRemote.getState().select({ hostId: 'host-1', paneId: 'nope' })
+    expect(useRemote.getState().selected).toBeNull()
+  })
+
+  it('opens a workspace on the pane its own desktop has focused', () => {
+    useRemote.getState().selectWorkspace('host-1', 'ws-1')
+    expect(useRemote.getState().selected?.paneId).toBe('pane-b')
+  })
+
+  it('opens a workspace on its first terminal when none is focused, never a file viewer', () => {
+    useRemote.getState().selectWorkspace('host-1', 'ws-2')
+    expect(useRemote.getState().selected?.paneId).toBe('pane-c')
+    useRemote.getState().selectWorkspace('host-1', 'ws-empty')
+    expect(useRemote.getState().selected).toEqual({
+      hostId: 'host-1',
+      workspaceId: 'ws-empty',
+      paneId: null
+    })
+  })
+
+  it('keeps the pane in hand when its workspace is selected again', () => {
+    useRemote.getState().select({ hostId: 'host-1', paneId: 'pane-a' })
+    useRemote.getState().selectWorkspace('host-1', 'ws-1')
+    expect(useRemote.getState().selected?.paneId).toBe('pane-a')
   })
 })
 

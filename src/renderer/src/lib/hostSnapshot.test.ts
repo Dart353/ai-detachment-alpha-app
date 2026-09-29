@@ -128,6 +128,39 @@ describe('buildHostSnapshot', () => {
     })
   })
 
+  it('publishes the canvas: each tile and the pane in it, nothing stale', () => {
+    const laidOut: Workspace = {
+      ...workspace,
+      focusedPaneId: 'p2',
+      maximizedPaneId: 'gone',
+      layout: {
+        v: 2,
+        snap: { cols: 12, rows: 8 },
+        zones: [
+          { id: 'z1', x: 0, y: 0, w: 50, h: 100 },
+          { id: 'z2', x: 50, y: 0, w: 50, h: 100 }
+        ],
+        assign: { p1: 'z1', p2: 'z2', ghost: 'z1', p1b: 'nowhere' }
+      }
+    }
+    const snapshot = buildHostSnapshot({
+      workspaces: [laidOut],
+      recents: [],
+      status: {},
+      sessions: {},
+      lastActivity: {},
+      now: 1
+    })
+    expect(snapshot.workspaces[0].layout).toEqual({
+      zones: [
+        { id: 'z1', x: 0, y: 0, w: 50, h: 100 },
+        { id: 'z2', x: 50, y: 0, w: 50, h: 100 }
+      ],
+      assign: { p1: 'z1', p2: 'z2' },
+      focusedPaneId: 'p2'
+    })
+  })
+
   it('leaks no session, account or cwd', () => {
     const text = JSON.stringify(
       buildHostSnapshot({
