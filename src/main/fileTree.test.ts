@@ -174,13 +174,16 @@ describe('file operations', () => {
 describe('FileTreeWatcher', () => {
   it('coalesces a burst of writes into one change event', async () => {
     const changed: string[] = []
+    // The window has to outlast how the OS delivers the burst, not only how
+    // fast it is written: macOS hands file events over in delayed batches, and
+    // two batches further apart than the debounce are, correctly, two changes.
     const watcher = new FileTreeWatcher((dir) => changed.push(dir), {
-      debounceMs: 30,
-      maxWaitMs: 500
+      debounceMs: 250,
+      maxWaitMs: 3000
     })
     watcher.watch('pane-1', root)
     for (let index = 0; index < 8; index++) write(`burst-${index}.txt`, 'x')
-    await sleep(200)
+    await sleep(900)
     watcher.dispose()
 
     expect(changed).toEqual([root])
