@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.9.0...v1.10.0) (2026-09-29)
+
+
+### Features
+
+* **remote:** show a remote workspace as its own desktop lays it out ([41bb92d](https://github.com/Dart353/ai-detachment-alpha-app/commit/41bb92d977afa583674e79aebb72b13c547a106b))
+
 ## [1.9.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.8.0...v1.9.0) (2026-09-29)
 
 
