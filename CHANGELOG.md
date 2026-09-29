@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.8.0...v1.9.0) (2026-09-29)
+
+
+### Features
+
+* **remote:** watch and drive another desktop from the app ([4da71d7](https://github.com/Dart353/ai-detachment-alpha-app/commit/4da71d73eb52254b485958a913f3ceb867e15cb8))
+
 ## [1.8.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.7.2...v1.8.0) (2026-09-28)
 
 
