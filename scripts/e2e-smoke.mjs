@@ -15,6 +15,7 @@
  * Run it with `pnpm test:e2e` (which builds first).
  */
 import { spawn } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -743,6 +744,128 @@ function buildSteps(cdp, dirs) {
           await relay.close()
         }
       }
+    ],
+    [
+      'remote mode watches a machine through the relay',
+      async () => {
+        // Remote mode is this desktop as a viewer of another one. The viewer link
+        // needs only the relay's address — publishing this machine stays off.
+        const relay = await startFakeRelay()
+        const remote = 'window.__ada.remote.getState()'
+        const remoteRows = `document.querySelector('.ada-remote .xterm-rows')`
+        try {
+          const settings = await cdp.evaluate(
+            `${store}.updateSettings({ relay: { enabled: false, url: ${json(relay.url)}, name: 'smoke' } })
+             const relay = window.__ada.useApp.getState().settings.relay
+             return { ok: relay.url === ${json(relay.url)} && relay.enabled === false, relay }`
+          )
+          if (!settings.ok) throw new StepError('the relay address did not take', settings)
+
+          // Pairing hands main the key; the host id it answers with is the key's
+          // sha256, which is what the relay addresses that machine by.
+          const FAKE_KEY = 'f'.repeat(64)
+          const hostId = sha256(FAKE_KEY)
+          const paired = await cdp.evaluate(`return window.api.addRemoteMachine(${json(FAKE_KEY)}, 'fake')`)
+          if (!paired?.ok || paired.hostId !== hostId) {
+            throw new StepError('pairing did not answer with the key\'s host id', { paired, expected: hostId })
+          }
+
+          // The link came up with that key, and the relay's hostState reached the
+          // renderer-facing status with the machine's feed in it.
+          await waitFor(
+            cdp,
+            'the paired machine to show up online with its feed',
+            `const status = await window.api.remoteStatus()
+             const machine = status.machines.find((candidate) => candidate.hostId === ${json(hostId)})
+             return {
+               ok: status.state === 'connected' && machine?.online === true &&
+                 machine.feed?.workspaces[0]?.panes[0]?.id === 'pR',
+               state: status.state, error: status.error ?? null, machine: machine ?? null
+             }`
+          )
+          const userAgent = relay.viewer.userAgent ?? ''
+          if (!userAgent.startsWith('ai-detachment-alpha/') || !userAgent.includes('(viewer)')) {
+            throw new StepError('the viewer link did not identify itself', { userAgent })
+          }
+
+          // Opening the pane mounts the remote view, sends a watch, and paints the
+          // screen the relay answers with — all three, or the prompt is not there.
+          await cdp.evaluate(
+            `${remote}.setMode('remote')
+             ${remote}.select({ hostId: ${json(hostId)}, paneId: 'pR' })
+             return true`
+          )
+          await waitFor(
+            cdp,
+            'the remote pane to paint its screen',
+            `const text = ${remoteRows}?.innerText ?? ''
+             return { ok: text.includes('fake $'), text: text.slice(0, 400) }`
+          )
+          // The local grids are hidden behind the remote view, never unmounted.
+          const grids = await cdp.evaluate(`return document.querySelectorAll('.ada-app-grid').length`)
+          if (!(grids > 0)) throw new StepError('remote mode unmounted the local grids', { grids })
+          if (!relay.viewer.watches.some((watch) => watch.hostId === hostId && watch.paneId === 'pR')) {
+            throw new StepError('the relay never got a watch for the pane', relay.viewer.watches)
+          }
+
+          // Typing goes out addressed to the machine and pane.
+          await cdp.evaluate(
+            `window.api.writeRemotePane(${json(hostId)}, 'pR', 'echo remote-1\\r')
+             return true`
+          )
+          const typedDeadline = Date.now() + WAIT_MS
+          while (Date.now() < typedDeadline && !relay.viewer.inputs.some((input) => input.data === 'echo remote-1\r')) {
+            await sleep(100)
+          }
+          const typed = relay.viewer.inputs.find((input) => input.data === 'echo remote-1\r')
+          if (!typed || typed.hostId !== hostId || typed.paneId !== 'pR') {
+            throw new StepError('the typed input never reached the relay', relay.viewer.inputs)
+          }
+
+          // Live output from the machine lands in the open terminal.
+          relay.viewer.output(hostId, 'pR', 'remote-42')
+          await waitFor(
+            cdp,
+            'the live output to reach the remote terminal',
+            `const text = ${remoteRows}?.innerText ?? ''
+             return { ok: text.includes('remote-42'), text: text.slice(0, 400) }`
+          )
+
+          // Closing the pane stops the stream at the relay.
+          await cdp.evaluate(`${remote}.select(null)
+                              return true`)
+          const unwatchDeadline = Date.now() + WAIT_MS
+          const unwatched = () =>
+            relay.viewer.unwatches.some((unwatch) => unwatch.hostId === hostId && unwatch.paneId === 'pR')
+          while (Date.now() < unwatchDeadline && !unwatched()) await sleep(100)
+          if (!unwatched()) throw new StepError('closing the pane sent no unwatch', relay.viewer.unwatches)
+
+          // Back to local: the remote view goes and the local body shows again.
+          await cdp.evaluate(`${remote}.setMode('local')
+                              return true`)
+          await waitFor(
+            cdp,
+            'the local body to come back',
+            `const body = document.querySelector('.ada-app-body')
+             const remoteView = !!document.querySelector('.ada-remote')
+             const hidden = body?.classList.contains('ada-app-body--hidden') ?? null
+             return { ok: !remoteView && hidden === false, remoteView, hidden }`
+          )
+
+          // Forgetting the only machine leaves nothing to watch: the link closes.
+          await cdp.evaluate(`window.api.forgetRemoteMachine(${json(hostId)})
+                              return true`)
+          await waitFor(
+            cdp,
+            'the link to close once the machine is forgotten',
+            `const status = await window.api.remoteStatus()
+             return { ok: status.machines.length === 0 && status.state === 'off',
+                      state: status.state, machines: status.machines.length }`
+          )
+        } finally {
+          await relay.close()
+        }
+      }
     ]
   ]
 }
@@ -763,8 +886,21 @@ async function startFakeRelay() {
   const server = createServer()
   const io = new Server(server)
   const state = { auth: null, feeds: [], outputs: [], socket: null }
+  const viewer = {
+    socket: null,
+    userAgent: null,
+    watches: [],
+    unwatches: [],
+    inputs: [],
+    addPanes: [],
+    openWorkspaces: []
+  }
   io.on('connection', (socket) => {
     const auth = socket.handshake.auth
+    if (auth.role === 'viewer' && isViewerKeys(auth.keys)) {
+      acceptViewer(socket, auth.keys)
+      return
+    }
     if (auth.role !== 'host' || !/^[0-9a-f]{64}$/.test(auth.key ?? '')) {
       socket.emit('authError', { code: 'bad-key', message: 'bad key', protocolVersion: 5 })
       setImmediate(() => socket.disconnect(true))
@@ -776,6 +912,28 @@ async function startFakeRelay() {
     socket.on('output', (output) => state.outputs.push(output.data))
     socket.emit('registered', { hostId: 'smoke', viewers: 0 })
   })
+
+  /**
+   * The viewer half: a desktop in Remote mode subscribes with the pairing keys
+   * it holds, is told about one made-up machine per key, and has everything it
+   * asks of those machines recorded instead of forwarded.
+   */
+  function acceptViewer(socket, keys) {
+    viewer.socket = socket
+    viewer.userAgent = socket.handshake.headers['user-agent'] ?? null
+    socket.on('watch', (request) => {
+      viewer.watches.push(request)
+      socket.emit('screen', { hostId: request.hostId, paneId: request.paneId, data: 'fake $ ', cols: 60, rows: 20 })
+    })
+    socket.on('unwatch', (request) => viewer.unwatches.push(request))
+    socket.on('input', (request) => viewer.inputs.push(request))
+    socket.on('addPane', (request) => viewer.addPanes.push(request))
+    socket.on('openWorkspace', (request) => viewer.openWorkspaces.push(request))
+    for (const key of keys) {
+      socket.emit('hostState', { hostId: sha256(key), online: true, name: 'fake-desktop', feed: fakeRemoteFeed() })
+    }
+  }
+
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
   return {
     url: `http://127.0.0.1:${server.address().port}`,
@@ -806,7 +964,57 @@ async function startFakeRelay() {
       }
       return false
     },
+    viewer: {
+      watches: viewer.watches,
+      unwatches: viewer.unwatches,
+      inputs: viewer.inputs,
+      addPanes: viewer.addPanes,
+      openWorkspaces: viewer.openWorkspaces,
+      get userAgent() {
+        return viewer.userAgent
+      },
+      get connected() {
+        return viewer.socket?.connected ?? false
+      },
+      /** Live output from a fake machine's pane, as the relay would forward it. */
+      output: (hostId, paneId, data) => viewer.socket?.emit('output', { hostId, paneId, data })
+    },
     close: () => new Promise((resolve) => io.close(() => resolve()))
+  }
+}
+
+const sha256 = (text) => createHash('sha256').update(text, 'utf8').digest('hex')
+
+function isViewerKeys(keys) {
+  return Array.isArray(keys) && keys.length > 0 && keys.every((key) => /^[0-9a-f]{64}$/.test(key))
+}
+
+/** What a paired machine publishes: one workspace holding one idle Claude pane. */
+function fakeRemoteFeed() {
+  return {
+    updatedAt: Date.now(),
+    recents: [{ name: 'proj', rootDir: '/tmp/proj' }],
+    host: { name: 'fake-desktop', version: '0.0.0', models: ['opus'] },
+    workspaces: [
+      {
+        id: 'wsR',
+        name: 'remote-ws',
+        rootDir: '/tmp/remote-ws',
+        panes: [
+          {
+            id: 'pR',
+            name: 'Remote Agent',
+            kind: 'claude',
+            status: 'idle',
+            title: null,
+            lastPrompt: null,
+            model: 'opus',
+            summary: 'Idle',
+            lastActivity: 0
+          }
+        ]
+      }
+    ]
   }
 }
 

@@ -8,11 +8,14 @@ import FirstRun from './components/FirstRun'
 import AddWorkspace from './components/AddWorkspace'
 import SettingsView from './components/SettingsView'
 import RestorePreview from './components/RestorePreview'
+import RemoteView from './components/remote/RemoteView'
 import { Toasts } from './components/ui'
 import { useStatusEngine } from './hooks/useStatusEngine'
 import { useHostPublisher } from './hooks/useHostPublisher'
+import { useRemoteLink } from './hooks/useRemoteLink'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
 import { selectActiveWorkspace, useApp } from './store/app'
+import { useRemote } from './store/remote'
 import { hydrate, startPersistence } from './store/persist'
 import './App.css'
 
@@ -33,6 +36,9 @@ export default function App(): JSX.Element {
   const toasts = useApp((state) => state.toasts)
   const dismissToast = useApp((state) => state.dismissToast)
   const setZoneEditorOpen = useApp((state) => state.setZoneEditorOpen)
+  // Remote mode only ever replaces the grid view; Settings and the other
+  // overlays still take precedence over it.
+  const remote = useRemote((state) => state.mode) === 'remote' && view === 'grid'
 
   const [maximized, setMaximized] = useState(false)
   // StrictMode mounts, unmounts and remounts in development; hydrating twice
@@ -41,6 +47,7 @@ export default function App(): JSX.Element {
 
   useStatusEngine()
   useHostPublisher()
+  useRemoteLink()
   useGlobalShortcuts()
 
   useEffect(() => {
@@ -79,7 +86,7 @@ export default function App(): JSX.Element {
       <Titlebar variant={titlebarVariant} />
 
       <main className="ada-app-main">
-        <div className={`ada-app-body${view === 'grid' ? '' : ' ada-app-body--hidden'}`}>
+        <div className={`ada-app-body${view === 'grid' && !remote ? '' : ' ada-app-body--hidden'}`}>
           <Sidebar />
           {activeWorkspace?.explorer.open && <ExplorerPanel workspaceId={activeWorkspace.id} />}
           <div className="ada-app-grids">
@@ -99,6 +106,13 @@ export default function App(): JSX.Element {
             })}
           </div>
         </div>
+
+        {/* The local body above stays mounted (hidden) while a remote machine is shown. */}
+        {remote && (
+          <div className="ada-app-layer">
+            <RemoteView />
+          </div>
+        )}
 
         {view === 'firstRun' && (
           <div className="ada-app-layer">

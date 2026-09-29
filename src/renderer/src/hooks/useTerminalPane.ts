@@ -74,7 +74,7 @@ function cssVar(name: string, fallback: string): string {
  * the chrome around it can never drift apart. The literals are the same values
  * tokens.css holds, kept as a fallback for a document that has not applied it.
  */
-function termTheme(focused: boolean): ITheme {
+export function termTheme(focused: boolean): ITheme {
   const accent = cssVar('--ada-accent', '#f05219')
   const accentRgb = cssVar('--ada-accent-rgb', '240, 82, 25')
   return {
@@ -94,7 +94,7 @@ function termTheme(focused: boolean): ITheme {
  * back to the bare ratio when nothing can be measured (a fallback face that is
  * exactly its size tall is the neutral guess).
  */
-function rowLineHeight(fontSize: number, fontFamily: string): number {
+export function rowLineHeight(fontSize: number, fontFamily: string): number {
   const natural = measureNaturalHeight(fontStack(fontFamily), fontSize)
   return natural === null ? ROW_RATIO : xtermLineHeight(fontSize, natural)
 }
@@ -105,7 +105,7 @@ function primaryFamily(fontFamily: string): string {
 }
 
 /** The stack xterm renders with: the chosen face, then the house fallbacks. */
-function fontStack(fontFamily: string): string {
+export function fontStack(fontFamily: string): string {
   return `${fontFamily}, ui-monospace, monospace`
 }
 

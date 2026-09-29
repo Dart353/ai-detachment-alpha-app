@@ -7,9 +7,11 @@ import {
   loadArchive,
   loadLayouts,
   loadRecents,
+  loadRemoteMachines,
   loadSettings,
   loadState,
   saveLayouts,
+  saveRemoteMachines,
   saveSettings,
   saveState,
   setStoreDir
@@ -95,5 +97,22 @@ describe('settings', () => {
     expect(merged.notifications.attention).toEqual(DEFAULT_SETTINGS.notifications.attention)
     expect(merged.notifications.done).toEqual({ banner: true, sound: false })
     expect(merged.cliPaths).toEqual({ claude: '/opt/bin/claude' })
+  })
+})
+
+describe('remote machines', () => {
+  it('answers empty when nothing is paired yet', () => {
+    expect(loadRemoteMachines()).toEqual([])
+  })
+
+  it('reads back what it wrote and drops malformed entries', () => {
+    const machines = [{ hostId: 'h1', label: 'Office', ciphertext: 'c2VjcmV0' }]
+    saveRemoteMachines(machines)
+    expect(loadRemoteMachines()).toEqual(machines)
+    fs.writeFileSync(
+      path.join(dir, 'ada-remote.json'),
+      JSON.stringify({ machines: [...machines, { hostId: 'h2' }, null, 'junk'] })
+    )
+    expect(loadRemoteMachines()).toEqual(machines)
   })
 })

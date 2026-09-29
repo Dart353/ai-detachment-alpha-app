@@ -20,6 +20,11 @@ import type {
   RelayScreenReply,
   RelayScreenRequest,
   RelayStatus,
+  RemoteAddPane,
+  RemoteNotice,
+  RemoteOutput,
+  RemoteScreen,
+  RemoteStatus,
   SavedLayout,
   SessionInfo,
   Settings,
@@ -121,6 +126,21 @@ export const CH = {
   relayDisconnectViewer: 'relay:disconnectViewer',
   relayScreenRequest: 'relay:screenRequest',
   relayScreenReply: 'relay:screenReply',
+
+  // remote mode (this desktop as a viewer of another, via the relay)
+  remoteStatus: 'remote:status',
+  remoteAddMachine: 'remote:addMachine',
+  remoteForgetMachine: 'remote:forgetMachine',
+  remoteWatch: 'remote:watch',
+  remoteUnwatch: 'remote:unwatch',
+  remoteInput: 'remote:input',
+  remoteAddPane: 'remote:addPane',
+  remoteOpenWorkspace: 'remote:openWorkspace',
+  remoteAttach: 'remote:attach',
+  remoteChanged: 'remote:changed',
+  remoteScreen: 'remote:screen',
+  remoteOutput: 'remote:output',
+  remoteNotice: 'remote:notice',
 
   // updates (GitHub releases, via electron-updater)
   updateGet: 'update:get',
@@ -257,6 +277,26 @@ export interface Api {
   onRelayScreenRequest(cb: (request: RelayScreenRequest) => void): Unsubscribe
   replyRelayScreen(reply: RelayScreenReply): void
 
+  /* === remote mode (this desktop as a viewer) === */
+  remoteStatus(): Promise<RemoteStatus>
+  /** Pair another desktop by its pairing key; the key stays in main. */
+  addRemoteMachine(
+    key: string,
+    label: string
+  ): Promise<{ ok: true; hostId: string } | { ok: false; error: string }>
+  forgetRemoteMachine(hostId: string): void
+  watchRemotePane(hostId: string, paneId: string): void
+  unwatchRemotePane(hostId: string, paneId: string): void
+  writeRemotePane(hostId: string, paneId: string, data: string): void
+  addRemotePane(request: RemoteAddPane): void
+  openRemoteWorkspace(hostId: string, rootDir: string): void
+  /** Main shows the image picker itself and sends the bytes; resolves once the relay answers or fails. */
+  attachToRemotePane(hostId: string, paneId: string): Promise<{ ok: boolean; error?: string }>
+  onRemoteChanged(cb: (status: RemoteStatus) => void): Unsubscribe
+  onRemoteScreen(cb: (screen: RemoteScreen) => void): Unsubscribe
+  onRemoteOutput(cb: (output: RemoteOutput) => void): Unsubscribe
+  onRemoteNotice(cb: (notice: RemoteNotice) => void): Unsubscribe
+
   /* === updates === */
   /** The status main already holds; no network call. */
   getUpdateStatus(): Promise<UpdateStatus>
@@ -350,6 +390,19 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   disconnectRelayViewer: true,
   onRelayScreenRequest: true,
   replyRelayScreen: true,
+  remoteStatus: true,
+  addRemoteMachine: true,
+  forgetRemoteMachine: true,
+  watchRemotePane: true,
+  unwatchRemotePane: true,
+  writeRemotePane: true,
+  addRemotePane: true,
+  openRemoteWorkspace: true,
+  attachToRemotePane: true,
+  onRemoteChanged: true,
+  onRemoteScreen: true,
+  onRemoteOutput: true,
+  onRemoteNotice: true,
   getUpdateStatus: true,
   checkForUpdate: true,
   installUpdate: true,

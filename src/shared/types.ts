@@ -5,7 +5,7 @@
  * no class instances, no Dates, no functions. Epoch milliseconds stand in
  * for timestamps throughout.
  */
-import type { Effort } from './relayProtocol'
+import type { Effort, Feed } from './relayProtocol'
 
 /** What a pane runs. `viewer` is a read-only file pane, not a process. */
 export type PaneKind = 'claude' | 'terminal' | 'ssh' | 'viewer'
@@ -284,6 +284,71 @@ export interface RelayStatus {
    */
   keyPersisted: boolean
 }
+
+/* === Remote mode (this desktop as a viewer of another, via the relay) === */
+
+/** One paired remote machine as the renderer sees it: never its key. */
+export interface RemoteMachine {
+  /** The relay's id for the machine: sha256(key). */
+  hostId: string
+  /** What the user called it when pairing. */
+  label: string
+  online: boolean
+  /** The name the machine announces itself with, once it has. */
+  name: string | null
+  /** The machine's last picture; kept while it is offline. */
+  feed: Feed | null
+  /** epoch ms it was last online, 0 if never */
+  lastSeen: number
+}
+
+/** What the remote view shows about the viewer link. */
+export interface RemoteStatus {
+  /** 'off' while no machine is paired or no relay url is set; the rest follow the socket. */
+  state: 'off' | 'connecting' | 'connected' | 'error'
+  /** The last refusal or transport error. */
+  error?: string
+  machines: RemoteMachine[]
+  /**
+   * False when the OS keychain is unavailable: the keys then live in memory
+   * for this launch only, and every machine has to be paired again after a relaunch.
+   */
+  keysPersisted: boolean
+}
+
+/** A remote pane's screen, serialised, for a pane just opened here. */
+export interface RemoteScreen {
+  hostId: string
+  paneId: string
+  data: string
+  cols: number
+  rows: number
+}
+
+/** Live output from a watched remote pane. */
+export interface RemoteOutput {
+  hostId: string
+  paneId: string
+  data: string
+}
+
+/** Ask a remote machine for a new pane, as its own add-pane click would. */
+export interface RemoteAddPane {
+  hostId: string
+  workspaceId: string
+  kind: 'claude' | 'terminal'
+  name?: string
+  model?: string
+  effort?: Effort
+  planMode?: boolean
+}
+
+/** Something the remote link tells the renderer once, for a toast. */
+export type RemoteNotice =
+  /** The remote desktop disconnected this viewer from its Settings; its key was forgotten here. */
+  | { type: 'kicked'; hostId: string; label: string }
+  /** How an image attach to a remote pane ended. */
+  | { type: 'attached'; hostId: string; paneId: string; ok: boolean; error?: string }
 
 /* === Claude session transcripts === */
 

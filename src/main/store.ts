@@ -168,6 +168,41 @@ export function saveRelayKeyCiphertext(ciphertext: string): void {
   writeJsonAtomic(file('ada-relay.json'), { key: ciphertext })
 }
 
+/** A remote machine this desktop views, with its pairing key encrypted. */
+export interface StoredRemoteMachine {
+  hostId: string
+  label: string
+  ciphertext: string
+}
+
+function isStoredRemoteMachine(value: unknown): value is StoredRemoteMachine {
+  return (
+    isRecord(value) &&
+    typeof value['hostId'] === 'string' &&
+    value['hostId'] !== '' &&
+    typeof value['label'] === 'string' &&
+    typeof value['ciphertext'] === 'string' &&
+    value['ciphertext'] !== ''
+  )
+}
+
+/**
+ * The machines paired for viewing, their keys encrypted. Beside the relay key
+ * and apart from settings for the same reason: these are secrets.
+ */
+export function loadRemoteMachines(): StoredRemoteMachine[] {
+  const raw = readJson(file('ada-remote.json'))
+  const machines = isRecord(raw) ? raw['machines'] : null
+  if (!Array.isArray(machines)) return []
+  return machines
+    .filter(isStoredRemoteMachine)
+    .map((machine) => ({ hostId: machine.hostId, label: machine.label, ciphertext: machine.ciphertext }))
+}
+
+export function saveRemoteMachines(list: StoredRemoteMachine[]): void {
+  writeJsonAtomic(file('ada-remote.json'), { machines: list })
+}
+
 /**
  * Merge a partial save into what is already on disk and return the result, so
  * a lone field (the keyboard zoom's termFontSize, say) never wipes the rest.

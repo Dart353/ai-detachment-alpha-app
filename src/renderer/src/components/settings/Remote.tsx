@@ -1,6 +1,7 @@
 import { useEffect, useState, type JSX } from 'react'
 import { Button, TextInput, Toggle } from '../ui'
 import { useApp } from '../../store/app'
+import { useRemote } from '../../store/remote'
 import { SettingRow } from './SettingRow'
 import type { RelayStatus } from '../../../../shared/types'
 import './settings.css'
@@ -68,6 +69,10 @@ export default function Remote(): JSX.Element {
   const [key, setKey] = useState<string | null>(null)
   const [url, setUrl] = useState(settings.relay.url)
   const [name, setName] = useState(settings.relay.name)
+  const remoteStatus = useRemote((state) => state.status)
+  const [machineLabel, setMachineLabel] = useState('')
+  const [machineKey, setMachineKey] = useState('')
+  const [pairError, setPairError] = useState<string | null>(null)
 
   useEffect(() => {
     let live = true
@@ -107,6 +112,27 @@ export default function Remote(): JSX.Element {
   const copy = (text: string): void => {
     window.api?.copyText(text)
     pushToast('Copied.')
+  }
+
+  const editMachineLabel = (value: string): void => {
+    setMachineLabel(value)
+    setPairError(null)
+  }
+  const editMachineKey = (value: string): void => {
+    setMachineKey(value.replace(/\s+/g, '').toLowerCase())
+    setPairError(null)
+  }
+  const machineKeyValid = /^[0-9a-f]{64}$/.test(machineKey)
+  const pairMachine = async (): Promise<void> => {
+    const result = await window.api?.addRemoteMachine(machineKey, machineLabel)
+    if (!result) return
+    if (result.ok) {
+      setMachineKey('')
+      setMachineLabel('')
+      pushToast('Paired — switch to Remote at the top of the window.')
+    } else {
+      setPairError(result.error)
+    }
   }
 
   const on = status.state === 'connected'
@@ -213,6 +239,69 @@ export default function Remote(): JSX.Element {
             Disconnect drops a phone and makes it forget this machine&apos;s key; anyone who still
             has the key can pair again. To shut out a phone you no longer control, rotate the
             key below.
+          </div>
+        </div>
+
+        <div className="ada-set-card">
+          <div className="ada-set-card-head">
+            <span className="ada-set-card-title">Remote machines</span>
+            <span className="ada-set-item-name">
+              {remoteStatus.machines.length > 0 ? `${remoteStatus.machines.length} paired` : 'None yet'}
+            </span>
+          </div>
+          <SettingRow label="Pair a machine" description="Paste the other desktop's pairing key from its Settings → Remote.">
+            <TextInput
+              value={machineLabel}
+              size="sm"
+              placeholder="home-desktop"
+              aria-label="Remote machine label"
+              style={{ width: 140 }}
+              onChange={editMachineLabel}
+            />
+            <TextInput
+              value={machineKey}
+              mono
+              size="sm"
+              placeholder="Pairing key"
+              aria-label="Remote machine pairing key"
+              style={{ width: 260 }}
+              onChange={editMachineKey}
+            />
+            <Button size="sm" disabled={!machineKeyValid} onClick={() => void pairMachine()}>
+              Pair
+            </Button>
+          </SettingRow>
+          {pairError && <div className="ada-set-probe ada-set-warn">{pairError}</div>}
+          {remoteStatus.machines.length > 0 && (
+            <div className="ada-set-list">
+              {remoteStatus.machines.map((machine) => (
+                <div key={machine.hostId} className="ada-set-item">
+                  <div>
+                    <div className="ada-set-item-name">{machine.label || machine.name || 'machine'}</div>
+                    <div className="ada-set-mono">
+                      {machine.hostId.slice(0, 16)}… · {machine.online ? 'online' : 'offline'}
+                      {machine.name && machine.label && machine.label !== machine.name ? ` (${machine.name})` : ''}
+                    </div>
+                  </div>
+                  <span className="ada-set-card-spacer" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    danger
+                    onClick={() => window.api?.forgetRemoteMachine(machine.hostId)}
+                  >
+                    Forget
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="ada-set-card-hint">
+            Holding a machine&apos;s key lets this desktop see and type into its panes. Keys are
+            stored encrypted here; rotate a key on that machine to shut this desktop out.
+            {remoteStatus.keysPersisted === false
+              ? ' No OS keychain here, so a pairing is kept in memory: it lasts until relaunch.'
+              : ''}
           </div>
         </div>
 

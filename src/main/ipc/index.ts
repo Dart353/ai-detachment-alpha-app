@@ -11,6 +11,7 @@ import { registerUsageIpc } from './usage'
 import { registerAccountsIpc } from './accounts'
 import { registerMiscIpc } from './misc'
 import { registerRelayIpc } from './relay'
+import { registerRemoteIpc } from './remote'
 import { registerUpdateIpc } from './update'
 
 /**
@@ -44,5 +45,6 @@ export function registerAllIpc(ctx: IpcCtx): void {
   registerAccountsIpc(ctx)
   registerMiscIpc(ctx)
   registerRelayIpc(ctx)
+  registerRemoteIpc(ctx)
   registerUpdateIpc(ctx)
 }

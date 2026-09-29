@@ -10,8 +10,10 @@ import Logo from './Logo'
 import WorkspaceTabs from './WorkspaceTabs'
 import UsagePill from './UsagePill'
 import LayoutPicker from './LayoutPicker'
+import { ModeSwitch } from './ModeSwitch'
 import { Button } from './ui'
 import { selectActiveWorkspace, useApp } from '../store/app'
+import { useRemote } from '../store/remote'
 import './Titlebar.css'
 
 /**
@@ -49,6 +51,7 @@ export default function Titlebar({ variant }: TitlebarProps): JSX.Element {
   const setView = useApp((state) => state.setView)
   const setZoneEditorOpen = useApp((state) => state.setZoneEditorOpen)
   const workspace = useApp(selectActiveWorkspace)
+  const remoteMode = useRemote((state) => state.mode) === 'remote'
 
   const [maximized, setMaximized] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -98,9 +101,11 @@ export default function Titlebar({ variant }: TitlebarProps): JSX.Element {
           >
             <FolderTree size={ICON} />
           </Button>
-          {/* Hidden by the setting, the tabs' flex:1 goes with them — the spacer
-              keeps everything to their right where it was. */}
-          {showTabs ? <WorkspaceTabs /> : <div className="ada-titlebar-spacer" />}
+          <ModeSwitch />
+          {/* Hidden by the setting (or in Remote mode, where remote machines have
+              no tab strip), the tabs' flex:1 goes with them — the spacer keeps
+              everything to their right where it was. */}
+          {showTabs && !remoteMode ? <WorkspaceTabs /> : <div className="ada-titlebar-spacer" />}
           <UsagePill />
           <Button
             ref={pickerAnchor}

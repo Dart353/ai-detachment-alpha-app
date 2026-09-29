@@ -1,0 +1,25 @@
+/* The Local / Remote segmented switch in the title bar. Kept short enough that
+   the bar keeps its --ada-size-titlebar height. */
+
+.ada-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  margin-left: 6px;
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-chip);
+  background: var(--ada-bg-window);
+}
+
+.ada-mode-switch .ada-btn {
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--ada-radius-chip);
+}
+
+/* The kit's ghost wash is too faint to read as "selected" in a segmented control. */
+.ada-mode-switch .ada-btn-active {
+  background: var(--ada-accent-tab-bg);
+  color: var(--ada-text-strong);
+}

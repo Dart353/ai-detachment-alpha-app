@@ -14,6 +14,7 @@ declare global {
     __ada?: {
       useApp: typeof import('./store/app').useApp
       useRuntime: typeof import('./store/runtime').useRuntime
+      remote?: typeof import('./store/remote').useRemote
     }
   }
 }

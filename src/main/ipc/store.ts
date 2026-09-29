@@ -23,6 +23,7 @@ import {
 } from '../store'
 import type { IpcCtx } from './index'
 import { applyRelaySettings } from './relay'
+import { applyRemoteSettings } from './remote'
 
 /** The relay link reconnects only when its own fields change, not on every save. */
 function sameRelay(a: Settings['relay'], b: Settings['relay']): boolean {
@@ -60,7 +61,10 @@ export function registerStoreIpc(ctx: IpcCtx): void {
     // corrects a wrong path in Settings expects the next pane to use it, not to
     // have to relaunch the app.
     if (merged.cliPaths?.claude !== before.cliPaths?.claude) clearCliPathCache()
-    if (!sameRelay(before.relay, merged.relay)) applyRelaySettings(ctx, merged.relay)
+    if (!sameRelay(before.relay, merged.relay)) {
+      applyRelaySettings(ctx, merged.relay)
+      applyRemoteSettings(ctx, merged.relay)
+    }
     ctx.send(CH.settingsChanged, merged)
     return merged
   })

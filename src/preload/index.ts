@@ -22,6 +22,11 @@ import type {
   RelayScreenReply,
   RelayScreenRequest,
   RelayStatus,
+  RemoteAddPane,
+  RemoteNotice,
+  RemoteOutput,
+  RemoteScreen,
+  RemoteStatus,
   SavedLayout,
   SessionInfo,
   Settings,
@@ -170,6 +175,32 @@ const api: Api = {
   onRelayScreenRequest: (cb: (request: RelayScreenRequest) => void) =>
     sub<RelayScreenRequest>(CH.relayScreenRequest, cb),
   replyRelayScreen: (reply: RelayScreenReply) => ipcRenderer.send(CH.relayScreenReply, reply),
+
+  /* === remote mode (this desktop as a viewer) === */
+  remoteStatus: () => ipcRenderer.invoke(CH.remoteStatus) as Promise<RemoteStatus>,
+  addRemoteMachine: (key: string, label: string) =>
+    ipcRenderer.invoke(CH.remoteAddMachine, { key, label }) as Promise<
+      { ok: true; hostId: string } | { ok: false; error: string }
+    >,
+  forgetRemoteMachine: (hostId: string) => ipcRenderer.send(CH.remoteForgetMachine, hostId),
+  watchRemotePane: (hostId: string, paneId: string) =>
+    ipcRenderer.send(CH.remoteWatch, { hostId, paneId }),
+  unwatchRemotePane: (hostId: string, paneId: string) =>
+    ipcRenderer.send(CH.remoteUnwatch, { hostId, paneId }),
+  writeRemotePane: (hostId: string, paneId: string, data: string) =>
+    ipcRenderer.send(CH.remoteInput, { hostId, paneId, data }),
+  addRemotePane: (request: RemoteAddPane) => ipcRenderer.send(CH.remoteAddPane, request),
+  openRemoteWorkspace: (hostId: string, rootDir: string) =>
+    ipcRenderer.send(CH.remoteOpenWorkspace, { hostId, rootDir }),
+  attachToRemotePane: (hostId: string, paneId: string) =>
+    ipcRenderer.invoke(CH.remoteAttach, { hostId, paneId }) as Promise<{
+      ok: boolean
+      error?: string
+    }>,
+  onRemoteChanged: (cb: (status: RemoteStatus) => void) => sub<RemoteStatus>(CH.remoteChanged, cb),
+  onRemoteScreen: (cb: (screen: RemoteScreen) => void) => sub<RemoteScreen>(CH.remoteScreen, cb),
+  onRemoteOutput: (cb: (output: RemoteOutput) => void) => sub<RemoteOutput>(CH.remoteOutput, cb),
+  onRemoteNotice: (cb: (notice: RemoteNotice) => void) => sub<RemoteNotice>(CH.remoteNotice, cb),
 
   /* === updates === */
   getUpdateStatus: () => ipcRenderer.invoke(CH.updateGet) as Promise<UpdateStatus>,
