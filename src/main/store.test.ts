@@ -98,6 +98,28 @@ describe('settings', () => {
     expect(merged.notifications.done).toEqual({ banner: true, sound: false })
     expect(merged.cliPaths).toEqual({ claude: '/opt/bin/claude' })
   })
+
+  it('keeps well-formed custom agents and drops the rest', () => {
+    fs.writeFileSync(
+      path.join(dir, 'ada-settings.json'),
+      JSON.stringify({
+        customAgents: [
+          { id: 'a1', name: 'Backend reviewer', prompt: 'Review the backend.', extra: 1 },
+          { id: '', name: 'no id', prompt: 'x' },
+          { id: 'a2', name: 'no prompt' },
+          'junk'
+        ]
+      })
+    )
+    expect(loadSettings().customAgents).toEqual([
+      { id: 'a1', name: 'Backend reviewer', prompt: 'Review the backend.' }
+    ])
+  })
+
+  it('treats a non-list customAgents as none', () => {
+    fs.writeFileSync(path.join(dir, 'ada-settings.json'), JSON.stringify({ customAgents: 'x' }))
+    expect(loadSettings().customAgents).toEqual([])
+  })
 })
 
 describe('remote machines', () => {

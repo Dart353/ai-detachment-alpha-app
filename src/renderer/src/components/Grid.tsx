@@ -149,6 +149,7 @@ export default function Grid({ workspaceId, active }: GridProps): JSX.Element | 
 
   const remountKeys = useRuntime((state) => state.remountKey)
   const accounts = useRuntime((state) => state.accounts)
+  const customAgents = useApp((state) => state.settings.customAgents)
 
   const gridRef = useRef<HTMLDivElement>(null)
   /** The pane in flight. `dataTransfer` refuses to be read during a dragover. */
@@ -215,6 +216,7 @@ export default function Grid({ workspaceId, active }: GridProps): JSX.Element | 
     return buildQuickSpawnMenu({
       sshHosts,
       accounts,
+      customAgents,
       canDuplicate: !!focusedPaneId,
       onSpawn: (init) => addPane(workspaceId, init, zoneId),
       onDuplicate: () => {

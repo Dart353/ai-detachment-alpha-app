@@ -4,6 +4,7 @@ import { useApp } from '../store/app'
 import Appearance from './settings/Appearance'
 import Terminal from './settings/Terminal'
 import Agents from './settings/Agents'
+import CustomAgents from './settings/CustomAgents'
 import Accounts from './settings/Accounts'
 import Workspaces from './settings/Workspaces'
 import Remote from './settings/Remote'
@@ -15,6 +16,7 @@ type SectionId =
   | 'appearance'
   | 'terminal'
   | 'agents'
+  | 'customAgents'
   | 'accounts'
   | 'workspaces'
   | 'remote'
@@ -24,6 +26,7 @@ const SECTIONS: { id: SectionId; label: string; render: () => JSX.Element }[] = 
   { id: 'appearance', label: 'Appearance', render: () => <Appearance /> },
   { id: 'terminal', label: 'Terminal', render: () => <Terminal /> },
   { id: 'agents', label: 'Agents', render: () => <Agents /> },
+  { id: 'customAgents', label: 'Custom agents', render: () => <CustomAgents /> },
   { id: 'accounts', label: 'Accounts', render: () => <Accounts /> },
   { id: 'workspaces', label: 'Workspaces', render: () => <Workspaces /> },
   { id: 'remote', label: 'Remote', render: () => <Remote /> },

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DRAFT_GIVE_UP_MS,
   DRAFT_SETTLE_MS,
+  bracketedPaste,
   claudeInputReady,
   draftDecision,
   fileMention
@@ -82,5 +83,19 @@ describe('fileMention', () => {
 
   it('uses forward slashes for a Windows relative path', () => {
     expect(fileMention('src\\main\\index.ts')).toBe('@src/main/index.ts ')
+  })
+})
+
+describe('bracketedPaste', () => {
+  it('wraps the text in paste markers, newlines intact', () => {
+    expect(bracketedPaste('You review\nbackend code.')).toBe('\x1b[200~You review\nbackend code.\x1b[201~')
+  })
+
+  it('normalizes CRLF so a pasted Windows prompt keeps single line breaks', () => {
+    expect(bracketedPaste('a\r\nb')).toBe('\x1b[200~a\nb\x1b[201~')
+  })
+
+  it('strips ESC so the text cannot end the paste early', () => {
+    expect(bracketedPaste('x\x1b[201~y')).toBe('\x1b[200~x[201~y\x1b[201~')
   })
 })

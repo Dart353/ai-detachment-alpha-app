@@ -3,6 +3,7 @@ import path from 'node:path'
 import {
   DEFAULT_SETTINGS,
   type ArchiveEntry,
+  type CustomAgent,
   type PersistedState,
   type RecentWorkspace,
   type SavedLayout,
@@ -124,6 +125,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * banner/sound sub-objects the UI reads unconditionally, so every nested group
  * is merged on its own terms.
  */
+/** Keep only well-formed agents from a stored (possibly hand-edited) list. */
+function sanitizeCustomAgents(raw: unknown): CustomAgent[] {
+  if (!Array.isArray(raw)) return []
+  return raw.filter(
+    (agent): agent is CustomAgent =>
+      isRecord(agent) &&
+      typeof agent['id'] === 'string' &&
+      agent['id'] !== '' &&
+      typeof agent['name'] === 'string' &&
+      typeof agent['prompt'] === 'string'
+  ).map(({ id, name, prompt }) => ({ id, name, prompt }))
+}
+
 function mergeSettings(base: Settings, stored: Record<string, unknown>): Settings {
   const notifications = isRecord(stored['notifications']) ? stored['notifications'] : {}
   return {
@@ -132,6 +146,8 @@ function mergeSettings(base: Settings, stored: Record<string, unknown>): Setting
     wsl: { ...base.wsl, ...(isRecord(stored['wsl']) ? stored['wsl'] : {}) },
     cliPaths: { ...base.cliPaths, ...(isRecord(stored['cliPaths']) ? stored['cliPaths'] : {}) },
     relay: { ...base.relay, ...(isRecord(stored['relay']) ? stored['relay'] : {}) },
+    customAgents:
+      'customAgents' in stored ? sanitizeCustomAgents(stored['customAgents']) : base.customAgents,
     notifications: {
       ...base.notifications,
       ...notifications,
