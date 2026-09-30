@@ -157,7 +157,8 @@ terminal's size.
 Pairing: each machine has a **pairing key** (256 random bits, shown under
 Settings → Remote). The relay knows the machine only by the key's SHA-256; the
 phone opens the relay's page, adds the key once, and sees that machine — and
-every other machine it holds a key for — on one screen. **Rotate** revokes
+every other machine it holds a key for — on one screen. Another desktop pairs
+it the same way, from the **+** beside MACHINES in its Remote view. **Rotate** revokes
 every phone. Holding a key grants everything on that machine — seeing its panes
 and typing into them — so treat it like a password. Settings → Remote lists the
 phones connected right now (device, address, how long, what they are watching)

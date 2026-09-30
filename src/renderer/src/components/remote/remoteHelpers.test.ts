@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { FeedPane, FeedWorkspace } from '../../../../shared/relayProtocol'
-import { evenZones, slotsOf } from './remoteHelpers'
+import { evenZones, isPairingKey, normalizePairingKey, slotsOf } from './remoteHelpers'
 
 function pane(id: string): FeedPane {
   return { id, name: id, kind: 'claude', status: 'idle', title: null, lastPrompt: null, model: null, summary: null, lastActivity: 0 }
@@ -52,5 +52,19 @@ describe('slotsOf', () => {
     expect(slotsOf(workspace([pane('p1'), pane('p2')])).map((slot) => slot.zone.w)).toEqual([50, 50])
     expect(slotsOf(workspace([pane('p1')], { zones, assign: {} }))).toHaveLength(1)
     expect(slotsOf(workspace([]))).toEqual([])
+  })
+})
+
+describe('pairing keys', () => {
+  const key = 'ab'.repeat(32)
+
+  it('drops whitespace and case from a pasted key', () => {
+    expect(normalizePairingKey(`  ${key.slice(0, 32).toUpperCase()}\n${key.slice(32)} `)).toBe(key)
+  })
+
+  it('accepts exactly 64 hex characters', () => {
+    expect(isPairingKey(key)).toBe(true)
+    expect(isPairingKey(key.slice(1))).toBe(false)
+    expect(isPairingKey(key.slice(1) + 'g')).toBe(false)
   })
 })
