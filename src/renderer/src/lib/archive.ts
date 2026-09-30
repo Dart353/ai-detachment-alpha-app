@@ -105,6 +105,7 @@ function copyPane(pane: Pane): Pane {
   if (pane.model !== undefined) copy.model = pane.model
   if (pane.effort !== undefined) copy.effort = pane.effort
   if (pane.color !== undefined) copy.color = pane.color
+  if (pane.customAgentId !== undefined) copy.customAgentId = pane.customAgentId
   return copy
 }
 

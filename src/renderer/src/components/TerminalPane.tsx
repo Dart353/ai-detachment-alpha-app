@@ -34,7 +34,7 @@ import {
   type RuntimeState
 } from '../store/runtime'
 import { BLOCKING_PROMPT_MARKERS } from '../lib/status'
-import { draftDecision } from '../lib/draftGate'
+import { bracketedPaste, draftDecision } from '../lib/draftGate'
 import { buildLaunchCommand } from '../lib/launch'
 import { shellQuote } from '../../../shared/shellQuote'
 import { useTerminalPane } from '../hooks/useTerminalPane'
@@ -55,6 +55,44 @@ const PROMPT_PROBE_ROWS = 12
 
 /** How often a pending draft re-checks whether Claude's input box is up. */
 const DRAFT_POLL_MS = 250
+/** Between a submitted paste and its Enter, so Claude has taken the paste in. */
+const SUBMIT_AFTER_PASTE_MS = 150
+
+/**
+ * Type `text` into a freshly spawned Claude pane once its input box is up (see
+ * lib/draftGate): as-is and unsubmitted for a draft, or pasted and sent with
+ * Enter for a custom agent's prompt. Returns the cancel for an unmount.
+ */
+function typeWhenReady(
+  term: Terminal,
+  paneId: string,
+  text: string,
+  submit: boolean
+): () => void {
+  const startedAt = Date.now()
+  let submitTimer: ReturnType<typeof setTimeout> | null = null
+  const poll = setInterval(() => {
+    const decision = draftDecision({
+      rows: visibleRows(term),
+      now: Date.now(),
+      startedAt,
+      lastOutputAt: getLastActivity(paneId)
+    })
+    if (decision === 'wait') return
+    clearInterval(poll)
+    if (decision !== 'write') return
+    if (!submit) {
+      window.api.writePty(paneId, text)
+      return
+    }
+    window.api.writePty(paneId, bracketedPaste(text))
+    submitTimer = setTimeout(() => window.api.writePty(paneId, '\r'), SUBMIT_AFTER_PASTE_MS)
+  }, DRAFT_POLL_MS)
+  return () => {
+    clearInterval(poll)
+    if (submitTimer) clearTimeout(submitTimer)
+  }
+}
 
 /** The rows currently on screen, as plain text. */
 function visibleRows(term: Terminal, count = term.rows): string[] {
@@ -134,6 +172,8 @@ export function TerminalPane({
   const terminalRef = useRef<Terminal | null>(null)
   // One spawn per mount, whatever React does with effects in development.
   const spawnedRef = useRef(false)
+  // Stops a pending typeWhenReady when the pane unmounts first.
+  const cancelTypingRef = useRef<(() => void) | null>(null)
   const isClaude = pane?.kind === 'claude'
 
   const { containerRef } = useTerminalPane({
@@ -174,26 +214,6 @@ export function TerminalPane({
             BLOCKING_PROMPT_MARKERS.test(visibleRows(term, PROMPT_PROBE_ROWS).join('\n'))
           )
         : null
-
-      // A draft left by the explorer ("Open in Claude Code") is typed into the
-      // input, unsubmitted, once Claude has drawn it — see lib/draftGate.
-      const draft = isClaude ? takePendingDraft(paneId) : undefined
-      let draftTimer: ReturnType<typeof setInterval> | null = null
-      if (draft) {
-        const startedAt = Date.now()
-        draftTimer = setInterval(() => {
-          const decision = draftDecision({
-            rows: visibleRows(term),
-            now: Date.now(),
-            startedAt,
-            lastOutputAt: getLastActivity(paneId)
-          })
-          if (decision === 'wait') return
-          if (draftTimer) clearInterval(draftTimer)
-          draftTimer = null
-          if (decision === 'write') window.api.writePty(paneId, draft)
-        }, DRAFT_POLL_MS)
-      }
 
       term.attachCustomKeyEventHandler((event) => {
         // App chords belong to the window listener, not to the shell.
@@ -237,7 +257,8 @@ export function TerminalPane({
         offScreen()
         offSelection()
         offProbe?.()
-        if (draftTimer) clearInterval(draftTimer)
+        cancelTypingRef.current?.()
+        cancelTypingRef.current = null
         window.api.unregisterSession(paneId)
         terminalRef.current = null
       }
@@ -286,6 +307,23 @@ export function TerminalPane({
           ...(hasTranscript && current.sessionId ? { sessionId: current.sessionId } : {}),
           ...(current.accountId === undefined ? {} : { accountId: current.accountId })
         })
+
+        // A custom agent's role goes in as the first message of a FRESH session
+        // only: a resumed one already carries it in its transcript. Otherwise a
+        // draft the explorer left ("Open in Claude Code") is typed, unsubmitted.
+        const agent =
+          !hasTranscript && current.customAgentId
+            ? useApp.getState().settings.customAgents.find((a) => a.id === current.customAgentId)
+            : undefined
+        const draft = takePendingDraft(paneId)
+        // The unmount cleanup already ran if the terminal was torn down mid-spawn.
+        if (terminalRef.current === term) {
+          if (agent && agent.prompt.trim()) {
+            cancelTypingRef.current = typeWhenReady(term, paneId, agent.prompt, true)
+          } else if (draft) {
+            cancelTypingRef.current = typeWhenReady(term, paneId, draft, false)
+          }
+        }
       }
       return true
     }

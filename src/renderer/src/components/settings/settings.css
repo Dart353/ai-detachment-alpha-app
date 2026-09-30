@@ -388,3 +388,23 @@
   text-align: center;
   color: var(--ada-text-muted);
 }
+
+/* === custom agents ========================================================== */
+
+/* The text column of a list row may shrink, so a long prompt preview ellipsizes
+   instead of pushing the row's buttons off the card. */
+.ada-set-item-text {
+  min-width: 0;
+}
+
+.ada-set-item-text .ada-set-item-desc {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ada-set-textarea {
+  min-height: 200px;
+  resize: vertical;
+  line-height: 1.5;
+}

@@ -41,6 +41,8 @@ export interface Pane {
   model?: string
   /** `claude` panes only: `--effort`. */
   effort?: Effort
+  /** `claude` panes only: the custom agent whose prompt a fresh session is sent. */
+  customAgentId?: string
   /** Optional accent colour for the pane header, chosen by the user. */
   color?: string
 }
@@ -151,6 +153,18 @@ export interface Settings {
   }
   /** Remote: push this machine's pane statuses to the relay a phone watches. */
   relay: RelaySettings
+  /** Saved roles a Claude pane can be opened as (Settings → Custom agents). */
+  customAgents: CustomAgent[]
+}
+
+/**
+ * A saved role: opening one spawns a Claude pane and sends `prompt` as its first
+ * message, the way you would paste it in yourself.
+ */
+export interface CustomAgent {
+  id: string
+  name: string
+  prompt: string
 }
 
 export interface RelaySettings {
@@ -177,7 +191,8 @@ export const DEFAULT_SETTINGS: Settings = {
     attention: { banner: true, sound: true },
     done: { banner: true, sound: true }
   },
-  relay: { enabled: false, url: '', name: '' }
+  relay: { enabled: false, url: '', name: '' },
+  customAgents: []
 }
 
 /* === Remote (the phone's view of this machine, via the relay) === */

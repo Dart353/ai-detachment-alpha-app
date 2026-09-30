@@ -71,6 +71,7 @@ export interface PaneInit {
   cwd?: string
   model?: string
   effort?: Effort
+  customAgentId?: string
 }
 
 /** Everything the Add workspace screen decides; the store turns it into a workspace. */
@@ -523,6 +524,7 @@ export const useApp = create<AppState>()((set, get) => ({
     if (init.accountId !== undefined) pane.accountId = init.accountId
     if (init.model !== undefined) pane.model = init.model
     if (init.effort !== undefined) pane.effort = init.effort
+    if (init.customAgentId !== undefined) pane.customAgentId = init.customAgentId
 
     const panes = [...workspace.panes, pane]
     const targetZone = zoneId ? zoneById(workspace.layout, zoneId) : undefined
@@ -683,6 +685,7 @@ export const useApp = create<AppState>()((set, get) => ({
     if (pane.sshHost !== undefined) init.sshHost = pane.sshHost
     if (pane.planMode !== undefined) init.planMode = pane.planMode
     if (pane.accountId !== undefined) init.accountId = pane.accountId
+    if (pane.customAgentId !== undefined) init.customAgentId = pane.customAgentId
     return get().addPane(workspace.id, init)
   },
 

@@ -11,8 +11,8 @@
  * `title` saying why, never dropped. A vanished row reads as a missing feature.
  */
 import type { JSX } from 'react'
-import { Copy, Plus, Server, SquareTerminal, UserRound } from 'lucide-react'
-import type { ClaudeAccount, Pane } from '../../../shared/types'
+import { Bot, Copy, Plus, Server, SquareTerminal, UserRound } from 'lucide-react'
+import type { ClaudeAccount, CustomAgent, Pane } from '../../../shared/types'
 import { DEFAULT_ACCOUNT_ID } from '../../../shared/types'
 import type { PaneInit } from '../store/app'
 import { neighborZoneInDirection, zoneOfPane, type Dir, type ZoneLayout } from '../lib/zones'
@@ -77,6 +77,8 @@ export interface QuickSpawnContext {
   /** ~/.ssh/config hosts; null while the caller is still reading them. */
   sshHosts: string[] | null
   accounts: ClaudeAccount[]
+  /** Saved roles from Settings → Custom agents, in the order they were saved. */
+  customAgents: CustomAgent[]
   /** False when the workspace has no focused pane to duplicate. */
   canDuplicate: boolean
   /** Spawn into the zone this menu was opened on. */
@@ -92,6 +94,17 @@ function sshHostItems(hosts: string[] | null, pick: (host: string) => void): Men
   if (hosts === null) return [{ label: 'Loading…', disabled: true }]
   if (hosts.length === 0) return [{ label: 'No hosts in ~/.ssh/config', disabled: true }]
   return hosts.map((host) => ({ label: host, onClick: () => pick(host) }))
+}
+
+/** One row per custom agent: a Claude pane named after it, sent its prompt. */
+function customAgentItems(agents: CustomAgent[], spawn: (init: PaneInit) => void): MenuItem[] {
+  if (agents.length === 0) {
+    return [{ label: 'None yet', disabled: true, title: 'Build one in Settings → Custom agents' }]
+  }
+  return agents.map((agent) => ({
+    label: agent.name || 'Untitled agent',
+    onClick: () => spawn({ kind: 'claude', name: agent.name, customAgentId: agent.id })
+  }))
 }
 
 export function buildQuickSpawnMenu(ctx: QuickSpawnContext): MenuItem[] {
@@ -112,6 +125,11 @@ export function buildQuickSpawnMenu(ctx: QuickSpawnContext): MenuItem[] {
       label: 'Claude Code · plan mode',
       icon: <ClaudeGlyph muted />,
       onClick: () => ctx.onSpawn({ kind: 'claude', planMode: true })
+    },
+    {
+      label: 'Custom agent',
+      icon: <Bot size={ICON} />,
+      submenu: customAgentItems(ctx.customAgents, ctx.onSpawn)
     },
     {
       label: 'Connect to server',

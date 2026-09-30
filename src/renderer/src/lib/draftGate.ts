@@ -59,3 +59,14 @@ export function fileMention(relativePath: string): string {
   const path = relativePath.replace(/\\/g, '/')
   return /\s/.test(path) ? `@"${path}" ` : `@${path} `
 }
+
+/**
+ * A multi-line prompt as one bracketed paste, so its newlines stay newlines
+ * instead of each one submitting a line. ESC is stripped: a stray `ESC[201~` in
+ * the text would end the paste early and type the rest as keystrokes. The
+ * Enter that sends it is a separate write (see TerminalPane).
+ */
+export function bracketedPaste(text: string): string {
+  const body = text.replace(/\r\n?/g, '\n').replace(/\x1b/g, '')
+  return `\x1b[200~${body}\x1b[201~`
+}
