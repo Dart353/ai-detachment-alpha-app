@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.10.0...v1.11.0) (2026-09-30)
+
+
+### Features
+
+* **remote:** add machines from a + in the Remote sidebar ([ccdffcb](https://github.com/Dart353/ai-detachment-alpha-app/commit/ccdffcbf451ce47b82677503a8ea6c9a1d526691))
+* **remote:** add machines from a + in the Remote sidebar ([831f26f](https://github.com/Dart353/ai-detachment-alpha-app/commit/831f26fc1f18dd953af15774c89d5c3c0e1fc93d))
+
 ## [1.10.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.9.0...v1.10.0) (2026-09-29)
 
 
