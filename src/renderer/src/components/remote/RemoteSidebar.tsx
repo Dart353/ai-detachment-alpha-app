@@ -3,7 +3,7 @@
  * its open workspaces nested beneath it, and their panes beneath those. Clicking
  * a pane selects it for the terminal on the right; the machine and workspace
  * rows carry the menus that act on the far desktop (open a folder, add a pane,
- * forget the machine).
+ * forget the machine), and the header's + pairs a new one.
  *
  * Reuses the local sidebar's row classes so both trees read as the same thing.
  */
@@ -16,6 +16,7 @@ import type { FeedPane, FeedWorkspace } from '../../../../shared/relayProtocol'
 import { dotStatus, kindLabel, machineName } from './remoteHelpers'
 import { RemoteNewAgent } from './RemoteNewAgent'
 import { RemoteOpenWorkspace } from './RemoteOpenWorkspace'
+import { RemoteAddMachine } from './RemoteAddMachine'
 import '../Sidebar.css'
 import './remote.css'
 
@@ -50,6 +51,7 @@ export function RemoteSidebar(): JSX.Element {
   const [openWorkspaceHostId, setOpenWorkspaceHostId] = useState<string | null>(null)
   const [newAgentTarget, setNewAgentTarget] = useState<WorkspaceTarget | null>(null)
   const [forgetHostId, setForgetHostId] = useState<string | null>(null)
+  const [addingMachine, setAddingMachine] = useState(false)
 
   function menuItems(anchor: MenuAnchor): MenuItem[] {
     if (anchor.kind === 'machine') {
@@ -83,14 +85,24 @@ export function RemoteSidebar(): JSX.Element {
     <aside className="ada-sidebar">
       <div className="ada-sidebar-head">
         <span className="ada-sidebar-title">MACHINES</span>
+        <Button
+          variant="icon"
+          size="sm"
+          aria-label="Add a machine"
+          title="Add a machine"
+          onClick={() => setAddingMachine(true)}
+        >
+          <Plus size={ICON} />
+        </Button>
       </div>
 
       <div className="ada-sidebar-tree">
         {machines.length === 0 && (
           <div className="ada-sb-empty">
-            <span className="ada-sb-empty-text">
-              No machines paired yet. Settings → Remote → Remote machines.
-            </span>
+            <span className="ada-sb-empty-text">No machines paired yet</span>
+            <Button variant="outline" size="sm" onClick={() => setAddingMachine(true)}>
+              Add machine…
+            </Button>
           </div>
         )}
 
@@ -132,6 +144,8 @@ export function RemoteSidebar(): JSX.Element {
           onClose={() => setNewAgentTarget(null)}
         />
       )}
+
+      <RemoteAddMachine open={addingMachine} onClose={() => setAddingMachine(false)} />
 
       {forgetMachine && (
         <ForgetMachineDialog machine={forgetMachine} onClose={() => setForgetHostId(null)} />

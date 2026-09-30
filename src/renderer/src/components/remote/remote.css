@@ -192,3 +192,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.ada-remote-field-error {
+  font-size: 11.5px;
+  color: var(--ada-warn);
+}

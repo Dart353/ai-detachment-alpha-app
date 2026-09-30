@@ -80,3 +80,13 @@ export function slotsOf(workspace: FeedWorkspace): RemoteSlot[] {
   }
   return slots
 }
+
+/** A pasted pairing key as main expects it: whitespace dropped, lowercased. */
+export function normalizePairingKey(value: string): string {
+  return value.replace(/\s+/g, '').toLowerCase()
+}
+
+/** A pairing key is 32 bytes of hex. */
+export function isPairingKey(value: string): boolean {
+  return /^[0-9a-f]{64}$/.test(value)
+}
