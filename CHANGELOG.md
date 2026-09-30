@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.11.0...v1.12.0) (2026-09-30)
+
+
+### Features
+
+* **agents:** save custom agents and open one from an empty zone ([20620e0](https://github.com/Dart353/ai-detachment-alpha-app/commit/20620e0a5c0090cd8528a0280f6ea86b07cc1bfe))
+* **agents:** save custom agents and open one from an empty zone ([d0a0bbc](https://github.com/Dart353/ai-detachment-alpha-app/commit/d0a0bbc9588f45ad2736f6a40c3cbdcac8880176))
+
 ## [1.11.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.10.0...v1.11.0) (2026-09-30)
 
 
