@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron'
 import { CH, type Api, type Unsubscribe } from '../shared/ipc'
 import type {
+  ArtifactRecord,
   AddAccountInput,
   AppNotification,
   ArchiveEntry,
@@ -136,6 +137,7 @@ const api: Api = {
 
   /* === usage meters === */
   getUsage: (force?: boolean) => ipcRenderer.invoke(CH.usageGet, force) as Promise<UsageSnapshot>,
+  listArtifacts: () => ipcRenderer.invoke(CH.artifactsList) as Promise<ArtifactRecord[]>,
   onUsage: (cb: (usage: UsageSnapshot) => void) => sub<UsageSnapshot>(CH.usageUpdate, cb),
 
   /* === Claude accounts === */

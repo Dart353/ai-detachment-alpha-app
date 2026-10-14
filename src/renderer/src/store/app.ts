@@ -58,7 +58,7 @@ import {
 import { getFocusFn, useRuntime } from './runtime'
 
 /** Which top-level surface is on screen. */
-export type AppView = 'grid' | 'settings' | 'firstRun' | 'addWorkspace'
+export type AppView = 'grid' | 'settings' | 'artifacts' | 'firstRun' | 'addWorkspace'
 
 /** What a caller may specify when spawning a pane; everything else is derived. */
 export interface PaneInit {

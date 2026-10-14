@@ -13,6 +13,7 @@ import { registerMiscIpc } from './misc'
 import { registerRelayIpc } from './relay'
 import { registerRemoteIpc } from './remote'
 import { registerUpdateIpc } from './update'
+import { registerArtifactsIpc } from './artifacts'
 
 /**
  * What every IPC area gets instead of a module-level reference to the window.
@@ -47,4 +48,5 @@ export function registerAllIpc(ctx: IpcCtx): void {
   registerRelayIpc(ctx)
   registerRemoteIpc(ctx)
   registerUpdateIpc(ctx)
+  registerArtifactsIpc(ctx)
 }

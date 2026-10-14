@@ -43,10 +43,11 @@ this app ports with their reasoning comments and neutral vocabulary.
 | `fileTree.ts`, `git.ts`, `ssh.ts` | explorer listings, branch + dirty flag, `~/.ssh/config` |
 | `protocol.ts` | the `ada-file://` scheme the sandboxed renderer reads files through |
 | `relay.ts` / `paneTap.ts` | Remote: the outbound socket.io link to the relay a phone watches, and the tap on every PTY (recent output, size, live stream, input) it serves panes from |
+| `artifacts.ts` | the claude.ai pages Claude published, read back out of every account's transcripts |
 | `log.ts` | `logs/ada.log`, the ring buffer, and crash reports |
 
 `src/main/ipc/*.ts` is **one file per area** (`pty`, `sessions`, `store`, `fs`,
-`git`, `ssh`, `hooks`, `usage`, `accounts`, `window`, `misc`, `relay`), all registered
+`git`, `ssh`, `hooks`, `usage`, `accounts`, `window`, `misc`, `relay`, `artifacts`), all registered
 once by `ipc/index.ts` before the window exists. Handlers reach the window only
 through the `IpcCtx` they are given, never through a captured reference.
 
