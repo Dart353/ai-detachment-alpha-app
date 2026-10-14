@@ -6,6 +6,7 @@ import Grid from './components/Grid'
 import ZoneEditor from './components/ZoneEditor'
 import FirstRun from './components/FirstRun'
 import AddWorkspace from './components/AddWorkspace'
+import ArtifactsView from './components/ArtifactsView'
 import SettingsView from './components/SettingsView'
 import RestorePreview from './components/RestorePreview'
 import RemoteView from './components/remote/RemoteView'
@@ -75,7 +76,9 @@ export default function App(): JSX.Element {
   const titlebarVariant =
     view === 'settings'
       ? 'settings'
-      : view === 'addWorkspace'
+      : view === 'artifacts'
+        ? 'artifacts'
+        : view === 'addWorkspace'
         ? 'addWorkspace'
         : view === 'firstRun' || zoneEditorOpen
           ? 'minimal'
@@ -129,6 +132,12 @@ export default function App(): JSX.Element {
         {view === 'settings' && (
           <div className="ada-app-layer">
             <SettingsView />
+          </div>
+        )}
+
+        {view === 'artifacts' && (
+          <div className="ada-app-layer">
+            <ArtifactsView />
           </div>
         )}
 

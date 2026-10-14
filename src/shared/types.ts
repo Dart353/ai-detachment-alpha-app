@@ -195,6 +195,31 @@ export const DEFAULT_SETTINGS: Settings = {
   customAgents: []
 }
 
+/* === Artifacts (pages Claude published, read back from the transcripts) === */
+
+/**
+ * One claude.ai artifact, merged from every publish of it found in this
+ * machine's Claude Code transcripts. Paths are as the transcript recorded them
+ * (Linux paths in WSL mode); `revealPath` translates.
+ */
+export interface ArtifactRecord {
+  url: string
+  /** The page's <title> when its source file is still here, else a name from its path. */
+  title: string
+  description: string | null
+  /** The source file of the latest publish, when it published a local file. */
+  filePath: string | null
+  fileExists: boolean
+  /** The folder the publishing session ran in. */
+  cwd: string | null
+  /** The highest version number a publish reported, when it reported one. */
+  version: number | null
+  /** Epoch ms. */
+  firstPublishedAt: number
+  lastPublishedAt: number
+  publishCount: number
+}
+
 /* === Remote (the phone's view of this machine, via the relay) === */
 
 /**

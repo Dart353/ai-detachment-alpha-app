@@ -1,4 +1,5 @@
 import type {
+  ArtifactRecord,
   AddAccountInput,
   AppNotification,
   ArchiveEntry,
@@ -104,6 +105,7 @@ export const CH = {
 
   // usage meters
   usageGet: 'usage:get',
+  artifactsList: 'artifacts:list',
   usageUpdate: 'usage:update',
 
   // Claude accounts
@@ -236,6 +238,8 @@ export interface Api {
 
   /* === usage meters === */
   getUsage(force?: boolean): Promise<UsageSnapshot>
+  /** Every claude.ai artifact this machine's Claude Code sessions published, newest first. */
+  listArtifacts(): Promise<ArtifactRecord[]>
   onUsage(cb: (usage: UsageSnapshot) => void): Unsubscribe
 
   /* === Claude accounts === */
@@ -372,6 +376,7 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   sshHosts: true,
   gitStatus: true,
   getUsage: true,
+  listArtifacts: true,
   onUsage: true,
   listAccounts: true,
   addAccount: true,

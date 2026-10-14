@@ -5,7 +5,17 @@ import {
   type JSX,
   type MouseEvent as ReactMouseEvent
 } from 'react'
-import { Copy, FolderTree, LayoutGrid, Minus, PanelLeft, Settings, Square, X } from 'lucide-react'
+import {
+  Copy,
+  FolderTree,
+  LayoutGrid,
+  Minus,
+  PanelLeft,
+  Settings,
+  Shapes,
+  Square,
+  X
+} from 'lucide-react'
 import Logo from './Logo'
 import WorkspaceTabs from './WorkspaceTabs'
 import UsagePill from './UsagePill'
@@ -23,7 +33,7 @@ import './Titlebar.css'
  *   settings → the mark, a centred "Settings" label, the window controls
  *   addWorkspace → the same shell, captioned "Add workspace"
  */
-export type TitlebarVariant = 'full' | 'minimal' | 'settings' | 'addWorkspace'
+export type TitlebarVariant = 'full' | 'minimal' | 'settings' | 'artifacts' | 'addWorkspace'
 
 export interface TitlebarProps {
   variant: TitlebarVariant
@@ -130,6 +140,15 @@ export default function Titlebar({ variant }: TitlebarProps): JSX.Element {
           <Button
             className="ada-nodrag ada-titlebar-wide"
             variant="icon"
+            aria-label="Artifacts"
+            title="Artifacts — pages Claude published"
+            onClick={() => setView('artifacts')}
+          >
+            <Shapes size={ICON} />
+          </Button>
+          <Button
+            className="ada-nodrag ada-titlebar-wide"
+            variant="icon"
             aria-label="Settings"
             title="Settings"
             onClick={() => setView('settings')}
@@ -140,6 +159,7 @@ export default function Titlebar({ variant }: TitlebarProps): JSX.Element {
       )}
 
       {variant === 'settings' && <div className="ada-titlebar-label">Settings</div>}
+      {variant === 'artifacts' && <div className="ada-titlebar-label">Artifacts</div>}
       {variant === 'addWorkspace' && <div className="ada-titlebar-label">Add workspace</div>}
 
       {variant === 'minimal' && <div className="ada-titlebar-spacer" />}
