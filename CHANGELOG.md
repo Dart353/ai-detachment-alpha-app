@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.12.0...v1.13.0) (2026-10-14)
+
+
+### Features
+
+* **artifacts:** list the pages Claude published from this machine ([2804bdc](https://github.com/Dart353/ai-detachment-alpha-app/commit/2804bdc7dc48be58baf103fa6fc00f15efa6b53a))
+* **artifacts:** list the pages Claude published from this machine ([c077706](https://github.com/Dart353/ai-detachment-alpha-app/commit/c077706ac5de8a6fabc48fdbb89da934f899da6a))
+
 ## [1.12.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.11.0...v1.12.0) (2026-09-30)
 
 
