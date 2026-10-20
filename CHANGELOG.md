@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.13.0...v2.0.0) (2026-10-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **remote:** speaks relay protocol 6; relays and phone pages on 5 refuse the connection until updated.
+
+### Features
+
+* **remote:** agent panes a remote client can start and close (protocol v6) ([3e56426](https://github.com/Dart353/ai-detachment-alpha-app/commit/3e5642691c56930d9656f8510d97c50c82345654))
+
 ## [1.13.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.12.0...v1.13.0) (2026-10-14)
 
 
