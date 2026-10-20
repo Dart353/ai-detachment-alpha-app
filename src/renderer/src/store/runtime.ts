@@ -124,21 +124,27 @@ export function getSelectionFn(paneId: string): (() => string) | undefined {
   return selectionFns.get(paneId)
 }
 
-const pendingDrafts = new Map<string, string>()
+export interface PendingDraft {
+  text: string
+  /** Send it as the first message, rather than leave it in the input unsent. */
+  submit: boolean
+}
+
+const pendingDrafts = new Map<string, PendingDraft>()
 
 /**
  * Leave text for a Claude pane to type into its input once Claude is ready
  * (see `lib/draftGate`). Set right after `addPane`, before the pane mounts; the
  * pane takes it exactly once, so a remount or a restored pane never re-types it.
  */
-export function setPendingDraft(paneId: string, text: string): void {
-  pendingDrafts.set(paneId, text)
+export function setPendingDraft(paneId: string, text: string, submit = false): void {
+  pendingDrafts.set(paneId, { text, submit })
 }
 
-export function takePendingDraft(paneId: string): string | undefined {
-  const text = pendingDrafts.get(paneId)
+export function takePendingDraft(paneId: string): PendingDraft | undefined {
+  const draft = pendingDrafts.get(paneId)
   pendingDrafts.delete(paneId)
-  return text
+  return draft
 }
 
 /** The exact epoch ms of a pane's last PTY output, or 0 if it never spoke. */

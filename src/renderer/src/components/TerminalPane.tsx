@@ -310,7 +310,8 @@ export function TerminalPane({
 
         // A custom agent's role goes in as the first message of a FRESH session
         // only: a resumed one already carries it in its transcript. Otherwise a
-        // draft the explorer left ("Open in Claude Code") is typed, unsubmitted.
+        // draft is typed: the explorer's ("Open in Claude Code") unsubmitted, a
+        // remote client's first prompt sent.
         const agent =
           !hasTranscript && current.customAgentId
             ? useApp.getState().settings.customAgents.find((a) => a.id === current.customAgentId)
@@ -321,7 +322,7 @@ export function TerminalPane({
           if (agent && agent.prompt.trim()) {
             cancelTypingRef.current = typeWhenReady(term, paneId, agent.prompt, true)
           } else if (draft) {
-            cancelTypingRef.current = typeWhenReady(term, paneId, draft, false)
+            cancelTypingRef.current = typeWhenReady(term, paneId, draft.text, draft.submit)
           }
         }
       }

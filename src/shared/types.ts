@@ -45,6 +45,8 @@ export interface Pane {
   customAgentId?: string
   /** Optional accent colour for the pane header, chosen by the user. */
   color?: string
+  /** The label a remote client added the pane with, published back in the feed. */
+  tag?: string
 }
 
 /** One tile of the layout. x/y/w/h are percentages of the canvas, 0–100. */
@@ -242,6 +244,8 @@ export interface HostPane {
   summary: string | null
   /** epoch ms of the last PTY output, 0 if it never spoke */
   lastActivity: number
+  /** The tag a remote client added the pane with, so it can find it again. */
+  tag?: string
 }
 
 export interface HostWorkspace {
@@ -279,7 +283,12 @@ export type RelayCommand =
       model?: string
       effort?: Effort
       planMode?: boolean
+      tag?: string
+      cwd?: string
+      prompt?: string
+      background?: boolean
     }
+  | { type: 'closePane'; paneId: string }
   | { type: 'openWorkspace'; rootDir: string }
 
 /** Main asking the renderer for a pane's screen, for a phone that just opened it. */

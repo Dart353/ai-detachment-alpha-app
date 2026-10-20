@@ -72,6 +72,13 @@ export interface PaneInit {
   model?: string
   effort?: Effort
   customAgentId?: string
+  tag?: string
+}
+
+/** How a pane is added, beyond what it is. */
+export interface AddPaneOpts {
+  /** Leave the active workspace and its focused pane as they are. */
+  background?: boolean
 }
 
 /** Everything the Add workspace screen decides; the store turns it into a workspace. */
@@ -137,7 +144,7 @@ export interface AppState {
   toggleWorkspaceCollapsed: (id: string) => void
 
   /* panes */
-  addPane: (wsId: string, init: PaneInit, zoneId?: string) => string
+  addPane: (wsId: string, init: PaneInit, zoneId?: string, opts?: AddPaneOpts) => string
   closePane: (paneId: string) => void
   renamePane: (paneId: string, name: string) => void
   setPaneColor: (paneId: string, color: string | undefined) => void
@@ -495,7 +502,7 @@ export const useApp = create<AppState>()((set, get) => ({
 
   /* === panes =============================================================== */
 
-  addPane: (wsId, init, zoneId) => {
+  addPane: (wsId, init, zoneId, opts) => {
     const state = get()
     const workspace = state.workspaces.find((candidate) => candidate.id === wsId)
     if (!workspace) return ''
@@ -525,6 +532,7 @@ export const useApp = create<AppState>()((set, get) => ({
     if (init.model !== undefined) pane.model = init.model
     if (init.effort !== undefined) pane.effort = init.effort
     if (init.customAgentId !== undefined) pane.customAgentId = init.customAgentId
+    if (init.tag !== undefined) pane.tag = init.tag
 
     const panes = [...workspace.panes, pane]
     const targetZone = zoneId ? zoneById(workspace.layout, zoneId) : undefined
@@ -537,6 +545,14 @@ export const useApp = create<AppState>()((set, get) => ({
             DEFAULT_GRID
           )
 
+    // A background add (a remote client's agent) must not pull the desktop
+    // away from what the user is looking at.
+    if (opts?.background) {
+      set({
+        workspaces: mapWorkspace(state.workspaces, wsId, (current) => ({ ...current, panes, layout }))
+      })
+      return pane.id
+    }
     set({
       workspaces: mapWorkspace(state.workspaces, wsId, (current) => ({
         ...current,

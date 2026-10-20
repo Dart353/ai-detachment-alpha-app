@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import { useApp } from '../store/app'
 import { useRuntime } from '../store/runtime'
 import { buildHostSnapshot } from '../lib/hostSnapshot'
-import { getScreenFn } from '../store/runtime'
+import { remotePaneFor } from '../lib/remotePane'
+import { getScreenFn, setPendingDraft } from '../store/runtime'
 
 /** Bursts of status ticks and activity stamps collapse into one publish. */
 const PUBLISH_DEBOUNCE_MS = 400
@@ -71,15 +72,17 @@ export function useHostPublisher(): void {
     const offCommand = window.api?.onRelayCommand((command) => {
       const app = useApp.getState()
       if (command.type === 'addPane') {
-        if (app.workspaces.some((workspace) => workspace.id === command.workspaceId)) {
-          app.addPane(command.workspaceId, {
-            kind: command.kind,
-            ...(command.name ? { name: command.name } : {}),
-            ...(command.model ? { model: command.model } : {}),
-            ...(command.effort ? { effort: command.effort } : {}),
-            ...(command.planMode ? { planMode: true } : {})
-          })
+        const workspace = app.workspaces.find((candidate) => candidate.id === command.workspaceId)
+        if (workspace) {
+          const { init, opts, prompt } = remotePaneFor(command, workspace.rootDir)
+          const paneId = app.addPane(workspace.id, init, undefined, opts)
+          // Left before the pane mounts, so its first spawn sends it once ready.
+          if (paneId && prompt) setPendingDraft(paneId, prompt, true)
         }
+        return
+      }
+      if (command.type === 'closePane') {
+        app.closePane(command.paneId)
         return
       }
       app.openWorkspace(command.rootDir)

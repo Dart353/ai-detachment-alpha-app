@@ -2,11 +2,15 @@ import crypto from 'node:crypto'
 import { io, type Socket } from 'socket.io-client'
 import {
   EFFORTS,
+  INPUT_MAX_CHARS,
   KEY_RE,
   MODEL_RE,
   PANE_NAME_MAX_CHARS,
+  PANE_TAG_RE,
   PROTOCOL_VERSION,
+  ROOT_DIR_MAX_CHARS,
   type AddPane,
+  type ClosePane,
   type Attach,
   type Auth,
   type AuthError,
@@ -90,6 +94,8 @@ export interface RelayLinkOpts {
   onAttach?: (attach: Attach) => void
   /** A phone asked for a new pane in an open workspace. */
   onAddPane?: (request: AddPane) => void
+  /** A phone asked to close a pane. */
+  onClosePane?: (request: ClosePane) => void
   /** A phone asked to open a folder as a workspace. */
   onOpenWorkspace?: (request: OpenWorkspace) => void
   /** The phones holding this machine's key, whenever that set changes. */
@@ -171,8 +177,26 @@ export class RelayLink {
           clean.effort = request.effort
         }
         if (request.planMode === true) clean.planMode = true
+        if (
+          typeof request.prompt === 'string' &&
+          request.prompt.trim() &&
+          request.prompt.length <= INPUT_MAX_CHARS
+        ) {
+          clean.prompt = request.prompt
+        }
       }
+      if (typeof request.tag === 'string' && PANE_TAG_RE.test(request.tag)) clean.tag = request.tag
+      // Whether the cwd is inside the workspace is the renderer's call: it is the
+      // one that knows the workspace's folder.
+      const cwd = typeof request.cwd === 'string' ? request.cwd.trim() : ''
+      if (cwd && cwd.length <= ROOT_DIR_MAX_CHARS) clean.cwd = cwd
+      if (request.background === true) clean.background = true
       this.opts.onAddPane?.(clean)
+    })
+    this.socket.on('closePane', (request) => {
+      if (request && typeof request.paneId === 'string' && request.paneId) {
+        this.opts.onClosePane?.({ paneId: request.paneId })
+      }
     })
     this.socket.on('attach', (attach) => {
       if (

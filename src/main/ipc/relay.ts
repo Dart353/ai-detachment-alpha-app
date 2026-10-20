@@ -263,6 +263,7 @@ export function applyRelaySettings(ctx: IpcCtx, settings: RelaySettings): void {
     onAttach: receiveAttachment,
     // The renderer owns the workspace tree: main only carries the ask across.
     onAddPane: (request) => ctx.send(CH.relayCommand, { type: 'addPane', ...request }),
+    onClosePane: ({ paneId }) => ctx.send(CH.relayCommand, { type: 'closePane', paneId }),
     onOpenWorkspace: ({ rootDir }) => ctx.send(CH.relayCommand, { type: 'openWorkspace', rootDir }),
     onViewers: (list) => setStatus(ctx, { ...status, viewers: list.length, phones: list })
   })

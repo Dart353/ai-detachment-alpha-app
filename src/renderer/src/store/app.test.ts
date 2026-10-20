@@ -179,6 +179,25 @@ describe('workspace lifecycle', () => {
 })
 
 describe('panes', () => {
+  it('adds a background pane without moving the desktop\'s focus', () => {
+    const reviews = openRoot('/home/me/reviews')
+    const mine = openRoot()
+    const focused = useApp.getState().addPane(mine, { kind: 'claude' })
+
+    const paneId = useApp
+      .getState()
+      .addPane(reviews, { kind: 'claude', tag: 'claudeometer:review:acme/api#12' }, undefined, {
+        background: true
+      })
+
+    expect(useApp.getState().activeWorkspaceId).toBe(mine)
+    expect(workspaceById(mine).focusedPaneId).toBe(focused)
+    expect(workspaceById(reviews).focusedPaneId).not.toBe(paneId)
+    expect(workspaceById(reviews).panes.find((pane) => pane.id === paneId)?.tag).toBe(
+      'claudeometer:review:acme/api#12'
+    )
+  })
+
   it('reorders a workspace\'s panes without touching its layout', () => {
     const wsId = openRoot()
     const first = useApp.getState().addPane(wsId, { kind: 'claude' })
