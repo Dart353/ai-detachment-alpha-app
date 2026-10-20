@@ -408,3 +408,95 @@
   resize: vertical;
   line-height: 1.5;
 }
+
+/* === skills ================================================================= */
+
+.ada-skills-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ada-skills-bar > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.ada-skills-empty {
+  padding: 18px 2px;
+  font-size: 11.5px;
+  color: var(--ada-text-muted);
+}
+
+/* The group header inside a card: what these are, and where they come from. */
+.ada-skills-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+.ada-skills-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ada-text-muted);
+}
+
+.ada-skills-group-hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 10.5px;
+  color: var(--ada-text-faint);
+}
+
+.ada-skills-count {
+  font-family: var(--ada-font-mono);
+  font-size: 10.5px;
+  color: var(--ada-text-faint);
+}
+
+.ada-skills-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 8px;
+  margin: 0 -8px;
+  border-radius: var(--ada-radius-row);
+  cursor: pointer;
+}
+
+.ada-skills-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ada-skills-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ada-skills-name {
+  font-family: var(--ada-font-mono);
+  font-size: 11.5px;
+  color: var(--ada-text-secondary);
+}
+
+.ada-skills-origin {
+  font-size: 10px;
+  color: var(--ada-text-faint);
+}
+
+/* Two lines of the description is enough to know what a skill is for; the rest
+   is in the file the row opens. */
+.ada-skills-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ada-text-muted);
+}

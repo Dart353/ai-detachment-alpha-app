@@ -17,7 +17,7 @@
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
-import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -548,6 +548,28 @@ function buildSteps(cdp, dirs) {
            const text = panel?.innerText ?? ''
            return { ok: text.includes('smoke-file.txt'), text: text.slice(0, 400) }`
         )
+      }
+    ],
+    [
+      'the skills list finds a workspace skill and reads its description',
+      async (scratch) => {
+        const skills = await cdp.evaluate(
+          `return window.api.listSkills([${json(dirs.projectA)}])`
+        )
+        const mine = Array.isArray(skills)
+          ? skills.find((skill) => skill.name === 'smoke-skill')
+          : null
+        if (!mine) {
+          throw new StepError('the workspace skill was not listed', {
+            count: Array.isArray(skills) ? skills.length : null,
+            names: Array.isArray(skills) ? skills.slice(0, 8).map((s) => s.name) : null
+          })
+        }
+        // The folded `description: >` must come back as one line, which is the
+        // whole reason the list is readable.
+        if (mine.source !== 'project' || mine.description !== 'Folded over two lines.') {
+          throw new StepError('the workspace skill was listed wrongly', mine)
+        }
       }
     ],
     [
@@ -1087,6 +1109,13 @@ async function main() {
   const projectA = await mkdtemp(path.join(tmpdir(), 'ada-smoke-a-'))
   const projectB = await mkdtemp(path.join(tmpdir(), 'ada-smoke-b-'))
   await writeFile(path.join(projectA, 'smoke-file.txt'), 'ada smoke\n')
+  // A project skill for the Skills step: a real SKILL.md, in the place Claude
+  // Code reads them from, so the listing is exercised against disk.
+  await mkdir(path.join(projectA, '.claude', 'skills', 'smoke-skill'), { recursive: true })
+  await writeFile(
+    path.join(projectA, '.claude', 'skills', 'smoke-skill', 'SKILL.md'),
+    '---\nname: smoke-skill\ndescription: >\n  Folded over\n  two lines.\n---\n\nbody\n'
+  )
 
   const { child, output } = launchApp(userDataDir)
   let cdp = null

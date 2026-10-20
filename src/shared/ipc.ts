@@ -29,6 +29,7 @@ import type {
   SavedLayout,
   SessionInfo,
   Settings,
+  SkillInfo,
   SpawnOpts,
   UpdateStatus,
   UsageSnapshot
@@ -143,6 +144,9 @@ export const CH = {
   remoteScreen: 'remote:screen',
   remoteOutput: 'remote:output',
   remoteNotice: 'remote:notice',
+
+  // skills (Claude Code's SKILL.md directories)
+  skillsList: 'skills:list',
 
   // updates (GitHub releases, via electron-updater)
   updateGet: 'update:get',
@@ -301,6 +305,10 @@ export interface Api {
   onRemoteOutput(cb: (output: RemoteOutput) => void): Unsubscribe
   onRemoteNotice(cb: (notice: RemoteNotice) => void): Unsubscribe
 
+  /* === skills === */
+  /** Every skill on this machine; `workspaceRoots` adds each one's project skills. */
+  listSkills(workspaceRoots: string[]): Promise<SkillInfo[]>
+
   /* === updates === */
   /** The status main already holds; no network call. */
   getUpdateStatus(): Promise<UpdateStatus>
@@ -408,6 +416,7 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   onRemoteScreen: true,
   onRemoteOutput: true,
   onRemoteNotice: true,
+  listSkills: true,
   getUpdateStatus: true,
   checkForUpdate: true,
   installUpdate: true,

@@ -664,3 +664,21 @@ export interface UpdateStatus {
   /** epoch ms of the last completed check, null before the first one. */
   checkedAt: number | null
 }
+
+/** Where a skill came from; the Skills list groups by this. */
+export type SkillSource = 'personal' | 'synced' | 'project' | 'plugin'
+
+/** One Claude Code skill, as the Skills page lists it. */
+export interface SkillInfo {
+  /** Stable across a refresh: the source and the file it was read from. */
+  id: string
+  /** Frontmatter `name`, falling back to the directory's own name. */
+  name: string
+  /** Frontmatter `description`; '' when the skill carries none. */
+  description: string
+  source: SkillSource
+  /** The plugin or the workspace a skill belongs to, when it belongs to one. */
+  origin?: string
+  /** Stored path to its SKILL.md, which the viewer pane opens. */
+  path: string
+}

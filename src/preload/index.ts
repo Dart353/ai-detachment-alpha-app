@@ -31,6 +31,7 @@ import type {
   SavedLayout,
   SessionInfo,
   Settings,
+  SkillInfo,
   SpawnOpts,
   UpdateStatus,
   UsageSnapshot
@@ -203,6 +204,10 @@ const api: Api = {
   onRemoteScreen: (cb: (screen: RemoteScreen) => void) => sub<RemoteScreen>(CH.remoteScreen, cb),
   onRemoteOutput: (cb: (output: RemoteOutput) => void) => sub<RemoteOutput>(CH.remoteOutput, cb),
   onRemoteNotice: (cb: (notice: RemoteNotice) => void) => sub<RemoteNotice>(CH.remoteNotice, cb),
+
+  /* === skills === */
+  listSkills: (workspaceRoots: string[]) =>
+    ipcRenderer.invoke(CH.skillsList, workspaceRoots) as Promise<SkillInfo[]>,
 
   /* === updates === */
   getUpdateStatus: () => ipcRenderer.invoke(CH.updateGet) as Promise<UpdateStatus>,
