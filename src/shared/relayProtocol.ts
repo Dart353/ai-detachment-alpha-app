@@ -20,7 +20,7 @@
  * into them. There is no read-only key.
  */
 
-export const PROTOCOL_VERSION = 5
+export const PROTOCOL_VERSION = 6
 
 /** A 256-bit key as 64 lowercase hex chars — what the desktop shows and the phone types. */
 export const KEY_RE = /^[0-9a-f]{64}$/
@@ -44,6 +44,8 @@ export interface FeedPane {
   summary: string | null
   /** epoch ms of the pane's last output, 0 if it never spoke */
   lastActivity: number
+  /** The `tag` the pane was added with, so the client that asked can find it again. */
+  tag?: string
 }
 
 /** One tile of a workspace's canvas; x/y/w/h are percentages of it, 0–100. */
@@ -108,6 +110,8 @@ export type Effort = (typeof EFFORTS)[number]
 /** A model alias or id as `--model` takes it. */
 export const MODEL_RE = /^[a-z0-9][a-z0-9.-]{0,63}$/
 export const PANE_NAME_MAX_CHARS = 64
+/** A pane tag: an opaque label a client picks to recognise the pane it added. */
+export const PANE_TAG_RE = /^[A-Za-z0-9._:#/@-]{1,128}$/
 
 /** Add a pane to an open workspace; the desktop places it as a split would. */
 export interface AddPane {
@@ -119,6 +123,22 @@ export interface AddPane {
   model?: string
   effort?: Effort
   planMode?: boolean
+  /** Kept on the pane and published in its `FeedPane.tag`. */
+  tag?: string
+  /** Where the pane starts; must be the workspace's `rootDir` or a folder inside it. */
+  cwd?: string
+  /**
+   * `claude` panes: the first message of the fresh session, typed and sent once
+   * Claude Code shows its prompt. Never re-sent on a resume.
+   */
+  prompt?: string
+  /** Add it without switching the desktop to that workspace or pane. */
+  background?: boolean
+}
+
+/** Close a pane, as its close button would: the process is stopped, the zone stays empty. */
+export interface ClosePane {
+  paneId: string
 }
 
 /**
@@ -260,6 +280,7 @@ export interface RelayToHost {
   /** A viewer sent a picture for this pane. */
   attach: (attach: Attach) => void
   addPane: (request: AddPane) => void
+  closePane: (request: ClosePane) => void
   openWorkspace: (request: OpenWorkspace) => void
   /** Every phone holding this machine's key, whenever that set changes. */
   viewers: (list: ViewerInfo[]) => void
@@ -285,5 +306,6 @@ export interface ViewerToRelay {
   input: (input: { hostId: string } & Input) => void
   attach: (attach: { hostId: string } & Attach) => void
   addPane: (request: { hostId: string } & AddPane) => void
+  closePane: (request: { hostId: string } & ClosePane) => void
   openWorkspace: (request: { hostId: string } & OpenWorkspace) => void
 }

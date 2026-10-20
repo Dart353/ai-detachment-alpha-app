@@ -175,6 +175,53 @@ describe('RelayLink', () => {
     expect(Buffer.from(attached[0].data as Uint8Array)).toEqual(Buffer.from([1, 2, 3]))
   })
 
+  it('cleans an agent pane\'s tag, cwd, prompt and background flag, and passes close-pane on', async () => {
+    const events: LinkEvent[] = []
+    const added: unknown[] = []
+    const closed: unknown[] = []
+    let hostSocket: import('socket.io').Socket | null = null
+    io.on('connection', (socket) => {
+      hostSocket = socket
+    })
+    link = new RelayLink({
+      url,
+      key: mintKey(),
+      name: 'office',
+      version: '1.0.0',
+      feed: () => feed,
+      onChange: (e) => events.push(e),
+      onAddPane: (request) => added.push(request),
+      onClosePane: (request) => closed.push(request)
+    })
+    await untilState(events, 'connected')
+    hostSocket!.emit('addPane', {
+      workspaceId: 'w',
+      kind: 'claude',
+      tag: 'claudeometer:review:acme/api#12',
+      cwd: ' /home/me/reviews/api-12 ',
+      prompt: '/review-backend-pr api 12 --post',
+      background: true
+    })
+    hostSocket!.emit('addPane', { workspaceId: 'w', kind: 'claude', tag: 'bad tag', prompt: '   ', background: 1 })
+    hostSocket!.emit('addPane', { workspaceId: 'w', kind: 'terminal', prompt: 'ls' })
+    hostSocket!.emit('closePane', { paneId: 'p1' })
+    hostSocket!.emit('closePane', { paneId: 7 })
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(added).toEqual([
+      {
+        workspaceId: 'w',
+        kind: 'claude',
+        tag: 'claudeometer:review:acme/api#12',
+        cwd: '/home/me/reviews/api-12',
+        prompt: '/review-backend-pr api 12 --post',
+        background: true
+      },
+      { workspaceId: 'w', kind: 'claude' },
+      { workspaceId: 'w', kind: 'terminal' }
+    ])
+    expect(closed).toEqual([{ paneId: 'p1' }])
+  })
+
   it('passes the viewer list through and asks the relay to drop one', async () => {
     const events: LinkEvent[] = []
     const lists: unknown[] = []

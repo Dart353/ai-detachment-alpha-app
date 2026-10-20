@@ -59,7 +59,8 @@ export function buildHostSnapshot(inputs: HostSnapshotInputs): HostSnapshot {
           lastPrompt: session?.lastPrompt ?? null,
           model: session?.model ?? pane.model ?? null,
           summary: summarise(pane, status, session),
-          lastActivity: inputs.lastActivity[pane.id] ?? 0
+          lastActivity: inputs.lastActivity[pane.id] ?? 0,
+          ...(pane.tag ? { tag: pane.tag } : {})
         }
       })
     }))

@@ -176,4 +176,21 @@ describe('buildHostSnapshot', () => {
     expect(text).not.toContain('"work"')
     expect(text).not.toContain('cwd')
   })
+
+  it('publishes the tag a remote client added a pane with, and nothing for others', () => {
+    const tagged: Workspace = {
+      ...workspace,
+      panes: [{ ...workspace.panes[0], tag: 'claudeometer:review:acme/api#12' }, workspace.panes[1]]
+    }
+    const [first, second] = buildHostSnapshot({
+      workspaces: [tagged],
+      recents: [],
+      status: {},
+      sessions: {},
+      lastActivity: {},
+      now: 1
+    }).workspaces[0].panes
+    expect(first.tag).toBe('claudeometer:review:acme/api#12')
+    expect('tag' in second).toBe(false)
+  })
 })

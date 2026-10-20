@@ -55,6 +55,7 @@ function sanitizePane(raw: unknown, rootDir: string): Pane | null {
   if (typeof raw.planMode === 'boolean') pane.planMode = raw.planMode
   if (typeof raw.color === 'string') pane.color = raw.color
   if (typeof raw.customAgentId === 'string') pane.customAgentId = raw.customAgentId
+  if (typeof raw.tag === 'string') pane.tag = raw.tag
   return pane
 }
 
