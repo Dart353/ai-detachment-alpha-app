@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.0.0...v2.1.0) (2026-10-20)
+
+
+### Features
+
+* **skills:** list the skills Claude Code can reach for ([718718e](https://github.com/Dart353/ai-detachment-alpha-app/commit/718718e9934da145265a3133bb33604970b5fa4c))
+
 ## [2.0.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v1.13.0...v2.0.0) (2026-10-20)
 
 
