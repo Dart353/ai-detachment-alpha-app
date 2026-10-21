@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.1](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.1.0...v2.1.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **remote:** right-click Copy and Paste on remote panes ([f32e695](https://github.com/Dart353/ai-detachment-alpha-app/commit/f32e6956ea50d51ebb6098c5343ec38a82d11246))
+* **remote:** right-click Copy and Paste on remote panes ([5944594](https://github.com/Dart353/ai-detachment-alpha-app/commit/5944594de4270fbbd3668a0ae481a30a573ff276))
+
 ## [2.1.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.0.0...v2.1.0) (2026-10-20)
 
 
