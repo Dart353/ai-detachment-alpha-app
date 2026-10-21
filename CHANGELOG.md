@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.1.1...v2.2.0) (2026-10-21)
+
+
+### Features
+
+* **skills:** read a skill in place in Settings and copy it to share ([f9da480](https://github.com/Dart353/ai-detachment-alpha-app/commit/f9da480541c37e768608de768b95a74947421393))
+* **skills:** read a skill in place in Settings and copy it to share ([d8500df](https://github.com/Dart353/ai-detachment-alpha-app/commit/d8500df09f2cf0284fe8081625de7ede71662bda))
+
 ## [2.1.1](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.1.0...v2.1.1) (2026-10-21)
 
 
