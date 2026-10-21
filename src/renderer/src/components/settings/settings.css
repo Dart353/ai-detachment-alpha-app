@@ -500,3 +500,47 @@
   line-height: 1.5;
   color: var(--ada-text-muted);
 }
+
+/* A skill read in place of the list. */
+.ada-skill-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ada-skill-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ada-skill-title {
+  font-family: var(--ada-font-mono);
+}
+
+.ada-skill-path {
+  margin-top: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--ada-font-mono);
+  font-size: 10.5px;
+  color: var(--ada-text-faint);
+}
+
+.ada-skill-body {
+  margin-top: 16px;
+  padding: 0;
+}
+
+.ada-skill-source {
+  margin: 0;
+  padding: 14px 18px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font-family: var(--ada-font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ada-text-secondary);
+}
