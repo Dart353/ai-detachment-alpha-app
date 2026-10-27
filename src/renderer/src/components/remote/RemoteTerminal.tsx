@@ -19,6 +19,7 @@ import { Terminal } from '@xterm/xterm'
 import { ContextMenu, type MenuItem } from '../ui'
 import { filterMouseReports } from '../../lib/mouseReports'
 import { fontStack, rowLineHeight, termTheme } from '../../hooks/useTerminalPane'
+import { registerSelectionFn } from '../../store/runtime'
 import '@xterm/xterm/css/xterm.css'
 import './remote.css'
 
@@ -76,6 +77,14 @@ const BRACKETED_PASTE_START = '\x1b[200~'
 const BRACKETED_PASTE_END = '\x1b[201~'
 
 /**
+ * How a remote pane names itself in the selection registry. A remote pane id is
+ * only unique on its own machine, so the host goes in front of it.
+ */
+export function remoteSelectionKey(hostId: string, paneId: string): string {
+  return `${hostId}/${paneId}`
+}
+
+/**
  * Chords the window-level shortcut listener owns — the same set TerminalPane
  * declines, so they reach the app instead of being sent to the remote.
  */
@@ -99,7 +108,7 @@ function isPasteChord(event: KeyboardEvent): boolean {
   return (withModifier && event.shiftKey && key === 'v') || (event.metaKey && !event.shiftKey && key === 'v')
 }
 
-function pasteClipboardInto(hostId: string, paneId: string): void {
+export function pasteClipboardInto(hostId: string, paneId: string): void {
   void navigator.clipboard
     .readText()
     .then((text) => {
@@ -209,11 +218,17 @@ export function RemoteTerminal({
 
     const handleFocusIn = (): void => propsRef.current.onFocus()
     element.addEventListener('focusin', handleFocusIn)
+    // What the pane's context menu copies. xterm keeps its selection inside
+    // itself, so `window.getSelection()` cannot see it.
+    const offSelection = registerSelectionFn(remoteSelectionKey(hostId, paneId), () =>
+      term.getSelection()
+    )
 
     return () => {
       observer.disconnect()
       if (fitQueued) cancelAnimationFrame(fitQueued)
       window.api.unwatchRemotePane(hostId, paneId)
+      offSelection()
       element.removeEventListener('focusin', handleFocusIn)
       offScreen()
       offOutput()

@@ -891,6 +891,49 @@ function buildSteps(cdp, dirs) {
              return { ok: text.includes('remote-42'), text: text.slice(0, 400) }`
           )
 
+          // A selection in a remote pane must be copyable. The chord here is
+          // Ctrl/Cmd+Shift+C (plain Ctrl+C stays the remote's interrupt), so the
+          // right-click menu is how most people get a selection to the clipboard.
+          // The drag goes through CDP: xterm's selection follows real input
+          // events, and a synthesized MouseEvent leaves it with nothing selected.
+          const where = await cdp.evaluate(
+            `const rows = ${remoteRows}
+             const row = rows && [...rows.children].find((el) => el.innerText.includes('remote-42'))
+             if (!row) return { ok: false, why: 'no row holding the output' }
+             const box = row.getBoundingClientRect()
+             return { ok: true, y: box.top + box.height / 2, left: box.left + 2, right: box.right - 2 }`
+          )
+          if (!where.ok) throw new StepError('could not find the output row to select', where)
+
+          const mouse = (type, x, extra = {}) =>
+            cdp.send('Input.dispatchMouseEvent', { type, x: Math.round(x), y: Math.round(where.y), button: 'left', clickCount: 1, ...extra })
+          await mouse('mousePressed', where.left, { buttons: 1 })
+          await mouse('mouseMoved', (where.left + where.right) / 2, { buttons: 1 })
+          await mouse('mouseMoved', where.right, { buttons: 1 })
+          await mouse('mouseReleased', where.right, { buttons: 0 })
+          await sleep(200)
+
+          const copied = await cdp.evaluate(
+            `const pane = document.querySelector('[data-remote-pane-id="pR"]')
+             pane.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 200, clientY: 200 }))
+             await new Promise((resolve) => setTimeout(resolve, 150))
+             const entries = [...document.querySelectorAll('.ada-menu-item')]
+             const items = entries.map((el) => el.textContent.trim())
+             const copy = entries.find((el) => el.textContent.trim() === 'Copy')
+             if (!copy) return { ok: false, items, why: 'the menu offered no Copy' }
+             copy.click()
+             await new Promise((resolve) => setTimeout(resolve, 200))
+             let clipboard = null
+             try { clipboard = await navigator.clipboard.readText() } catch (err) { clipboard = 'ERR:' + err.message }
+             return { ok: true, items, clipboard }`
+          )
+          if (!copied.ok) throw new StepError('the remote pane could not copy its selection', copied)
+          if (typeof copied.clipboard === 'string' && !copied.clipboard.startsWith('ERR:')) {
+            if (!copied.clipboard.includes('remote-42')) {
+              throw new StepError('Copy did not put the selection on the clipboard', copied)
+            }
+          }
+
           // Closing the pane stops the stream at the relay.
           await cdp.evaluate(`${remote}.select(null)
                               return true`)

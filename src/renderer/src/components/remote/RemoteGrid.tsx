@@ -13,7 +13,9 @@ import { isWatchable, useRemote } from '../../store/remote'
 import type { RemoteMachine } from '../../../../shared/types'
 import type { FeedPane, FeedWorkspace, FeedZone } from '../../../../shared/relayProtocol'
 import { RemotePaneHeader } from './RemotePaneHeader'
-import { RemoteTerminal } from './RemoteTerminal'
+import { RemoteTerminal, pasteClipboardInto, remoteSelectionKey } from './RemoteTerminal'
+import { ContextMenu, type MenuItem } from '../ui'
+import { getSelectionFn } from '../../store/runtime'
 import { kindLabel, slotsOf } from './remoteHelpers'
 import '../Grid.css'
 import '../TerminalPane.css'
@@ -104,6 +106,27 @@ function RemotePane({
   const termFontFamily = useApp((state) => state.settings.termFontFamily)
   const [size, setSize] = useState<{ cols: number; rows: number } | null>(null)
   const [refreshToken, setRefreshToken] = useState(0)
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null)
+
+  /**
+   * The pane's right-click menu. Copy is the reason it exists: the chord that
+   * copies here is Ctrl/Cmd+Shift+C, because plain Ctrl+C has to stay the
+   * interrupt the remote agent expects, and a selection you cannot copy from a
+   * menu is a selection most people never get into the clipboard.
+   */
+  const menuItems = (): MenuItem[] => {
+    const selection = getSelectionFn(remoteSelectionKey(hostId, pane.id))?.() ?? ''
+    const items: MenuItem[] = []
+    // Absent rather than disabled, as on a local pane: with nothing selected it
+    // is not an action the operator can mean.
+    if (selection) items.push({ label: 'Copy', onClick: () => window.api.copyText(selection) })
+    items.push({
+      label: 'Paste',
+      divider: !!selection,
+      onClick: () => pasteClipboardInto(hostId, pane.id)
+    })
+    return items
+  }
 
   const classes = ['ada-pane']
   if (focused) classes.push('is-focused')
@@ -111,7 +134,16 @@ function RemotePane({
   const style = pane.color ? ({ ['--ada-pane-color' as string]: pane.color } as CSSProperties) : undefined
 
   return (
-    <div className={classes.join(' ')} style={style} data-remote-pane-id={pane.id} onPointerDown={onFocus}>
+    <div
+      className={classes.join(' ')}
+      style={style}
+      data-remote-pane-id={pane.id}
+      onPointerDown={onFocus}
+      onContextMenu={(event) => {
+        event.preventDefault()
+        setMenu({ x: event.clientX, y: event.clientY })
+      }}
+    >
       <RemotePaneHeader
         hostId={hostId}
         pane={pane}
@@ -138,6 +170,7 @@ function RemotePane({
       ) : (
         <div className="ada-remote-empty">{kindLabel(pane.kind)} panes are shown on their own machine only.</div>
       )}
+      {menu && <ContextMenu x={menu.x} y={menu.y} items={menuItems()} onClose={() => setMenu(null)} />}
     </div>
   )
 }
