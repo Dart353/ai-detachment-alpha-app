@@ -26,6 +26,19 @@ const require = createRequire(import.meta.url)
 const scriptsDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(scriptsDir, '..')
 
+// Said plainly, and before anything else runs: the harness drives the app over
+// a WebSocket, which Node only has as a global from 22 on. Under an older one
+// the first failure is `WebSocket is not defined` at launch, which reads as a
+// broken harness rather than the wrong Node.
+const NODE_MAJOR = Number(process.versions.node.split('.')[0])
+if (NODE_MAJOR < 22) {
+  console.error(
+    `This harness needs Node >= 22 (global WebSocket); this is ${process.version}.\n` +
+      `The repo pins 24 in .nvmrc — \`nvm use\` in the repo root, then run it again.`
+  )
+  process.exit(1)
+}
+
 const DEBUG_PORT = 9234
 /** How long a "the app should have done this by now" wait gets. */
 const WAIT_MS = 10_000

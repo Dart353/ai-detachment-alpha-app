@@ -6,6 +6,9 @@
   "main": "./out/main/index.js",
   "private": true,
   "packageManager": "pnpm@11.3.0",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "node scripts/electron-vite.mjs dev",
     "build": "node scripts/electron-vite.mjs build",
