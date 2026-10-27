@@ -11,7 +11,7 @@
  * `title` saying why, never dropped. A vanished row reads as a missing feature.
  */
 import type { JSX } from 'react'
-import { Bot, Copy, Plus, Server, SquareTerminal, UserRound } from 'lucide-react'
+import { Bot, Copy, Plus, Server, SquareTerminal, Trash2, UserRound } from 'lucide-react'
 import type { ClaudeAccount, CustomAgent, Pane } from '../../../shared/types'
 import { DEFAULT_ACCOUNT_ID } from '../../../shared/types'
 import type { PaneInit } from '../store/app'
@@ -87,6 +87,12 @@ export interface QuickSpawnContext {
   onDuplicate: () => void
   /** Open the "name your agent" dialog; spawning is its business. */
   onNewAgent: () => void
+  /**
+   * Remove this zone from the layout, letting a neighbour take the space.
+   * Absent when the zone is the last one: a workspace with no zones has
+   * nowhere to put a pane.
+   */
+  onCloseZone?: () => void
 }
 
 /** The ssh host rows, re-read from ~/.ssh/config each time the menu opens. */
@@ -165,6 +171,18 @@ export function buildQuickSpawnMenu(ctx: QuickSpawnContext): MenuItem[] {
     },
     { label: 'New agent…', icon: <Plus size={ICON} />, onClick: ctx.onNewAgent }
   )
+
+  // Closing an empty zone is tidying the layout, not spawning into it, so it
+  // sits below a divider at the end — and it is absent rather than disabled
+  // when there is no second zone to grow into the space.
+  if (ctx.onCloseZone) {
+    items.push({
+      label: 'Close zone',
+      icon: <Trash2 size={ICON} />,
+      divider: true,
+      onClick: ctx.onCloseZone
+    })
+  }
   return items
 }
 

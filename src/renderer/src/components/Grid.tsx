@@ -28,6 +28,7 @@ import { getSelectionFn, useRuntime } from '../store/runtime'
 import { usePaneShare } from '../hooks/useUsage'
 import {
   computeZoneRects,
+  deleteZone,
   emptyZones,
   moveSharedEdge,
   neighborZoneInDirection,
@@ -226,7 +227,13 @@ export default function Grid({ workspaceId, active }: GridProps): JSX.Element | 
         const copyId = duplicatePane(focusedPaneId)
         if (copyId) dropPane(copyId, zoneId, null)
       },
-      onNewAgent: () => setNewAgent({ zoneId, name: '' })
+      onNewAgent: () => setNewAgent({ zoneId, name: '' }),
+      // The last zone has no neighbour to take the space, and a workspace with
+      // no zones has nowhere to put a pane.
+      onCloseZone:
+        workspace.layout.zones.length > 1
+          ? () => applyLayout(workspaceId, deleteZone(workspace.layout, zoneId))
+          : undefined
     })
   }
 

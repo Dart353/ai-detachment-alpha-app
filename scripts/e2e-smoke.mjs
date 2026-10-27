@@ -564,6 +564,54 @@ function buildSteps(cdp, dirs) {
       }
     ],
     [
+      'an empty zone can be closed from its own menu',
+      async () => {
+        // The workspace ON SCREEN, which an earlier step closed and reopened —
+        // a reopened workspace is a new one, so the id from before is stale and
+        // its grid is hidden behind the live one.
+        const active = `window.__ada.useApp.getState().activeWorkspaceId`
+        // Four zones, two panes: the two empty ones are what the menu is for.
+        await cdp.evaluate(`${store}.applyPreset(${active}, 'grid-2x2')
+           return true`)
+        await sleep(300)
+        const before = await cdp.evaluate(
+          `const state = window.__ada.useApp.getState()
+           const ws = state.workspaces.find((w) => w.id === state.activeWorkspaceId)
+           return { zones: ws.layout.zones.length, panes: ws.panes.length,
+                    empties: document.querySelectorAll('.ada-app-grid:not(.ada-app-grid--hidden) .ada-empty-zone').length }`
+        )
+        if (before.zones !== 4 || before.empties < 1) {
+          throw new StepError('the preset did not leave an empty zone to close', before)
+        }
+
+        const closed = await cdp.evaluate(
+          `const tile = document.querySelector('.ada-app-grid:not(.ada-app-grid--hidden) .ada-empty-zone')
+           if (!tile) return { ok: false, items: [], why: 'no empty zone on the visible grid' }
+           tile.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 300, clientY: 300 }))
+           await new Promise((resolve) => setTimeout(resolve, 150))
+           const entries = [...document.querySelectorAll('.ada-menu-item')]
+           const row = entries.find((el) => el.textContent.trim() === 'Close zone')
+           if (!row) return { ok: false, items: entries.map((el) => el.textContent.trim()) }
+           row.click()
+           await new Promise((resolve) => setTimeout(resolve, 250))
+           const state = window.__ada.useApp.getState()
+           const ws = state.workspaces.find((w) => w.id === state.activeWorkspaceId)
+           return { ok: true, zones: ws.layout.zones.length, panes: ws.panes.length }`
+        )
+        if (!closed.ok) throw new StepError('the empty zone menu offered no Close zone', closed)
+        // One zone fewer, and not one pane disturbed: closing a zone is a
+        // layout edit, never a kill.
+        if (closed.zones !== before.zones - 1 || closed.panes !== before.panes) {
+          throw new StepError('closing the zone changed the wrong thing', { before, closed })
+        }
+
+        // Put the canvas back for the steps that follow.
+        await cdp.evaluate(`${store}.applyPreset(${active}, 'cols-2')
+           return true`)
+        await sleep(250)
+      }
+    ],
+    [
       'the skills list finds a workspace skill and reads its description',
       async (scratch) => {
         const skills = await cdp.evaluate(
