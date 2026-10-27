@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.3.0...v2.4.0) (2026-10-27)
+
+
+### Features
+
+* **grid:** close an empty zone from its own menu ([067cc19](https://github.com/Dart353/ai-detachment-alpha-app/commit/067cc195334cbea25d4532ad9c01dbfd11c636b2))
+
 ## [2.3.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.2.0...v2.3.0) (2026-10-27)
 
 
