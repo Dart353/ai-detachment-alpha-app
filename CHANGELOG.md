@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.2.0...v2.3.0) (2026-10-27)
+
+
+### Features
+
+* **remote:** copy a selection from a remote pane ([8916350](https://github.com/Dart353/ai-detachment-alpha-app/commit/891635032f8042606a260c907c443bd22807d76f))
+
 ## [2.2.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.1.1...v2.2.0) (2026-10-21)
 
 
