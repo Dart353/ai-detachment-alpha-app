@@ -626,20 +626,23 @@
   border-left: 1px solid var(--ada-line-10);
 }
 
+/* A checklist item wraps like the todo's own title rather than clipping: the row
+   grows with its text, and the checkbox and remove button sit on its first line.
+   One line still makes the original 24px row (4 + 16 + 4). */
 .ada-todo-sub {
-  height: 24px;
+  min-height: 24px;
+  padding: 4px 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 9px;
 }
 
 .ada-todo-sub-title {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   font-size: 12px;
+  line-height: 16px;
+  overflow-wrap: anywhere;
   color: var(--ada-text-secondary);
 }
 
@@ -649,9 +652,16 @@
   text-decoration-color: var(--ada-text-disabled);
 }
 
+.ada-todo-sub .ada-todo-check--sm {
+  margin-top: 1px; /* centred on the 16px first line */
+}
+
 .ada-todo-sub-remove {
+  flex: none;
   width: 20px;
   height: 20px;
+  /* 20px button, 16px line: overhang 2px each way so it takes the line's height */
+  margin: -2px 0;
   opacity: 0;
 }
 
