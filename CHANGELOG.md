@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.4.0...v2.5.0) (2026-10-28)
+
+
+### Features
+
+* **todo:** add a todo board that docks, pops out, and hands todos to agents ([cc9754e](https://github.com/Dart353/ai-detachment-alpha-app/commit/cc9754e3af121e414f1acd7f8395444f64404c99))
+* **todo:** add a todo board that docks, pops out, and hands todos to… ([f1e8b83](https://github.com/Dart353/ai-detachment-alpha-app/commit/f1e8b83547e9f11cb2355c0e57eaa470be0de75f))
+
 ## [2.4.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.3.0...v2.4.0) (2026-10-27)
 
 
