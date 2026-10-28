@@ -150,8 +150,11 @@ export function registerPtyIpc(ctx: IpcCtx): void {
   // the pane was stored with.
   ipcMain.handle(CH.ptyCwd, (_event, { id }: { id: string }) => ptys.cwd(id))
 
-  // Quitting with live children would leave orphaned shells behind.
-  app.on('before-quit', () => {
+  // Quitting with live children would leave orphaned shells behind. On
+  // will-quit, not before-quit: before-quit fires before the windows close, and
+  // the close can still be cancelled (agents still working) — killing the PTYs
+  // there would leave the user a window of dead terminals.
+  app.on('will-quit', () => {
     ptyOwners.clear()
     ptys.killAll()
   })

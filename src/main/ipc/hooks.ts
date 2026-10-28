@@ -20,5 +20,5 @@ export function registerHooksIpc(ctx: IpcCtx): void {
   })
   watcher.start()
 
-  app.on('before-quit', () => watcher.dispose())
+  app.on('will-quit', () => watcher.dispose())
 }

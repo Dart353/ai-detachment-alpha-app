@@ -28,5 +28,5 @@ export function registerSessionsIpc(ctx: IpcCtx): void {
     ) => transcriptExists(cwd, sessionId, accountId)
   )
 
-  app.on('before-quit', () => watcher.dispose())
+  app.on('will-quit', () => watcher.dispose())
 }

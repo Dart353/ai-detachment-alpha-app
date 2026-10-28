@@ -67,6 +67,14 @@ const api: Api = {
   winMinimize: () => ipcRenderer.send(CH.winMinimize),
   winToggleMaximize: () => ipcRenderer.send(CH.winToggleMaximize),
   winClose: () => ipcRenderer.send(CH.winClose),
+  onCloseRequested: (cb: () => void) => {
+    const off = sub<void>(CH.winCloseRequested, () => cb())
+    ipcRenderer.send(CH.winCloseReady)
+    return off
+  },
+  holdClose: () => ipcRenderer.send(CH.winCloseHold),
+  proceedClose: () => ipcRenderer.send(CH.winCloseProceed),
+  cancelClose: () => ipcRenderer.send(CH.winCloseCancel),
   onWinMaximized: (cb: (maximized: boolean) => void) => sub<boolean>(CH.winMaximized, cb),
 
   /* === persistence + settings === */

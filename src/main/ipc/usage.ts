@@ -148,7 +148,7 @@ export function registerUsageIpc(ctx: IpcCtx): void {
     return poll(force === true)
   })
 
-  app.on('before-quit', () => {
+  app.on('will-quit', () => {
     if (firstTimer) clearTimeout(firstTimer)
     if (timer) clearInterval(timer)
     firstTimer = null
