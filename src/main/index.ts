@@ -1,11 +1,13 @@
-import { app, BrowserWindow, Menu, shell } from 'electron'
+import { app, BrowserWindow, Menu } from 'electron'
 import path from 'node:path'
 import { reconcileAccountShares } from './accounts'
 import { sweepOrphanedMintDirs } from './accountMint'
 import { registerAllIpc, type IpcCtx } from './ipc'
+import { closeTodoWindow, restoreTodoWindow } from './ipc/todos'
 import { attachWindowEvents } from './ipc/window'
 import { log, writeCrashReport } from './log'
 import { installProtocolHandlers, registerSchemes } from './protocol'
+import { guardWebContents, loadRenderer } from './windows'
 
 let win: BrowserWindow | null = null
 
@@ -93,53 +95,16 @@ function createWindow(): void {
     }
   })
 
-  // The e2e smoke test drives the app through the renderer's own stores, and
-  // `?e2e=1` is what asks the renderer to expose them. It rides on
-  // ADA_USER_DATA, so the flag can only ever appear in a throwaway profile.
-  const e2e = !!process.env['ADA_USER_DATA']
-  if (process.env['ELECTRON_RENDERER_URL']) {
-    const url = new URL(process.env['ELECTRON_RENDERER_URL'])
-    if (e2e) url.searchParams.set('e2e', '1')
-    void win.loadURL(url.toString())
-  } else {
-    const file = path.join(__dirname, '../renderer/index.html')
-    void win.loadFile(file, e2e ? { query: { e2e: '1' } } : {})
-  }
-
-  // Nothing in the app is meant to spawn a child window. Left unhandled, any
-  // window.open — xterm's OSC 8 default, a stray target=_blank — gets Electron's
-  // default answer: a new BrowserWindow with no address bar and no way to
-  // navigate. Deny the popup and hand the URL to the OS browser instead.
-  const webContents = win.webContents
-  webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//i.test(url)) void shell.openExternal(url)
-    return { action: 'deny' }
-  })
-
-  // Same reasoning for top-level navigation: following an external link in place
-  // would replace the app with a web page, and this window has no chrome to get
-  // back from it. Same-origin navigation still passes so the dev server's
-  // reloads keep working.
-  webContents.on('will-navigate', (event, url) => {
-    try {
-      if (new URL(url).origin === new URL(webContents.getURL()).origin) return
-    } catch {
-      /* unparsable current or target URL — fall through to the guard */
-    }
-    event.preventDefault()
-    if (/^https?:\/\//i.test(url)) void shell.openExternal(url)
-  })
-
-  // A renderer crash blanks the window with no dialog and no console left to
-  // read; the report is the only trace of why.
-  webContents.on('render-process-gone', (_event, details) => {
-    writeCrashReport('render-process-gone', details)
-  })
+  loadRenderer(win)
+  guardWebContents(win)
 
   attachWindowEvents(win)
 
   win.on('closed', () => {
     win = null
+    // The board's window is the main window's satellite: left open, it would
+    // keep the app alive with nothing behind it to send a todo to.
+    closeTodoWindow()
   })
 }
 
@@ -179,6 +144,7 @@ void app.whenReady().then(() => {
   // before its handler — and so a recreated window never double-registers.
   registerAllIpc(ipcCtx)
   createWindow()
+  restoreTodoWindow()
 
   // macOS keeps the app alive after the last window closes; clicking the dock
   // icon has to be able to bring a window back.

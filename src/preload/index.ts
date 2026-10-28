@@ -33,6 +33,11 @@ import type {
   Settings,
   SkillInfo,
   SpawnOpts,
+  TodoBoardState,
+  TodoCommand,
+  TodoItem,
+  TodoSendRequest,
+  TodoTargets,
   UpdateStatus,
   UsageSnapshot
 } from '../shared/types'
@@ -214,6 +219,20 @@ const api: Api = {
   checkForUpdate: () => ipcRenderer.invoke(CH.updateCheck) as Promise<UpdateStatus>,
   installUpdate: () => ipcRenderer.send(CH.updateInstall),
   onUpdateStatus: (cb: (status: UpdateStatus) => void) => sub<UpdateStatus>(CH.updateChanged, cb),
+
+  /* === todo board === */
+  loadTodos: () => ipcRenderer.invoke(CH.todosLoad) as Promise<TodoItem[]>,
+  saveTodos: (items: TodoItem[]) => ipcRenderer.send(CH.todosSave, items),
+  onTodosChanged: (cb: (items: TodoItem[]) => void) => sub<TodoItem[]>(CH.todosChanged, cb),
+  getTodoTargets: () => ipcRenderer.invoke(CH.todoTargetsGet) as Promise<TodoTargets>,
+  publishTodoTargets: (targets: TodoTargets) => ipcRenderer.send(CH.todoTargetsPublish, targets),
+  onTodoTargets: (cb: (targets: TodoTargets) => void) => sub<TodoTargets>(CH.todoTargetsChanged, cb),
+  sendTodo: (request: TodoSendRequest) => ipcRenderer.send(CH.todoSend, request),
+  openTodoPane: (paneId: string) => ipcRenderer.send(CH.todoOpenPane, paneId),
+  onTodoCommand: (cb: (command: TodoCommand) => void) => sub<TodoCommand>(CH.todoCommand, cb),
+  getTodoBoard: () => ipcRenderer.invoke(CH.todoBoardGet) as Promise<TodoBoardState>,
+  setTodoBoard: (partial: Partial<TodoBoardState>) => ipcRenderer.send(CH.todoBoardSet, partial),
+  onTodoBoard: (cb: (state: TodoBoardState) => void) => sub<TodoBoardState>(CH.todoBoardChanged, cb),
 
   /* === misc host services === */
   copyText: (text: string) => ipcRenderer.send(CH.copyText, text),

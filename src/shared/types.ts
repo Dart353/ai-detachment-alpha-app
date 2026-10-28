@@ -682,3 +682,97 @@ export interface SkillInfo {
   /** Stored path to its SKILL.md, which the viewer pane opens. */
   path: string
 }
+
+/* === todo board === */
+
+/** One line of a checklist todo. */
+export interface TodoSubItem {
+  id: string
+  title: string
+  done: boolean
+}
+
+/**
+ * Where a todo's hand-off to a Claude pane stands. `queued` is waiting for a
+ * busy pane's turn to end; `sent` has been typed in but the transcript has not
+ * yet shown the turn it started; `working` has; `finished` saw that turn end.
+ */
+export type TodoAgentPhase = 'queued' | 'sent' | 'working' | 'finished'
+
+export interface TodoAgentLink {
+  paneId: string
+  /** The pane's name when it was sent, shown once the pane itself is gone. */
+  paneName: string
+  phase: TodoAgentPhase
+  /** What gets typed into the pane; kept so a queued send can be delivered later. */
+  message: string
+  /** Press Enter after pasting, rather than leave the text in Claude's input. */
+  submit: boolean
+  /** Check the todo off on its own when the agent's turn ends. */
+  autoComplete: boolean
+  /** epoch ms the text went into the pane (or was queued). */
+  sentAt: number
+}
+
+export interface TodoItem {
+  id: string
+  title: string
+  done: boolean
+  createdAt: number
+  doneAt?: number
+  /** The workspace name it is tagged with — free text, it need not be open. */
+  workspace?: string
+  /** Present (even empty) when the todo is a checklist. */
+  items?: TodoSubItem[]
+  agent?: TodoAgentLink
+}
+
+/** A Claude pane a todo can be sent to, as the main window sees it right now. */
+export interface TodoTargetPane {
+  paneId: string
+  name: string
+  status: PaneStatus
+}
+
+export interface TodoTargetWorkspace {
+  workspaceId: string
+  name: string
+  panes: TodoTargetPane[]
+}
+
+/**
+ * The main window's live picture of every workspace and its Claude panes. The
+ * popped-out board has no panes of its own, so it renders agent chips and the
+ * send picker from this. `ready` is false until the main window has published
+ * once: before that a missing pane means "not known yet", not "closed".
+ */
+export interface TodoTargets {
+  ready: boolean
+  workspaces: TodoTargetWorkspace[]
+}
+
+export interface TodoSendRequest {
+  todoId: string
+  workspaceId: string
+  /** null spawns a new Claude pane in the workspace for it. */
+  paneId: string | null
+  message: string
+  submit: boolean
+  autoComplete: boolean
+}
+
+/** Something the board asks of the main window, which owns the panes. */
+export type TodoCommand =
+  | { type: 'send'; request: TodoSendRequest }
+  | { type: 'openPane'; paneId: string }
+
+/** Where the board is showing. Main owns it, so both windows agree. */
+export interface TodoBoardState {
+  /** The panel over the grid in the main window. Never persisted. */
+  docked: boolean
+  /** Its own always-on-top window. */
+  poppedOut: boolean
+  alwaysOnTop: boolean
+  /** The popped-out window rolled up to its header. */
+  collapsed: boolean
+}

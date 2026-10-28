@@ -15,6 +15,7 @@ declare global {
       useApp: typeof import('./store/app').useApp
       useRuntime: typeof import('./store/runtime').useRuntime
       remote?: typeof import('./store/remote').useRemote
+      todos?: typeof import('./store/todos').useTodos
     }
   }
 }

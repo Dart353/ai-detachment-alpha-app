@@ -15,6 +15,7 @@ import { registerRemoteIpc } from './remote'
 import { registerSkillsIpc } from './skills'
 import { registerUpdateIpc } from './update'
 import { registerArtifactsIpc } from './artifacts'
+import { registerTodosIpc } from './todos'
 
 /**
  * What every IPC area gets instead of a module-level reference to the window.
@@ -51,4 +52,5 @@ export function registerAllIpc(ctx: IpcCtx): void {
   registerSkillsIpc(ctx)
   registerUpdateIpc(ctx)
   registerArtifactsIpc(ctx)
+  registerTodosIpc(ctx)
 }

@@ -68,3 +68,43 @@
 .ada-titlebar .ada-titlebar-close:hover:not(:disabled) {
   background: var(--ada-line-08);
 }
+
+/* The todo board's button wears a count: open todos in grey, an agent that
+   finished in green, one that is waiting on you in the warn tone. */
+.ada-titlebar .ada-titlebar-todo {
+  position: relative;
+}
+
+.ada-titlebar-badge {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  min-width: 13px;
+  height: 13px;
+  padding: 0 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  font-family: var(--ada-font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.ada-titlebar-badge--neutral {
+  background: var(--ada-line-16);
+  color: var(--ada-text-primary);
+}
+
+.ada-titlebar-badge--finished {
+  background: var(--ada-done);
+  color: var(--ada-bg-app);
+}
+
+.ada-titlebar-badge--attention {
+  background: var(--ada-warn);
+  /* no token: the ink used only on top of a filled accent surface */
+  color: #1a1a1a;
+}
