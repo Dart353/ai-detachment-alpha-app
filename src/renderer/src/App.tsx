@@ -15,6 +15,9 @@ import { useStatusEngine } from './hooks/useStatusEngine'
 import { useHostPublisher } from './hooks/useHostPublisher'
 import { useRemoteLink } from './hooks/useRemoteLink'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
+import { useTodoAgents } from './hooks/useTodoAgents'
+import { TodoBoard } from './components/todo/TodoBoard'
+import { startTodoSync, useTodos } from './store/todos'
 import { selectActiveWorkspace, useApp } from './store/app'
 import { useRemote } from './store/remote'
 import { hydrate, startPersistence } from './store/persist'
@@ -37,6 +40,7 @@ export default function App(): JSX.Element {
   const toasts = useApp((state) => state.toasts)
   const dismissToast = useApp((state) => state.dismissToast)
   const setZoneEditorOpen = useApp((state) => state.setZoneEditorOpen)
+  const todoDocked = useTodos((state) => state.board.docked && state.hydrated)
   // Remote mode only ever replaces the grid view; Settings and the other
   // overlays still take precedence over it.
   const remote = useRemote((state) => state.mode) === 'remote' && view === 'grid'
@@ -50,16 +54,19 @@ export default function App(): JSX.Element {
   useHostPublisher()
   useRemoteLink()
   useGlobalShortcuts()
+  useTodoAgents()
 
   useEffect(() => {
     if (booted.current) return undefined
     booted.current = true
     let stop: (() => void) | null = null
+    const stopTodos = startTodoSync()
     void hydrate().then(() => {
       stop = startPersistence()
     })
     return () => {
       stop?.()
+      stopTodos()
     }
   }, [])
 
@@ -149,6 +156,8 @@ export default function App(): JSX.Element {
             />
           </div>
         )}
+        {/* Docked over whatever the main area shows, like a popover that stays. */}
+        {todoDocked && titlebarVariant === 'full' && <TodoBoard mode="docked" />}
       </main>
 
       <RestorePreview />

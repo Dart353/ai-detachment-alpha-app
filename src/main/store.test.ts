@@ -10,7 +10,12 @@ import {
   loadRemoteMachines,
   loadSettings,
   loadState,
+  loadTodoWindowPrefs,
+  loadTodos,
+  sanitizeTodos,
   saveLayouts,
+  saveTodoWindowPrefs,
+  saveTodos,
   saveRemoteMachines,
   saveSettings,
   saveState,
@@ -136,5 +141,69 @@ describe('remote machines', () => {
       JSON.stringify({ machines: [...machines, { hostId: 'h2' }, null, 'junk'] })
     )
     expect(loadRemoteMachines()).toEqual(machines)
+  })
+})
+
+describe('todos', () => {
+  it('reads back what it wrote', () => {
+    const items = [
+      { id: 't1', title: 'Ship it', done: false, createdAt: 1, workspace: 'ada-app', items: [] }
+    ]
+    saveTodos(items)
+    expect(loadTodos()).toEqual(items)
+  })
+
+  it('drops malformed todos, lines and agent links but keeps the todo they hang off', () => {
+    const out = sanitizeTodos([
+      null,
+      { id: 7, title: 'no string id' },
+      {
+        id: 'a',
+        title: 'Fix it',
+        done: 'yes',
+        workspace: '',
+        items: [{ id: 's1', title: 'step', done: true }, { title: 'no id' }],
+        agent: { paneId: 'p1', phase: 'teleporting' }
+      },
+      {
+        id: 'b',
+        title: 'Sent',
+        done: false,
+        createdAt: 5,
+        agent: { paneId: 'p2', phase: 'queued', message: 'go', sentAt: 9 }
+      }
+    ])
+    expect(out).toEqual([
+      { id: 'a', title: 'Fix it', done: false, createdAt: 0, items: [{ id: 's1', title: 'step', done: true }] },
+      {
+        id: 'b',
+        title: 'Sent',
+        done: false,
+        createdAt: 5,
+        agent: {
+          paneId: 'p2',
+          paneName: '',
+          phase: 'queued',
+          message: 'go',
+          submit: true,
+          autoComplete: false,
+          sentAt: 9
+        }
+      }
+    ])
+  })
+
+  it('treats a non-list file as empty', () => {
+    expect(sanitizeTodos({ items: [] })).toEqual([])
+  })
+
+  it('defaults the window to docked and on top, and keeps only whole bounds', () => {
+    expect(loadTodoWindowPrefs()).toEqual({ poppedOut: false, alwaysOnTop: true })
+    saveTodoWindowPrefs({ poppedOut: true, alwaysOnTop: false, bounds: { x: 1, y: 2, width: 3, height: 4 } })
+    expect(loadTodoWindowPrefs()).toEqual({
+      poppedOut: true,
+      alwaysOnTop: false,
+      bounds: { x: 1, y: 2, width: 3, height: 4 }
+    })
   })
 })

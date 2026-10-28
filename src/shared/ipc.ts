@@ -31,6 +31,11 @@ import type {
   Settings,
   SkillInfo,
   SpawnOpts,
+  TodoBoardState,
+  TodoCommand,
+  TodoItem,
+  TodoSendRequest,
+  TodoTargets,
   UpdateStatus,
   UsageSnapshot
 } from './types'
@@ -153,6 +158,20 @@ export const CH = {
   updateCheck: 'update:check',
   updateInstall: 'update:install',
   updateChanged: 'update:changed',
+
+  // todo board (the list lives in main; both windows render it)
+  todosLoad: 'todos:load',
+  todosSave: 'todos:save',
+  todosChanged: 'todos:changed',
+  todoTargetsGet: 'todo:targetsGet',
+  todoTargetsPublish: 'todo:targetsPublish',
+  todoTargetsChanged: 'todo:targetsChanged',
+  todoSend: 'todo:send',
+  todoOpenPane: 'todo:openPane',
+  todoCommand: 'todo:command',
+  todoBoardGet: 'todo:boardGet',
+  todoBoardSet: 'todo:boardSet',
+  todoBoardChanged: 'todo:boardChanged',
 
   // misc host services
   copyText: 'misc:copyText',
@@ -318,6 +337,25 @@ export interface Api {
   installUpdate(): void
   onUpdateStatus(cb: (status: UpdateStatus) => void): Unsubscribe
 
+  /* === todo board === */
+  loadTodos(): Promise<TodoItem[]>
+  /** Replace the whole list; main writes it and tells the other window. */
+  saveTodos(items: TodoItem[]): void
+  onTodosChanged(cb: (items: TodoItem[]) => void): Unsubscribe
+  getTodoTargets(): Promise<TodoTargets>
+  /** The main window's picture of its Claude panes, for the popped-out board. */
+  publishTodoTargets(targets: TodoTargets): void
+  onTodoTargets(cb: (targets: TodoTargets) => void): Unsubscribe
+  /** Hand a todo to a Claude pane; the main window carries it out. */
+  sendTodo(request: TodoSendRequest): void
+  /** Bring the main window forward with this pane focused. */
+  openTodoPane(paneId: string): void
+  /** Main window only: what the board asked for. */
+  onTodoCommand(cb: (command: TodoCommand) => void): Unsubscribe
+  getTodoBoard(): Promise<TodoBoardState>
+  setTodoBoard(partial: Partial<TodoBoardState>): void
+  onTodoBoard(cb: (state: TodoBoardState) => void): Unsubscribe
+
   /* === misc host services === */
   copyText(text: string): void
   revealPath(path: string): Promise<void>
@@ -421,6 +459,18 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   checkForUpdate: true,
   installUpdate: true,
   onUpdateStatus: true,
+  loadTodos: true,
+  saveTodos: true,
+  onTodosChanged: true,
+  getTodoTargets: true,
+  publishTodoTargets: true,
+  onTodoTargets: true,
+  sendTodo: true,
+  openTodoPane: true,
+  onTodoCommand: true,
+  getTodoBoard: true,
+  setTodoBoard: true,
+  onTodoBoard: true,
   copyText: true,
   revealPath: true,
   openExternal: true,

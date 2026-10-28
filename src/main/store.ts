@@ -7,7 +7,10 @@ import {
   type PersistedState,
   type RecentWorkspace,
   type SavedLayout,
-  type Settings
+  type Settings,
+  type TodoAgentLink,
+  type TodoItem,
+  type TodoSubItem
 } from '../shared/types'
 
 /**
@@ -227,4 +230,105 @@ export function saveSettings(partial: Partial<Settings>): Settings {
   const merged = mergeSettings(loadSettings(), partial as Record<string, unknown>)
   writeJsonAtomic(file('ada-settings.json'), merged)
   return merged
+}
+
+/* === todo board ============================================================ */
+
+const AGENT_PHASES = new Set(['queued', 'sent', 'working', 'finished'])
+
+function sanitizeTodoSub(raw: unknown): TodoSubItem | null {
+  if (!isRecord(raw) || typeof raw['id'] !== 'string' || typeof raw['title'] !== 'string') {
+    return null
+  }
+  return { id: raw['id'], title: raw['title'], done: raw['done'] === true }
+}
+
+function sanitizeTodoAgent(raw: unknown): TodoAgentLink | undefined {
+  if (
+    !isRecord(raw) ||
+    typeof raw['paneId'] !== 'string' ||
+    typeof raw['phase'] !== 'string' ||
+    !AGENT_PHASES.has(raw['phase'])
+  ) {
+    return undefined
+  }
+  return {
+    paneId: raw['paneId'],
+    paneName: typeof raw['paneName'] === 'string' ? raw['paneName'] : '',
+    phase: raw['phase'] as TodoAgentLink['phase'],
+    message: typeof raw['message'] === 'string' ? raw['message'] : '',
+    submit: raw['submit'] !== false,
+    autoComplete: raw['autoComplete'] === true,
+    sentAt: typeof raw['sentAt'] === 'number' ? raw['sentAt'] : 0
+  }
+}
+
+/**
+ * Keep only well-formed todos from a stored (possibly hand-edited) list. A bad
+ * checklist line or agent link is dropped on its own; the todo it hangs off
+ * survives, because losing a task to a typo in someone else's field is worse.
+ */
+export function sanitizeTodos(raw: unknown): TodoItem[] {
+  if (!Array.isArray(raw)) return []
+  const out: TodoItem[] = []
+  for (const entry of raw) {
+    if (!isRecord(entry) || typeof entry['id'] !== 'string' || typeof entry['title'] !== 'string') {
+      continue
+    }
+    const item: TodoItem = {
+      id: entry['id'],
+      title: entry['title'],
+      done: entry['done'] === true,
+      createdAt: typeof entry['createdAt'] === 'number' ? entry['createdAt'] : 0
+    }
+    if (typeof entry['doneAt'] === 'number') item.doneAt = entry['doneAt']
+    if (typeof entry['workspace'] === 'string' && entry['workspace']) {
+      item.workspace = entry['workspace']
+    }
+    if (Array.isArray(entry['items'])) {
+      item.items = entry['items']
+        .map(sanitizeTodoSub)
+        .filter((sub): sub is TodoSubItem => sub !== null)
+    }
+    const agent = sanitizeTodoAgent(entry['agent'])
+    if (agent) item.agent = agent
+    out.push(item)
+  }
+  return out
+}
+
+/** The todo board's list. Its own file: it is written from two windows. */
+export function loadTodos(): TodoItem[] {
+  return sanitizeTodos(readJson(file('ada-todos.json')))
+}
+
+export function saveTodos(items: TodoItem[]): void {
+  writeJsonAtomic(file('ada-todos.json'), items)
+}
+
+/** Where the popped-out board sat, and whether it was out at all. */
+export interface TodoWindowPrefs {
+  poppedOut: boolean
+  alwaysOnTop: boolean
+  bounds?: { x: number; y: number; width: number; height: number }
+}
+
+export function loadTodoWindowPrefs(): TodoWindowPrefs {
+  const raw = readJson(file('ada-todo-window.json'))
+  const prefs: TodoWindowPrefs = { poppedOut: false, alwaysOnTop: true }
+  if (!isRecord(raw)) return prefs
+  prefs.poppedOut = raw['poppedOut'] === true
+  prefs.alwaysOnTop = raw['alwaysOnTop'] !== false
+  const bounds = raw['bounds']
+  if (
+    isRecord(bounds) &&
+    ['x', 'y', 'width', 'height'].every((key) => Number.isFinite(bounds[key]))
+  ) {
+    prefs.bounds = bounds as unknown as TodoWindowPrefs['bounds']
+  }
+  return prefs
+}
+
+export function saveTodoWindowPrefs(prefs: TodoWindowPrefs): void {
+  writeJsonAtomic(file('ada-todo-window.json'), prefs)
 }

@@ -25,6 +25,10 @@ is read from Claude Code's own transcript rather than guessed at.
 - **Usage and limit meters** — session and week windows, each pane's share of the
   current window, OS notifications when a pane finishes or needs input.
 - **Multiple Claude accounts**, each with its own config directory.
+- **Todo board** — a quick checklist docked under the titlebar (Ctrl+Shift+T) or
+  popped out into its own always-on-top window. Tag a todo `@workspace`, make it a
+  checklist with Shift+Enter, and send it to a Claude pane: the todo shows that
+  pane's status and asks whether to check it off when the turn ends.
 - **Explorer panel**, clickable links, file drop → shell-quoted path, and a pane
   context menu for everything above.
 - **Windows (with WSL mode), macOS and Linux**, all packaged.
@@ -122,6 +126,7 @@ Everything is in Electron's userData directory:
 
 `ada-state.json` (workspaces, panes, layouts), `ada-settings.json`,
 `ada-archive.json`, `ada-recents.json`, `ada-layouts.json`, `ada-accounts.json`,
+`ada-todos.json` and `ada-todo-window.json` (the todo board and where its window sits),
 per-account Claude config under `claude-accounts/<id>/`, and `logs/ada.log`
 alongside `logs/crashes/` — Settings → About reveals the folder.
 

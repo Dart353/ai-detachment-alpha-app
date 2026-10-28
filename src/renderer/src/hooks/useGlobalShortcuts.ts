@@ -14,6 +14,7 @@
 import { useEffect } from 'react'
 import { useApp } from '../store/app'
 import { zonePaneIds } from '../lib/zones'
+import { toggleTodoBoard } from '../store/todos'
 
 /** True for a real text field — but never for xterm's hidden input. */
 function isTextEntry(target: EventTarget | null): boolean {
@@ -56,6 +57,9 @@ export function useGlobalShortcuts(): void {
           state.toggleMaximize(workspace.focusedPaneId)
           handled = true
         }
+      } else if (event.shiftKey && key === 't') {
+        toggleTodoBoard()
+        handled = true
       } else if (event.shiftKey && key === 'l') {
         state.setZoneEditorOpen(true)
         handled = true

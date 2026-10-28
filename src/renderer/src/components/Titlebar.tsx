@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type JSX,
@@ -9,6 +10,7 @@ import {
   Copy,
   FolderTree,
   LayoutGrid,
+  ListTodo,
   Minus,
   PanelLeft,
   Settings,
@@ -24,6 +26,8 @@ import { ModeSwitch } from './ModeSwitch'
 import { Button } from './ui'
 import { selectActiveWorkspace, useApp } from '../store/app'
 import { useRemote } from '../store/remote'
+import { toggleTodoBoard, useTodos } from '../store/todos'
+import { boardBadge } from '../lib/todos'
 import './Titlebar.css'
 
 /**
@@ -62,6 +66,10 @@ export default function Titlebar({ variant }: TitlebarProps): JSX.Element {
   const setZoneEditorOpen = useApp((state) => state.setZoneEditorOpen)
   const workspace = useApp(selectActiveWorkspace)
   const remoteMode = useRemote((state) => state.mode) === 'remote'
+  const todoItems = useTodos((state) => state.items)
+  const todoTargets = useTodos((state) => state.targets)
+  const todoBoardShown = useTodos((state) => state.board.docked || state.board.poppedOut)
+  const todoBadge = useMemo(() => boardBadge(todoItems, todoTargets), [todoItems, todoTargets])
 
   const [maximized, setMaximized] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -117,6 +125,21 @@ export default function Titlebar({ variant }: TitlebarProps): JSX.Element {
               everything to their right where it was. */}
           {showTabs && !remoteMode ? <WorkspaceTabs /> : <div className="ada-titlebar-spacer" />}
           <UsagePill />
+          <Button
+            className="ada-nodrag ada-titlebar-wide ada-titlebar-todo"
+            variant="icon"
+            active={todoBoardShown}
+            aria-label={todoBadge ? `Todo board, ${todoBadge.count} ${todoBadge.tone === 'neutral' ? 'open' : todoBadge.tone === 'attention' ? 'waiting on you' : 'finished'}` : 'Todo board'}
+            title="Todo board (Ctrl+Shift+T)"
+            onClick={toggleTodoBoard}
+          >
+            <ListTodo size={14} />
+            {todoBadge && (
+              <span className={`ada-titlebar-badge ada-titlebar-badge--${todoBadge.tone}`} aria-hidden="true">
+                {todoBadge.count > 99 ? '99+' : todoBadge.count}
+              </span>
+            )}
+          </Button>
           <Button
             ref={pickerAnchor}
             className="ada-nodrag ada-titlebar-wide"

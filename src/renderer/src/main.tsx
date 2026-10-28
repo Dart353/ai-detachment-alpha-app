@@ -3,6 +3,8 @@ import App from './App'
 import { useApp } from './store/app'
 import { useRuntime } from './store/runtime'
 import { useRemote } from './store/remote'
+import { useTodos } from './store/todos'
+import { TodoWindow } from './components/todo/TodoWindow'
 // The mono face is bundled, not fetched: a cold offline launch must not fall
 // back to a system stack and leave xterm measuring the wrong cell.
 import '@fontsource/jetbrains-mono/400.css'
@@ -20,7 +22,13 @@ document.body.classList.add(`platform-${window.api.platform}`)
 // `?e2e=1` (which it only does for a throwaway userData profile); a packaged
 // launch has neither, so nothing is reachable from a real window.
 if (import.meta.env.DEV || new URLSearchParams(location.search).has('e2e')) {
-  window.__ada = { useApp, useRuntime, remote: useRemote }
+  window.__ada = { useApp, useRuntime, remote: useRemote, todos: useTodos }
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
+// The popped-out todo board is this same bundle in a second window, told apart
+// by its query. It renders the board alone: none of the app shell, and nothing
+// that would load or save the workspaces.
+const isTodoWindow = new URLSearchParams(location.search).get('view') === 'todo'
+if (isTodoWindow) document.body.classList.add('ada-todo-window')
+
+ReactDOM.createRoot(document.getElementById('root')!).render(isTodoWindow ? <TodoWindow /> : <App />)

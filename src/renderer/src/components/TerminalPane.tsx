@@ -132,7 +132,7 @@ function isAppShortcut(event: KeyboardEvent): boolean {
   const key = event.key.toLowerCase()
   if (!event.shiftKey) return /^[1-9]$/.test(key) || key === 'b'
   // Shift+[ and Shift+] arrive as { and } on most layouts, so both spellings count.
-  return key === 'm' || key === 'l' || key === '[' || key === ']' || key === '{' || key === '}'
+  return key === 'm' || key === 'l' || key === 't' || key === '[' || key === ']' || key === '{' || key === '}'
 }
 
 export function TerminalPane({

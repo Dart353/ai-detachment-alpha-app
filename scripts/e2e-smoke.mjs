@@ -96,7 +96,9 @@ async function waitForPageTarget(child) {
       const response = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json`)
       const targets = await response.json()
       const page = targets.find(
-        (target) => target.type === 'page' && target.webSocketDebuggerUrl
+        // The popped-out todo board is a page too; the app is the other one.
+        (target) =>
+          target.type === 'page' && target.webSocketDebuggerUrl && !target.url.includes('view=todo')
       )
       if (page) return page.webSocketDebuggerUrl
     } catch {
@@ -710,6 +712,137 @@ function buildSteps(cdp, dirs) {
            return { ok: !!el && el.__mark === 2, present: !!el, mark: el?.__mark ?? null }`
         )
         if (!back.ok) throw new StepError('the terminal was remounted by the detour', back)
+      }
+    ],
+    [
+      'the todo board docks, takes todos and checklists, and keeps them across a reload',
+      async (scratch) => {
+        const todos = 'window.__ada.todos.getState()'
+        await waitFor(
+          cdp,
+          'the todo store to hydrate',
+          `return { ok: !!window.__ada.todos?.getState().hydrated }`
+        )
+        await cdp.evaluate(`${todos}.setBoard({ docked: true })`)
+        await waitFor(
+          cdp,
+          'the docked board',
+          `return { ok: !!document.querySelector('.ada-todo--docked') }`
+        )
+        const added = await cdp.evaluate(
+          `const store = window.__ada.todos
+           store.getState().add('Review the relay PR @ada-smoke')
+           const listId = store.getState().add('Ship the board', true)
+           store.getState().addSub(listId, 'Design')
+           store.getState().addSub(listId, 'Build')
+           const list = store.getState().items.find((item) => item.id === listId)
+           store.getState().toggleSub(listId, list.items[0].id)
+           return { listId, items: store.getState().items }`
+        )
+        scratch.todoList = added.listId
+        await waitFor(
+          cdp,
+          'both todos on the board, the tag as a chip',
+          `const rows = document.querySelectorAll('.ada-todo--docked .ada-todo-row')
+           const chip = document.querySelector('.ada-todo--docked .ada-todo-chip--ws')?.textContent
+           const progress = document.querySelector('.ada-todo--docked .ada-todo-progress')?.textContent
+           return { ok: rows.length === 2 && chip === 'ada-smoke' && progress?.startsWith('1/2'), rows: rows.length, chip, progress }`
+        )
+        const shape = (items) =>
+          JSON.stringify(items.map(({ id, title, done, workspace, items: lines }) => ({ id, title, done, workspace, lines })))
+        await cdp.send('Page.reload')
+        await waitFor(
+          cdp,
+          'the todos after the reload',
+          `const store = window.__ada?.todos?.getState()
+           return { ok: !!store?.hydrated && store.items.length === 2, count: store?.items.length }`,
+          20_000
+        )
+        const after = await cdp.evaluate(`return ${todos}.items`)
+        if (shape(after) !== shape(added.items)) {
+          throw new StepError('the todos changed across the reload', { before: added.items, after })
+        }
+        await waitFor(
+          cdp,
+          'the app grid after the reload',
+          `const state = window.__ada.useApp.getState()
+           return { ok: state.hydrated && state.view === 'grid', view: state.view }`,
+          20_000
+        )
+      }
+    ],
+    [
+      'the todo board pops out into its own window, and both windows stay in step',
+      async (scratch) => {
+        const findBoardTarget = async () => {
+          const response = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json`)
+          const targets = await response.json()
+          return targets.find((target) => target.type === 'page' && target.url.includes('view=todo'))
+        }
+        await cdp.evaluate(`window.__ada.todos.getState().setBoard({ poppedOut: true })`)
+        let target = null
+        const deadline = Date.now() + WAIT_MS
+        while (!target) {
+          target = await findBoardTarget()
+          if (target) break
+          if (Date.now() > deadline) throw new StepError('no popped-out board window appeared', null)
+          await sleep(150)
+        }
+        const board = await connect(target.webSocketDebuggerUrl)
+        try {
+          await waitFor(
+            board,
+            'the popped-out board to load the list',
+            `const store = window.__ada?.todos?.getState()
+             return { ok: !!store?.hydrated && store.items.length === 2 && !!document.querySelector('.ada-todo--window'),
+                      count: store?.items.length }`,
+            20_000
+          )
+          await waitFor(
+            cdp,
+            'the docked board to give way to the window',
+            `return { ok: !document.querySelector('.ada-todo--docked'), docked: window.__ada.todos.getState().board }`
+          )
+          // An edit in either window shows up in the other.
+          await board.evaluate(`window.__ada.todos.getState().add('Written in the popped-out window')`)
+          await waitFor(
+            cdp,
+            'the main window to hear about the new todo',
+            `const titles = window.__ada.todos.getState().items.map((item) => item.title)
+             return { ok: titles.includes('Written in the popped-out window'), titles }`
+          )
+          await cdp.evaluate(`window.__ada.todos.getState().toggle(${json(scratch.todoList)})`)
+          await waitFor(
+            board,
+            'the popped-out board to see the checklist checked off',
+            `const list = window.__ada.todos.getState().items.find((item) => item.id === ${json(scratch.todoList)})
+             return { ok: list?.done === true && list.items.every((sub) => sub.done), list }`
+          )
+          // The pane picture the main window publishes reaches the window.
+          await waitFor(
+            board,
+            'the open workspaces in the popped-out board',
+            `const targets = window.__ada.todos.getState().targets
+             return { ok: targets.ready && targets.workspaces.length > 0, targets }`
+          )
+          if (board.consoleErrors.length > 0) {
+            throw new StepError('the popped-out board logged errors', board.consoleErrors)
+          }
+        } finally {
+          board.close()
+        }
+        await cdp.evaluate(`window.__ada.todos.getState().setBoard({ poppedOut: false, docked: true })`)
+        await waitFor(
+          cdp,
+          'the board back in the main window',
+          `return { ok: !!document.querySelector('.ada-todo--docked') }`
+        )
+        const gone = Date.now() + WAIT_MS
+        while (await findBoardTarget()) {
+          if (Date.now() > gone) throw new StepError('the popped-out window did not close on dock', null)
+          await sleep(150)
+        }
+        await cdp.evaluate(`window.__ada.todos.getState().setBoard({ docked: false })`)
       }
     ],
     [

@@ -1,0 +1,892 @@
+/* The todo board (design: Todo Board canvas, 1a–3b). One surface, two homes:
+   docked over the main window's grid, or filling its own small window. */
+
+.ada-todo {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ada-bg-popover);
+  color: var(--ada-text-primary);
+  font-family: var(--ada-font-ui);
+  font-size: 12px;
+}
+
+.ada-todo--docked {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 40;
+  width: 380px;
+  height: min(620px, calc(100% - 16px));
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-popover);
+  box-shadow: var(--ada-shadow-popover);
+  overflow: hidden;
+}
+
+.ada-todo--window {
+  height: 100%;
+}
+
+.ada-todo--collapsed {
+  height: 100%;
+  background: var(--ada-bg-window);
+}
+
+.ada-todo button,
+.ada-todo input,
+.ada-todo-send textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* === header ================================================================ */
+
+.ada-todo-head {
+  height: 40px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 0 12px;
+  background: var(--ada-bg-window);
+  border-bottom: 1px solid var(--ada-line-06);
+  user-select: none;
+}
+
+.ada-todo--collapsed .ada-todo-head {
+  border-bottom: 0;
+}
+
+/* The popped-out window has no frame; its header is what moves it. */
+.ada-todo-head--drag {
+  -webkit-app-region: drag;
+}
+
+.ada-todo-head--drag button {
+  -webkit-app-region: no-drag;
+}
+
+.ada-todo-head-icon {
+  flex: none;
+  color: var(--ada-accent);
+}
+
+.ada-todo-head-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ada-text-strong);
+}
+
+.ada-todo-head-count {
+  font-family: var(--ada-font-mono);
+  font-size: 10.5px;
+  color: var(--ada-text-muted);
+}
+
+.ada-todo--collapsed .ada-todo-head-count {
+  color: var(--ada-text-secondary);
+}
+
+.ada-todo-head-spacer {
+  flex: 1;
+}
+
+.ada-todo-head-next {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ada-text-secondary);
+}
+
+.ada-todo-head-alert {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ada-warn);
+  animation: ada-todo-pulse 1.8s ease-in-out infinite;
+}
+
+/* === shared bits =========================================================== */
+
+.ada-todo-icon {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ada-text-muted);
+  cursor: pointer;
+}
+
+.ada-todo .ada-todo-icon {
+  color: var(--ada-text-muted);
+}
+
+.ada-todo-icon:hover {
+  background: var(--ada-line-08);
+}
+
+.ada-todo .ada-todo-icon:hover {
+  color: var(--ada-text-primary);
+}
+
+.ada-todo .ada-todo-icon--on {
+  background: var(--ada-accent-tab-bg);
+  color: var(--ada-accent-text);
+}
+
+.ada-todo-cap {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ada-text-muted);
+}
+
+.ada-todo-mono {
+  font-family: var(--ada-font-mono);
+}
+
+@keyframes ada-todo-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* === quick add + filters =================================================== */
+
+.ada-todo-top {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 8px;
+}
+
+.ada-todo-add {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--ada-line-10);
+  border-radius: var(--ada-radius-row);
+  background: var(--ada-bg-sidebar);
+  color: var(--ada-text-muted);
+}
+
+.ada-todo-add:focus-within {
+  border-color: var(--ada-accent-pane-border);
+}
+
+.ada-todo-add input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 12.5px;
+}
+
+.ada-todo .ada-todo-add input {
+  color: var(--ada-text-strong);
+}
+
+.ada-todo-add input::placeholder {
+  color: var(--ada-text-muted);
+}
+
+.ada-todo-add-hint {
+  font-family: var(--ada-font-mono);
+  font-size: 10px;
+}
+
+.ada-todo-add-tag {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--ada-accent-tab-bg);
+  color: var(--ada-accent-text);
+  font-family: var(--ada-font-mono);
+  font-size: 10.5px;
+}
+
+.ada-todo-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ada-todo-tabs {
+  flex: 1;
+  display: flex;
+  gap: 2px;
+}
+
+.ada-todo-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.ada-todo .ada-todo-tab {
+  color: var(--ada-text-muted);
+}
+
+.ada-todo .ada-todo-tab:hover {
+  color: var(--ada-text-primary);
+}
+
+.ada-todo .ada-todo-tab--on {
+  background: var(--ada-line-08);
+  color: var(--ada-text-strong);
+  font-weight: 600;
+}
+
+.ada-todo-tab-count {
+  font-family: var(--ada-font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--ada-text-muted);
+}
+
+.ada-todo-scope {
+  max-width: 150px;
+}
+
+/* === list ================================================================== */
+
+.ada-todo-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 6px 8px;
+  border-top: 1px solid var(--ada-line-05);
+}
+
+.ada-todo-section-label {
+  padding: 10px 8px 4px;
+}
+
+.ada-todo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 56px 24px;
+  text-align: center;
+}
+
+.ada-todo-empty-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ada-text-secondary);
+}
+
+.ada-todo-empty-hint {
+  font-size: 11px;
+  color: var(--ada-text-muted);
+}
+
+.ada-todo-row {
+  padding: 7px 6px 7px 8px;
+  border-radius: var(--ada-radius-row);
+}
+
+.ada-todo-row:hover,
+.ada-todo-row:focus-within {
+  background: var(--ada-line-05);
+}
+
+.ada-todo-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ada-todo-check {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1.5px solid var(--ada-text-faint);
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ada-todo .ada-todo-check {
+  color: var(--ada-bg-app);
+}
+
+.ada-todo-check:hover {
+  border-color: var(--ada-text-tertiary);
+}
+
+.ada-todo-check svg {
+  opacity: 0;
+}
+
+.ada-todo-check--on,
+.ada-todo-check--on:hover {
+  border-color: var(--ada-done);
+  background: var(--ada-done);
+}
+
+.ada-todo-check--on svg {
+  opacity: 1;
+}
+
+.ada-todo-check--sm {
+  width: 14px;
+  height: 14px;
+  margin-top: 0;
+  border-radius: 4px;
+}
+
+.ada-todo-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ada-todo-title {
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--ada-text-strong);
+  overflow-wrap: anywhere;
+}
+
+.ada-todo-row--done .ada-todo-title {
+  color: var(--ada-text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--ada-text-disabled);
+}
+
+.ada-todo-edit {
+  width: 100%;
+  padding: 0 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--ada-accent-pane-border);
+  outline: 0;
+  background: transparent;
+  font-size: 12.5px;
+}
+
+.ada-todo .ada-todo-edit {
+  color: var(--ada-text-strong);
+}
+
+.ada-todo-edit--sub {
+  font-size: 12px;
+}
+
+.ada-todo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.ada-todo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 18px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--ada-radius-chip);
+  background: var(--ada-line-06);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.ada-todo .ada-todo-chip {
+  color: var(--ada-text-tertiary);
+}
+
+.ada-todo-chip--ws {
+  font-family: var(--ada-font-mono);
+}
+
+.ada-todo-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 18px;
+  padding: 0 4px 0 0;
+  border: 0;
+  background: transparent;
+  font-family: var(--ada-font-mono);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.ada-todo .ada-todo-progress {
+  color: var(--ada-text-tertiary);
+}
+
+.ada-todo .ada-todo-progress:hover {
+  color: var(--ada-text-primary);
+}
+
+.ada-todo-chev {
+  transition: transform 120ms ease;
+}
+
+.ada-todo-chev--open {
+  transform: rotate(90deg);
+}
+
+.ada-todo-bar {
+  display: inline-block;
+  width: 34px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--ada-line-12);
+}
+
+.ada-todo-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--ada-done);
+}
+
+/* --- agent chip: the dot is the pane's status dot ------------------------- */
+
+.ada-todo-agent {
+  cursor: pointer;
+  font-family: var(--ada-font-ui);
+}
+
+.ada-todo-agent:disabled {
+  cursor: default;
+}
+
+.ada-todo-agent-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+}
+
+.ada-todo .ada-todo-agent--working,
+.ada-todo .ada-todo-agent--queued {
+  border-color: var(--ada-accent-row-border);
+  background: var(--ada-accent-row-bg);
+  color: var(--ada-accent-text);
+}
+
+.ada-todo-agent--working .ada-todo-agent-dot {
+  background: var(--ada-accent);
+}
+
+.ada-todo-agent--queued .ada-todo-agent-dot {
+  box-shadow: inset 0 0 0 1px var(--ada-accent-text);
+}
+
+.ada-todo .ada-todo-agent--attention {
+  /* no token: the warn tone's tinted surface */
+  border-color: rgba(224, 120, 74, 0.4);
+  background: rgba(224, 120, 74, 0.12);
+  color: var(--ada-accent-text);
+}
+
+.ada-todo-agent--attention .ada-todo-agent-dot {
+  background: var(--ada-warn);
+  animation: ada-todo-pulse 1.8s ease-in-out infinite;
+}
+
+.ada-todo .ada-todo-agent--finished {
+  /* no token: the done tone's tinted surface */
+  border-color: rgba(126, 194, 122, 0.3);
+  background: rgba(126, 194, 122, 0.1);
+  color: var(--ada-text-primary);
+}
+
+.ada-todo-agent--finished .ada-todo-agent-dot,
+.ada-todo-agent--done .ada-todo-agent-dot {
+  background: var(--ada-done);
+}
+
+.ada-todo .ada-todo-agent--closed {
+  color: var(--ada-text-muted);
+  text-decoration: line-through;
+}
+
+.ada-todo-agent--closed .ada-todo-agent-dot {
+  box-shadow: inset 0 0 0 1px var(--ada-text-disabled);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ada-todo-agent--attention .ada-todo-agent-dot,
+  .ada-todo-head-alert {
+    animation: none;
+  }
+}
+
+/* --- hover actions -------------------------------------------------------- */
+
+.ada-todo-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 100ms ease;
+}
+
+.ada-todo-row:hover .ada-todo-actions,
+.ada-todo-row:focus-within .ada-todo-actions {
+  opacity: 1;
+}
+
+/* --- the strip that asks for a decision ----------------------------------- */
+
+.ada-todo-ask {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0 1px 26px;
+  font-size: 11px;
+  color: var(--ada-text-tertiary);
+}
+
+.ada-todo-ask--finished {
+  color: var(--ada-done);
+}
+
+.ada-todo-ask--attention {
+  color: var(--ada-warn);
+}
+
+.ada-todo-pill {
+  height: 22px;
+  padding: 0 9px;
+  border: 1px solid var(--ada-line-16);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.ada-todo .ada-todo-pill {
+  color: var(--ada-text-primary);
+}
+
+.ada-todo-pill:hover {
+  background: var(--ada-line-06);
+}
+
+.ada-todo .ada-todo-pill--done {
+  border-color: var(--ada-done);
+  background: var(--ada-done);
+  color: var(--ada-bg-app);
+  font-weight: 600;
+}
+
+.ada-todo .ada-todo-pill--warn {
+  /* no token: the warn tone's border alpha */
+  border-color: rgba(224, 120, 74, 0.5);
+  color: var(--ada-warn);
+}
+
+/* --- checklist lines, nested like a sub-agent under its parent ------------- */
+
+.ada-todo-subs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 6px 0 2px 21px;
+  padding-left: 12px;
+  border-left: 1px solid var(--ada-line-10);
+}
+
+.ada-todo-sub {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.ada-todo-sub-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--ada-text-secondary);
+}
+
+.ada-todo-sub-title--done {
+  color: var(--ada-text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--ada-text-disabled);
+}
+
+.ada-todo-sub-remove {
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+}
+
+.ada-todo-sub:hover .ada-todo-sub-remove,
+.ada-todo-sub-remove:focus-visible {
+  opacity: 1;
+}
+
+.ada-todo-sub-add {
+  height: 24px;
+  padding: 0 0 0 23px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 12px;
+}
+
+.ada-todo .ada-todo-sub-add {
+  color: var(--ada-text-primary);
+}
+
+.ada-todo-sub-add::placeholder {
+  color: var(--ada-text-muted);
+}
+
+/* === footer ================================================================ */
+
+.ada-todo-foot {
+  height: 34px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-top: 1px solid var(--ada-line-06);
+  font-size: 11px;
+  color: var(--ada-text-muted);
+}
+
+.ada-todo-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.ada-todo .ada-todo-link {
+  color: var(--ada-text-tertiary);
+}
+
+.ada-todo .ada-todo-link:hover:not(:disabled) {
+  color: var(--ada-text-strong);
+}
+
+.ada-todo .ada-todo-link:disabled {
+  color: var(--ada-text-disabled);
+  cursor: default;
+}
+
+/* === send popover ========================================================== */
+
+.ada-todo-send {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.ada-todo-send-head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ada-todo-send-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ada-text-strong);
+}
+
+.ada-todo-send-sub {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  color: var(--ada-text-muted);
+}
+
+.ada-todo-send-empty {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ada-text-tertiary);
+}
+
+.ada-todo-send-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ada-todo-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--ada-radius-row);
+  background: transparent;
+  color: var(--ada-text-secondary);
+  font-family: var(--ada-font-ui);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ada-todo-pick:hover {
+  background: var(--ada-line-05);
+}
+
+.ada-todo-pick--on,
+.ada-todo-pick--on:hover {
+  border-color: var(--ada-accent-row-border);
+  background: var(--ada-accent-row-bg);
+}
+
+.ada-todo-radio {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--ada-text-faint);
+  border-radius: 50%;
+}
+
+.ada-todo-pick--on .ada-todo-radio {
+  border-color: var(--ada-accent);
+}
+
+.ada-todo-pick--on .ada-todo-radio::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ada-accent);
+}
+
+.ada-todo-pick-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ada-text-disabled);
+}
+
+.ada-todo-pick-dot--working {
+  background: var(--ada-accent);
+}
+
+.ada-todo-pick-dot--attention {
+  background: var(--ada-warn);
+}
+
+.ada-todo-pick-dot--done {
+  background: var(--ada-done);
+}
+
+.ada-todo-pick-glyph {
+  width: 6px;
+  flex: none;
+  color: var(--ada-accent);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.ada-todo-pick-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ada-todo-pick-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ada-todo-pick--on .ada-todo-pick-name {
+  font-weight: 600;
+  color: var(--ada-text-strong);
+}
+
+.ada-todo-pick-hint {
+  font-size: 10.5px;
+  color: var(--ada-text-muted);
+}
+
+.ada-todo-pick-hint--warn {
+  color: var(--ada-warn);
+}
+
+.ada-todo-send-message {
+  min-height: 74px;
+  max-height: 220px;
+  padding: 9px 10px;
+  resize: vertical;
+  border: 1px solid var(--ada-line-12);
+  border-radius: var(--ada-radius-row);
+  outline: 0;
+  background: var(--ada-bg-sidebar);
+  color: var(--ada-text-secondary);
+  font-family: var(--ada-font-mono);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.ada-todo-send-message:focus {
+  border-color: var(--ada-accent-pane-border);
+}
+
+.ada-todo-send-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ada-todo-send-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ada-line-08);
+}
