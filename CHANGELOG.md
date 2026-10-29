@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.5.2](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.5.1...v2.5.2) (2026-10-29)
+
+
+### Bug Fixes
+
+* keep every pane's session across a restart, and save before closing ([4e058a2](https://github.com/Dart353/ai-detachment-alpha-app/commit/4e058a2aaa21512cfc38490c9bfe37fc6dfa30b1))
+* **select:** open the menu leftward when it would run off the window's right edge ([04fa37f](https://github.com/Dart353/ai-detachment-alpha-app/commit/04fa37fc5173776c12860c5973ba704a3f0f3b7c))
+* **todo:** wrap long checklist items instead of cutting them off ([a8bceae](https://github.com/Dart353/ai-detachment-alpha-app/commit/a8bceae0bcd781e63253c90c4d7f7f4a29ec50c7))
+
 ## [2.5.1](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.5.0...v2.5.1) (2026-10-29)
 
 
