@@ -14,10 +14,16 @@
 # "Run workflow" with a tag rebuilds the installers for a release that already
 # exists and attaches them — for when a build job failed after the tag was cut.
 #
-# macOS builds are ad-hoc signed, not notarized: there is no Apple signing
-# identity yet. Gatekeeper blocks the first open of such an app until it is
-# cleared once (see README → Installing on a Mac); auto-update on macOS needs
-# a real signature and stays off until one is added as a secret.
+# macOS builds are signed and notarized with the Developer ID certificate in
+# the CSC_LINK secret (team SL69NU235S, Alexander Suess). Squirrel.Mac only
+# installs an update whose signature matches the running app's Team ID, so
+# auto-update on macOS depends on every release being signed with that same
+# certificate. Without the secret the build falls back to an ad-hoc signature,
+# which launches but cannot auto-update (see README → Installing on a Mac).
+#
+# Secrets the mac job reads: CSC_LINK (base64 of the Developer ID Application
+# .p12), CSC_KEY_PASSWORD (its export password), APPLE_ID and
+# APPLE_APP_SPECIFIC_PASSWORD (for notarytool).
 
 name: Release
 
@@ -99,10 +105,29 @@ jobs:
       # CSC_IDENTITY_AUTO_DISCOVERY=false: with no Apple certificate in the
       # keychain, electron-builder would otherwise spend the job looking for
       # one; it ad-hoc signs the macOS app instead.
-      - run: pnpm package:${{ matrix.platform }} --publish never
+      - if: matrix.platform != 'mac'
+        run: pnpm package:${{ matrix.platform }} --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      # The mac job gets its own step because CSC_LINK must not exist at all on
+      # the other runners: electron-builder treats even an empty CSC_LINK as a
+      # certificate to sign with, and the Windows job would try to use it.
+      # electron-builder imports the .p12 into a throwaway keychain, signs with
+      # it, and notarizes whenever APPLE_ID is set. Auto-discovery has to stay
+      # ON when a certificate is supplied — with it off, electron-builder never
+      # looks in that keychain — and off when there is none, so the afterSign
+      # hook ad-hoc signs instead of shipping an unsigned app.
+      - if: matrix.platform == 'mac'
+        run: pnpm package:mac --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.CSC_LINK == '' && 'false' || 'true' }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: SL69NU235S
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}

@@ -50,6 +50,7 @@ pnpm dev
 | `pnpm test:e2e` | build, then drive the real app over CDP (see below) |
 | `pnpm package:dir` | fast unpacked Linux build into `release/linux/version_<x_y_z>/linux-unpacked` |
 | `pnpm package:linux` / `:win` / `:mac` | full electron-builder packaging into `release/<platform>/version_<x_y_z>/` |
+| `pnpm make:icon` | regenerate `build/icon.png` (already committed) |
 
 ### Packaging for Windows
 
@@ -66,28 +67,57 @@ pnpm package:win
 The NSIS installer lands in `release\win\version_0_1_0\AI Detachment Alpha Setup 0.1.0.exe`
 (per-user, custom install dir). It is unsigned, so SmartScreen will warn on
 first launch; code signing is a later step. `pnpm package:mac` works the same
-way on a Mac (ad-hoc signed, unnotarized until certificates are added).
+way on a Mac; see Signing for macOS below for what it signs with.
 
 ### Installing on a Mac
 
 Every release carries two DMGs: `-arm64` for Apple Silicon and `-x64` for Intel.
-They are ad-hoc signed and not notarized, so the first open is blocked: macOS
-says it "could not verify" the app (or, on older versions, that the developer
-cannot be verified). Clear it once with either of:
+Releases are signed with a Developer ID certificate and notarized, so they open
+normally and update themselves from Settings → About.
 
-- open it, dismiss the dialog, then **System Settings → Privacy & Security**,
-  scroll to the message about the app and click **Open Anyway**; or
-- in Terminal, after dragging the app to Applications:
+Releases up to v2.3.0 were ad-hoc signed instead. Two consequences:
+
+- macOS blocks their first open ("could not verify" the app). Clear it once via
+  **System Settings → Privacy & Security → Open Anyway**, or in Terminal after
+  dragging the app to Applications:
 
   ```sh
   xattr -dr com.apple.quarantine "/Applications/AI Detachment Alpha.app"
   ```
 
-After that it opens normally. If macOS instead says the app "is damaged", the
-build was not signed at all — that was the case for v1.7.0's DMG; use a later
-release. Auto-update is off on macOS until the app is
-signed with an Apple Developer identity; install new releases from the DMG.
-| `pnpm make:icon` | regenerate `build/icon.png` (already committed) |
+- they cannot auto-update, not even to a signed release: Squirrel.Mac checks
+  the update against the running app's signature, and an ad-hoc signature only
+  matches itself ("code failed to satisfy specified code requirement(s)").
+  Install the first signed release from its DMG by hand; every release after
+  that updates in place.
+
+If macOS says the app "is damaged", the build was not signed at all — that was
+the case for v1.7.0's DMG; use a later release.
+
+### Signing for macOS
+
+`pnpm package:mac` signs with whatever Developer ID Application identity is in
+the login keychain (electron-builder finds it on its own) and notarizes when the
+Apple credentials are in the environment:
+
+```sh
+export APPLE_ID="you@example.com"                 # the Apple ID on the team
+export APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"  # appleid.apple.com → App-Specific Passwords
+export APPLE_TEAM_ID="SL69NU235S"
+pnpm package:mac
+```
+
+Check the result with `spctl -a -vv` on the built `.app`: it should say
+`accepted` and `source=Notarized Developer ID`. With no identity in the
+keychain the build is ad-hoc signed by `scripts/adhoc-sign.cjs` — it runs, but
+with the limits described above.
+
+The release workflow signs the same way from repository secrets: `CSC_LINK`
+(the certificate and key exported from Keychain Access as a `.p12`, then
+`base64 -i cert.p12`), `CSC_KEY_PASSWORD`, `APPLE_ID` and
+`APPLE_APP_SPECIFIC_PASSWORD`. The Team ID is written into
+`.github/workflows/release.yml`. Changing teams changes the Team ID every
+installed copy checks updates against, so it is a one-time choice.
 
 ### The end-to-end smoke test
 
