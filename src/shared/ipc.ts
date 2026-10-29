@@ -54,6 +54,11 @@ export const CH = {
   winMinimize: 'win:minimize',
   winToggleMaximize: 'win:toggleMaximize',
   winClose: 'win:close',
+  winCloseRequested: 'win:closeRequested',
+  winCloseReady: 'win:closeReady',
+  winCloseHold: 'win:closeHold',
+  winCloseProceed: 'win:closeProceed',
+  winCloseCancel: 'win:closeCancel',
   winMaximized: 'win:maximized',
 
   // persistence + settings
@@ -196,6 +201,16 @@ export interface Api {
   winMinimize(): void
   winToggleMaximize(): void
   winClose(): void
+  /**
+   * Closing the window (or quitting) waits on the renderer: main asks through
+   * this, the renderer saves and then calls `proceedClose` — or `cancelClose`
+   * when the user keeps the app open. Subscribing tells main someone is listening.
+   */
+  onCloseRequested(cb: () => void): Unsubscribe
+  /** The user is being asked; main must not time the close out meanwhile. */
+  holdClose(): void
+  proceedClose(): void
+  cancelClose(): void
   onWinMaximized(cb: (maximized: boolean) => void): Unsubscribe
 
   /* === persistence + settings === */
@@ -378,6 +393,10 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   winMinimize: true,
   winToggleMaximize: true,
   winClose: true,
+  onCloseRequested: true,
+  holdClose: true,
+  proceedClose: true,
+  cancelClose: true,
   onWinMaximized: true,
   loadState: true,
   saveState: true,

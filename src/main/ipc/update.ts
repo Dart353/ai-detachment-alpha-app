@@ -24,7 +24,7 @@ export function registerUpdateIpc(ctx: IpcCtx): void {
   ipcMain.handle(CH.updateCheck, (): Promise<UpdateStatus> => checkForUpdate())
   ipcMain.on(CH.updateInstall, () => installUpdate())
 
-  app.on('before-quit', () => {
+  app.on('will-quit', () => {
     if (startupTimer) clearTimeout(startupTimer)
     onUpdateStatus(null)
   })

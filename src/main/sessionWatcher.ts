@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { projectsRoot } from './platform'
+import { isWsl, projectsRoot } from './platform'
+import { wslShareToLinux } from './wslPaths'
 import { accountConfigDir, accountProjectsRoot } from './accounts'
 import { log } from './log'
 import type { JsonlStatus, PaneReg, SessionInfo, TurnState } from '../shared/types'
@@ -31,6 +32,15 @@ const PENDING_SETTLE_MS = 2500
 
 export function encodeCwd(cwd: string): string {
   return cwd.replace(/[^a-zA-Z0-9]/g, '-')
+}
+
+/**
+ * The folder Claude Code saw. In WSL mode it runs inside WSL, so a pane folder
+ * that reached us as the Windows share path is encoded from its Linux form —
+ * otherwise the pane hunts for transcripts in a folder that never exists.
+ */
+function claudeCwd(cwd: string): string {
+  return isWsl() ? wslShareToLinux(cwd) : cwd
 }
 
 /** The projects root a pane's transcripts live under (account-aware). */
@@ -100,7 +110,7 @@ function defaultContextWindow(accountId?: string): number | null {
 
 /** Absolute path to a session transcript for a given cwd + session id. */
 export function transcriptPath(cwd: string, sessionId: string, accountId?: string): string {
-  return path.join(rootFor(accountId), encodeCwd(cwd), sessionId + '.jsonl')
+  return path.join(rootFor(accountId), encodeCwd(claudeCwd(cwd)), sessionId + '.jsonl')
 }
 
 /** Does a resumable transcript still exist for this cwd + session id? */
@@ -358,7 +368,7 @@ export class SessionWatcher {
       const direct = transcriptPath(reg.cwd, owned, reg.accountId)
       if (!claimed.has(direct) && fs.existsSync(direct)) return direct
     }
-    const dir = path.join(rootFor(reg.accountId), encodeCwd(reg.cwd))
+    const dir = path.join(rootFor(reg.accountId), encodeCwd(claudeCwd(reg.cwd)))
     let files: string[]
     try {
       files = fs.readdirSync(dir).filter((file) => file.endsWith('.jsonl'))

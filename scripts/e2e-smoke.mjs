@@ -1163,6 +1163,30 @@ function buildSteps(cdp, dirs) {
           await relay.close()
         }
       }
+    ],
+    // LAST: it closes the app.
+    [
+      'closing the window saves the last change before it goes',
+      async () => {
+        // Rename and close inside the persistence debounce: only the close
+        // handshake can get this rename onto disk before the app exits.
+        const paneId = await cdp.evaluate(
+          `const ws = ${store}.workspaces.find((w) => w.panes.length > 0)
+           ${store}.renamePane(ws.panes[0].id, 'saved-on-close')
+           window.api.winClose()
+           return ws.panes[0].id`
+        )
+        const deadline = Date.now() + WAIT_MS
+        while (dirs.app.exitedWith === undefined) {
+          if (Date.now() > deadline) throw new StepError('the app did not exit after its window closed', null)
+          await sleep(100)
+        }
+        const saved = JSON.parse(await readFile(path.join(dirs.userDataDir, 'ada-state.json'), 'utf8'))
+        const pane = saved.workspaces.flatMap((ws) => ws.panes).find((p) => p.id === paneId)
+        if (pane?.name !== 'saved-on-close') {
+          throw new StepError('the last change before closing was not saved', { pane })
+        }
+      }
     ]
   ]
 }
@@ -1364,7 +1388,7 @@ async function main() {
     cdp = await connect(target)
 
     const scratch = {}
-    const steps = buildSteps(cdp, { projectA, projectB })
+    const steps = buildSteps(cdp, { projectA, projectB, userDataDir, app: child })
     for (const [index, [label, run]] of steps.entries()) {
       currentStep = `${index + 1}. ${label}`
       await run(scratch)

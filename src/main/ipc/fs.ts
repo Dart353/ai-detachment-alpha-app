@@ -23,7 +23,7 @@ export function registerFsIpc(ctx: IpcCtx): void {
   // One watcher for the whole app: it refcounts subscribers per directory itself,
   // so several panes expanding the same folder still cost a single `fs.watch`.
   const watcher = new FileTreeWatcher((dir) => ctx.send(CH.fsChanged, dir))
-  app.on('before-quit', () => watcher.dispose())
+  app.on('will-quit', () => watcher.dispose())
 
   ipcMain.handle(CH.fsPickDir, async () => {
     const win = ctx.win()

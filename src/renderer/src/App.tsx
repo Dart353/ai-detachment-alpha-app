@@ -10,7 +10,7 @@ import ArtifactsView from './components/ArtifactsView'
 import SettingsView from './components/SettingsView'
 import RestorePreview from './components/RestorePreview'
 import RemoteView from './components/remote/RemoteView'
-import { Toasts } from './components/ui'
+import { Button, Modal, Toasts } from './components/ui'
 import { useStatusEngine } from './hooks/useStatusEngine'
 import { useHostPublisher } from './hooks/useHostPublisher'
 import { useRemoteLink } from './hooks/useRemoteLink'
@@ -18,6 +18,7 @@ import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
 import { useTodoAgents } from './hooks/useTodoAgents'
 import { TodoBoard } from './components/todo/TodoBoard'
 import { startTodoSync, useTodos } from './store/todos'
+import { useCloseGuard } from './hooks/useCloseGuard'
 import { selectActiveWorkspace, useApp } from './store/app'
 import { useRemote } from './store/remote'
 import { hydrate, startPersistence } from './store/persist'
@@ -55,6 +56,7 @@ export default function App(): JSX.Element {
   useRemoteLink()
   useGlobalShortcuts()
   useTodoAgents()
+  const closeGuard = useCloseGuard()
 
   useEffect(() => {
     if (booted.current) return undefined
@@ -162,6 +164,27 @@ export default function App(): JSX.Element {
 
       <RestorePreview />
       <Toasts toasts={toasts} onDismiss={dismissToast} />
+
+      <Modal
+        open={closeGuard.asking !== null}
+        title="Quit while agents are working?"
+        width={440}
+        onClose={closeGuard.keepOpen}
+        footer={
+          <>
+            <Button variant="ghost" onClick={closeGuard.keepOpen}>
+              Keep working
+            </Button>
+            <Button variant="primary" onClick={closeGuard.quitAnyway}>
+              Quit anyway
+            </Button>
+          </>
+        }
+      >
+        {closeGuard.asking === 1
+          ? 'An agent is in the middle of a task. Quitting stops it: its conversation comes back when you reopen, but you will have to ask it to carry on.'
+          : `${closeGuard.asking ?? 0} agents are in the middle of a task. Quitting stops them: their conversations come back when you reopen, but you will have to ask them to carry on.`}
+      </Modal>
     </div>
   )
 }

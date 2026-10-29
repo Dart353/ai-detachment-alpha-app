@@ -8,7 +8,7 @@ import type {
   Settings
 } from '../../shared/types'
 import { clearCliPathCache } from '../cliPath'
-import { configureWsl } from '../platform'
+import { configureWsl, isWsl } from '../platform'
 import {
   loadArchive,
   loadLayouts,
@@ -21,9 +21,26 @@ import {
   saveSettings,
   saveState
 } from '../store'
+import { normalizeArchivePaths, normalizeRecentPaths, normalizeStatePaths } from '../wslPaths'
 import type { IpcCtx } from './index'
 import { applyRelaySettings } from './relay'
 import { applyRemoteSettings } from './remote'
+
+/**
+ * In WSL mode every stored folder must be its Linux path, or its panes never find
+ * their transcripts and lose their sessions on restart (see wslPaths.ts). Applied
+ * on load, which repairs files written before this existed, and on save, which
+ * catches a Windows-form path however it got in. A file too malformed to walk is
+ * passed through for the renderer's sanitizing to deal with.
+ */
+function inWslForm<T>(value: T, normalize: (value: T) => T): T {
+  if (!isWsl() || value === null) return value
+  try {
+    return normalize(value)
+  } catch {
+    return value
+  }
+}
 
 /** The relay link reconnects only when its own fields change, not on every save. */
 function sameRelay(a: Settings['relay'], b: Settings['relay']): boolean {
@@ -36,14 +53,23 @@ export function registerStoreIpc(ctx: IpcCtx): void {
   // applied here, at registration, not on first settings:get.
   configureWsl(loadSettings().wsl)
 
-  ipcMain.handle(CH.stateLoad, () => loadState())
-  ipcMain.handle(CH.stateSave, (_event, state: PersistedState) => saveState(state))
+  ipcMain.handle(CH.stateLoad, () => {
+    const state = loadState()
+    return state && inWslForm(state, normalizeStatePaths)
+  })
+  ipcMain.handle(CH.stateSave, (_event, state: PersistedState) =>
+    saveState(inWslForm(state, normalizeStatePaths))
+  )
 
-  ipcMain.handle(CH.archiveLoad, () => loadArchive())
-  ipcMain.handle(CH.archiveSave, (_event, archive: ArchiveEntry[]) => saveArchive(archive))
+  ipcMain.handle(CH.archiveLoad, () => inWslForm(loadArchive(), normalizeArchivePaths))
+  ipcMain.handle(CH.archiveSave, (_event, archive: ArchiveEntry[]) =>
+    saveArchive(inWslForm(archive, normalizeArchivePaths))
+  )
 
-  ipcMain.handle(CH.recentsLoad, () => loadRecents())
-  ipcMain.handle(CH.recentsSave, (_event, recents: RecentWorkspace[]) => saveRecents(recents))
+  ipcMain.handle(CH.recentsLoad, () => inWslForm(loadRecents(), normalizeRecentPaths))
+  ipcMain.handle(CH.recentsSave, (_event, recents: RecentWorkspace[]) =>
+    saveRecents(inWslForm(recents, normalizeRecentPaths))
+  )
 
   ipcMain.handle(CH.layoutsLoad, () => loadLayouts())
   ipcMain.handle(CH.layoutsSave, (_event, layouts: SavedLayout[]) => saveLayouts(layouts))

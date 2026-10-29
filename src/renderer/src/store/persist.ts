@@ -151,6 +151,17 @@ export async function hydrate(): Promise<void> {
 }
 
 /**
+ * Write the workspaces now and resolve once main has them on disk — for the
+ * close handshake, which must not let the window go before the last save lands.
+ * Nothing is written before hydration (it would overwrite the real file).
+ */
+export async function saveNow(): Promise<void> {
+  const state = useApp.getState()
+  if (!state.hydrated) return
+  await api()?.saveState(toPersisted(state))
+}
+
+/**
  * Start writing changes back. Returns a teardown that flushes anything pending,
  * so a hot reload does not strand an unsaved edit.
  */
