@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.1](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.5.0...v2.5.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **release:** sign and notarize the macOS build so it can auto-update ([1814fc2](https://github.com/Dart353/ai-detachment-alpha-app/commit/1814fc28f6e518b8bb60fd06841e7c64f1681439))
+* **release:** sign and notarize the macOS build so it can auto-update ([7a176c6](https://github.com/Dart353/ai-detachment-alpha-app/commit/7a176c64066b98d18996cb5bf5bb64f32bba7082))
+
 ## [2.5.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.4.0...v2.5.0) (2026-10-28)
 
 
