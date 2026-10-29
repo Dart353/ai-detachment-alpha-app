@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { Check } from 'lucide-react'
+import { menuLeft } from '../../lib/menuPlacement'
 import './Select.css'
 
 export interface SelectOption {
@@ -46,6 +47,26 @@ const SEARCH_THRESHOLD = 12
 /** Distance from the trigger, and the margin the menu keeps off the window edge. */
 const GAP = 4
 const VIEWPORT_PAD = 8
+
+/**
+ * The menu before place() has run: fixed at the origin and invisible. Fixed, so
+ * it shrink-wraps its rows and can be measured — left in the page's flow it would
+ * stretch to the body's full width.
+ */
+const UNPLACED: CSSProperties = { position: 'fixed', top: 0, left: 0, visibility: 'hidden' }
+
+/**
+ * The width a scrollbar takes inside `list`. Measured by forcing one on for a
+ * moment (synchronously, before paint), so it tracks whatever the theme's
+ * ::-webkit-scrollbar rule says rather than a number copied from it.
+ */
+function scrollbarWidth(list: HTMLElement): number {
+  const previous = list.style.overflowY
+  list.style.overflowY = 'scroll'
+  const width = list.offsetWidth - list.clientWidth
+  list.style.overflowY = previous
+  return width
+}
 
 /** A shown option paired with its index in the FULL options array. */
 interface VisibleOption {
@@ -102,13 +123,16 @@ export function Select({
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const [query, setQuery] = useState('')
-  const [menuStyle, setMenuStyle] = useState<CSSProperties>({ visibility: 'hidden' })
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>(UNPLACED)
 
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
   const typeahead = useRef<{ buffer: string; timer: number | null }>({ buffer: '', timer: null })
+  // The menu's own width, measured once per opening: re-measuring as the filter
+  // narrows the rows would slide a right-aligned menu sideways under the cursor.
+  const naturalWidth = useRef<number | null>(null)
 
   const baseId = useId()
   const listboxId = `${baseId}-listbox`
@@ -126,7 +150,8 @@ export function Select({
   const close = useCallback((refocus = true): void => {
     setOpen(false)
     setQuery('')
-    setMenuStyle({ visibility: 'hidden' })
+    setMenuStyle(UNPLACED)
+    naturalWidth.current = null
     if (refocus) triggerRef.current?.focus()
   }, [])
 
@@ -186,11 +211,23 @@ export function Select({
 
     let top = openUp ? rect.top - maxHeight - GAP : rect.bottom + GAP
     top = Math.max(VIEWPORT_PAD, Math.min(top, window.innerHeight - maxHeight - VIEWPORT_PAD))
-    const left = Math.max(
-      VIEWPORT_PAD,
-      Math.min(rect.left, window.innerWidth - rect.width - VIEWPORT_PAD)
-    )
-    setMenuStyle({ position: 'fixed', top, left, minWidth: rect.width, maxHeight })
+
+    // Across: the MENU's width decides where it fits, not the trigger's — the rows
+    // can be far wider than the button that opens them. Never wider than the window;
+    // long labels ellipsize.
+    // Measured before the height cap applies, so a list that is about to scroll
+    // has no scrollbar yet; leave room for it or the widest labels get clipped.
+    if (naturalWidth.current === null) {
+      const scrolls = natural > maxHeight && list !== null
+      // Rounded UP from the fractional width: offsetWidth rounds, and a label a
+      // fraction of a pixel short of its text still shows the ellipsis.
+      const own = Math.ceil(menu.getBoundingClientRect().width)
+      naturalWidth.current = own + (scrolls && list ? scrollbarWidth(list) : 0)
+    }
+    const maxWidth = Math.max(0, window.innerWidth - VIEWPORT_PAD * 2)
+    const width = Math.min(Math.max(naturalWidth.current, rect.width), maxWidth)
+    const left = menuLeft(rect.left, rect.right, width, window.innerWidth, VIEWPORT_PAD)
+    setMenuStyle({ position: 'fixed', top, left, width, maxHeight })
   }, [])
 
   // position once rendered, and again whenever filtering changes how many rows
