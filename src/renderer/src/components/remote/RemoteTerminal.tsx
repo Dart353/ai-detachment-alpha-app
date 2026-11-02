@@ -14,9 +14,8 @@
  * The terminal is created once per host/pane, so the parent should key this
  * component by `${hostId}/${paneId}`.
  */
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { useEffect, useRef } from 'react'
 import { Terminal } from '@xterm/xterm'
-import { ContextMenu, type MenuItem } from '../ui'
 import { filterMouseReports } from '../../lib/mouseReports'
 import { fontStack, rowLineHeight, termTheme } from '../../hooks/useTerminalPane'
 import { registerSelectionFn } from '../../store/runtime'
@@ -159,7 +158,6 @@ export function RemoteTerminal({
   const boxRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
-  const [menu, setMenu] = useState<{ x: number; y: number; selection: string } | null>(null)
   // Read through refs so a re-render never tears the terminal down.
   const propsRef = useRef({ fontSize, fontFamily, focused, onFocus, onSize })
   propsRef.current = { fontSize, fontFamily, focused, onFocus, onSize }
@@ -218,8 +216,10 @@ export function RemoteTerminal({
 
     const handleFocusIn = (): void => propsRef.current.onFocus()
     element.addEventListener('focusin', handleFocusIn)
-    // What the pane's context menu copies. xterm keeps its selection inside
-    // itself, so `window.getSelection()` cannot see it.
+    // What the pane's context menu (RemoteGrid's, over the whole tile) copies.
+    // xterm keeps its selection inside itself, so `window.getSelection()`
+    // cannot see it. The menu itself is not here: a second one on this box
+    // would open on top of the pane's on every right-click.
     const offSelection = registerSelectionFn(remoteSelectionKey(hostId, paneId), () =>
       term.getSelection()
     )
@@ -270,26 +270,9 @@ export function RemoteTerminal({
     fitFont(term, element, box, fontFamily)
   }, [fontSize, fontFamily])
 
-  // The same Copy a local pane's menu offers. The selection is read when the
-  // menu opens: a screen arriving while it is open resets the terminal and
-  // drops the highlight, and the operator still meant what they had selected.
-  const openMenu = (event: ReactMouseEvent): void => {
-    event.preventDefault()
-    setMenu({ x: event.clientX, y: event.clientY, selection: termRef.current?.getSelection() ?? '' })
-  }
-  const menuItems = (selection: string): MenuItem[] => {
-    const items: MenuItem[] = []
-    if (selection) items.push({ label: 'Copy', hint: 'Ctrl+Shift+C', onClick: () => window.api.copyText(selection) })
-    items.push({ label: 'Paste', hint: 'Ctrl+Shift+V', onClick: () => pasteClipboardInto(hostId, paneId) })
-    return items
-  }
-
   return (
-    <div className="ada-remote-term" ref={boxRef} onContextMenu={openMenu}>
+    <div className="ada-remote-term" ref={boxRef}>
       <div className="ada-remote-term-inner" ref={containerRef} />
-      {menu && (
-        <ContextMenu x={menu.x} y={menu.y} items={menuItems(menu.selection)} onClose={() => setMenu(null)} />
-      )}
     </div>
   )
 }
