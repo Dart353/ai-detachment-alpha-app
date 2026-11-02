@@ -106,16 +106,22 @@ function RemotePane({
   const termFontFamily = useApp((state) => state.settings.termFontFamily)
   const [size, setSize] = useState<{ cols: number; rows: number } | null>(null)
   const [refreshToken, setRefreshToken] = useState(0)
-  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null)
+  const [menu, setMenu] = useState<{ x: number; y: number; selection: string } | null>(null)
 
   /**
    * The pane's right-click menu. Copy is the reason it exists: the chord that
    * copies here is Ctrl/Cmd+Shift+C, because plain Ctrl+C has to stay the
    * interrupt the remote agent expects, and a selection you cannot copy from a
    * menu is a selection most people never get into the clipboard.
+   *
+   * The selection is read when the menu opens, not when it renders: a screen
+   * arriving while the menu is up resets the terminal and drops the highlight,
+   * and the operator still meant what they had selected.
    */
-  const menuItems = (): MenuItem[] => {
-    const selection = getSelectionFn(remoteSelectionKey(hostId, pane.id))?.() ?? ''
+  const openMenu = (x: number, y: number): void => {
+    setMenu({ x, y, selection: getSelectionFn(remoteSelectionKey(hostId, pane.id))?.() ?? '' })
+  }
+  const menuItems = (selection: string): MenuItem[] => {
     const items: MenuItem[] = []
     // Absent rather than disabled, as on a local pane: with nothing selected it
     // is not an action the operator can mean.
@@ -141,7 +147,7 @@ function RemotePane({
       onPointerDown={onFocus}
       onContextMenu={(event) => {
         event.preventDefault()
-        setMenu({ x: event.clientX, y: event.clientY })
+        openMenu(event.clientX, event.clientY)
       }}
     >
       <RemotePaneHeader
@@ -170,7 +176,9 @@ function RemotePane({
       ) : (
         <div className="ada-remote-empty">{kindLabel(pane.kind)} panes are shown on their own machine only.</div>
       )}
-      {menu && <ContextMenu x={menu.x} y={menu.y} items={menuItems()} onClose={() => setMenu(null)} />}
+      {menu && (
+        <ContextMenu x={menu.x} y={menu.y} items={menuItems(menu.selection)} onClose={() => setMenu(null)} />
+      )}
     </div>
   )
 }
