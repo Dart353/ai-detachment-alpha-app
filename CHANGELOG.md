@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.3](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.5.2...v2.5.3) (2026-11-09)
+
+
+### Bug Fixes
+
+* **remote:** one context menu per pane, with Copy kept while it is open ([73a0e10](https://github.com/Dart353/ai-detachment-alpha-app/commit/73a0e100bfc6002e154a20b6a56fc0f7dfd332cc))
+* **remote:** one context menu per pane, with Copy kept while it is open ([a3fd81a](https://github.com/Dart353/ai-detachment-alpha-app/commit/a3fd81a600a9fd082d0334f098f98d18951cb701))
+
 ## [2.5.2](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.5.1...v2.5.2) (2026-10-29)
 
 
