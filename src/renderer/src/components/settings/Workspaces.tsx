@@ -1,6 +1,7 @@
 import { useEffect, useState, type JSX } from 'react'
 import { Button, Toggle } from '../ui'
 import { useApp } from '../../store/app'
+import type { LoginItemStatus } from '../../../../shared/types'
 import { SettingRow } from './SettingRow'
 import './settings.css'
 
@@ -51,10 +52,13 @@ export default function Workspaces(): JSX.Element {
     <>
       <div className="ada-set-title">Workspaces</div>
       <div className="ada-set-sub">
-        What happens when you reopen a folder, and what is still waiting to be reopened.
+        How the app starts, what happens when you reopen a folder, and what is still waiting to
+        be reopened.
       </div>
 
       <div className="ada-set-cards">
+        <OpenAtLogin />
+
         <div className="ada-set-card">
           <SettingRow
             label="Restore archived workspaces automatically"
@@ -140,5 +144,51 @@ export default function Workspaces(): JSX.Element {
         </div>
       </div>
     </>
+  )
+}
+
+/**
+ * "Open at login". Reads and writes the OS's own login-item registration through
+ * main rather than a settings field, so the switch shows what the next boot will
+ * actually do — including an entry removed from the OS's startup list by hand.
+ */
+function OpenAtLogin(): JSX.Element {
+  const [status, setStatus] = useState<LoginItemStatus | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    let live = true
+    void window.api?.getLoginItem().then((value) => {
+      if (live) setStatus(value)
+    })
+    return () => {
+      live = false
+    }
+  }, [])
+
+  const change = (enabled: boolean): void => {
+    setBusy(true)
+    void window.api
+      ?.setLoginItem(enabled)
+      .then(setStatus)
+      .finally(() => setBusy(false))
+  }
+
+  const supported = status?.supported ?? false
+  return (
+    <div className="ada-set-card">
+      <SettingRow
+        label="Open at login"
+        description={status?.reason ?? 'Start AI Detachment Alpha when you sign in to this computer.'}
+        dimmed={!supported}
+      >
+        <Toggle
+          checked={status?.enabled ?? false}
+          disabled={!supported || busy}
+          ariaLabel="Open at login"
+          onChange={change}
+        />
+      </SettingRow>
+    </div>
   )
 }

@@ -13,6 +13,7 @@ import type {
   GitStatus,
   HookEvent,
   HostSnapshot,
+  LoginItemStatus,
   PaneReg,
   PendingMint,
   PersistedState,
@@ -226,7 +227,10 @@ const api: Api = {
   onNotificationClick: (cb: (paneId: string | undefined) => void) =>
     sub<string | undefined>(CH.notificationClick, cb),
   revealLogs: () => ipcRenderer.invoke(CH.revealLogs) as Promise<void>,
-  appVersion: () => ipcRenderer.invoke(CH.appVersion) as Promise<string>
+  appVersion: () => ipcRenderer.invoke(CH.appVersion) as Promise<string>,
+  getLoginItem: () => ipcRenderer.invoke(CH.loginItemGet) as Promise<LoginItemStatus>,
+  setLoginItem: (enabled: boolean) =>
+    ipcRenderer.invoke(CH.loginItemSet, enabled) as Promise<LoginItemStatus>
 }
 
 contextBridge.exposeInMainWorld('api', api)

@@ -305,6 +305,15 @@ export interface RelayScreenReply {
   rows: number
 }
 
+/** "Open at login", as the OS currently has it registered. */
+export interface LoginItemStatus {
+  /** False for a run from source and on systems with no login-item mechanism. */
+  supported: boolean
+  enabled: boolean
+  /** Why it is unsupported, or why the last change was refused. */
+  reason?: string
+}
+
 /** One phone connected with this machine's key, as Settings lists it. */
 export interface RelayViewer {
   /** The relay's id for the connection; changes on every reconnect. */

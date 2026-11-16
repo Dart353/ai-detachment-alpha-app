@@ -3,6 +3,7 @@ import { CH } from '../../shared/ipc'
 import type { AppNotification, CliProbe } from '../../shared/types'
 import { probeCli } from '../cliPath'
 import { logsDir } from '../log'
+import { getLoginItem, setLoginItem } from '../loginItem'
 import { listDistros, toHost } from '../platform'
 import type { IpcCtx } from './index'
 
@@ -73,4 +74,9 @@ export function registerMiscIpc(ctx: IpcCtx): void {
   })
 
   ipcMain.handle(CH.appVersion, () => app.getVersion())
+
+  ipcMain.handle(CH.loginItemGet, () => getLoginItem())
+  ipcMain.handle(CH.loginItemSet, (_event, enabled: unknown) =>
+    typeof enabled === 'boolean' ? setLoginItem(enabled) : getLoginItem()
+  )
 }
