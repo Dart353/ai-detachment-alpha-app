@@ -11,6 +11,7 @@ import type {
   GitStatus,
   HookEvent,
   HostSnapshot,
+  LoginItemStatus,
   PaneReg,
   PendingMint,
   PersistedState,
@@ -187,7 +188,9 @@ export const CH = {
   notificationShow: 'notification:show',
   notificationClick: 'notification:click',
   revealLogs: 'misc:revealLogs',
-  appVersion: 'misc:appVersion'
+  appVersion: 'misc:appVersion',
+  loginItemGet: 'misc:loginItemGet',
+  loginItemSet: 'misc:loginItemSet'
 } as const
 
 /** Drop an event subscription. Every `on*` returns one. */
@@ -381,6 +384,10 @@ export interface Api {
   onNotificationClick(cb: (paneId: string | undefined) => void): Unsubscribe
   revealLogs(): Promise<void>
   appVersion(): Promise<string>
+  /** "Open at login", read from the OS rather than settings.json. */
+  getLoginItem(): Promise<LoginItemStatus>
+  /** Register or unregister; resolves with what the OS now has. */
+  setLoginItem(enabled: boolean): Promise<LoginItemStatus>
 }
 
 /**
@@ -498,7 +505,9 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   showNotification: true,
   onNotificationClick: true,
   revealLogs: true,
-  appVersion: true
+  appVersion: true,
+  getLoginItem: true,
+  setLoginItem: true
 }
 
 export const API_KEYS: readonly (keyof Api)[] = Object.keys(API_KEY_RECORD) as (keyof Api)[]
