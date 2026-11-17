@@ -566,6 +566,34 @@ function buildSteps(cdp, dirs) {
       }
     ],
     [
+      'the explorer renames a file, and a viewer reloads when it changes on disk',
+      async (scratch) => {
+        const from = path.join(dirs.projectA, 'rename-me.txt')
+        const to = path.join(dirs.projectA, 'renamed.txt')
+        await writeFile(from, 'before\n')
+        const renamed = await cdp.evaluate(
+          `return await window.api.renamePath(${json(from)}, 'renamed.txt')`
+        )
+        if (!renamed?.ok) throw new StepError('renamePath did not rename the file', renamed)
+        const onDisk = await readFile(to, 'utf8').catch(() => null)
+        if (onDisk !== 'before\n') throw new StepError('the renamed file is not on disk', { onDisk })
+
+        scratch.viewerPane = await cdp.evaluate(
+          `return ${store}.addPane(${json(scratch.wsA)}, { kind: 'viewer', filePath: ${json(to)} })`
+        )
+        const body = `document.querySelector('[data-pane-id="' + ${json(scratch.viewerPane)} + '"]')?.innerText ?? ''`
+        await waitFor(cdp, 'the viewer to show the file', `const text = ${body}
+           return { ok: text.includes('before'), text: text.slice(0, 200) }`)
+        // Let the watcher arm before the edit it has to notice.
+        await sleep(300)
+        await writeFile(to, 'after an agent edit\n')
+        await waitFor(cdp, 'the viewer to reload the edit', `const text = ${body}
+           return { ok: text.includes('after an agent edit'), text: text.slice(0, 200) }`)
+        await cdp.evaluate(`${store}.closePane(${json(scratch.viewerPane)})
+                            return true`)
+      }
+    ],
+    [
       'an empty zone can be closed from its own menu',
       async () => {
         // The workspace ON SCREEN, which an earlier step closed and reopened —
