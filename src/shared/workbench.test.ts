@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
+  WORKBENCH_CAPTURES_DIR,
   WORKBENCH_FILE,
   WORKBENCH_INSTRUCTIONS,
   WORKBENCH_MAX_BYTES,
@@ -34,7 +35,8 @@ describe('the workbench contract', () => {
         status: 'working',
         now: 'Describe the step you are on.',
         counts: { done: 0, working: 1, queued: 1 },
-        question: null
+        question: null,
+        captures: 0
       }
     ])
   })
@@ -42,6 +44,10 @@ describe('the workbench contract', () => {
   it('ends the instructions with the skeleton, so an agent can create the page', () => {
     expect(WORKBENCH_INSTRUCTIONS).toContain(WORKBENCH_SKELETON)
     expect(WORKBENCH_INSTRUCTIONS).toContain(WORKBENCH_FILE)
+  })
+
+  it('tells agents where captures go', () => {
+    expect(WORKBENCH_INSTRUCTIONS).toContain(`${WORKBENCH_CAPTURES_DIR}/`)
   })
 
   it('keeps the rule small enough to load into every session', () => {
@@ -78,7 +84,8 @@ describe('parseWorkbench', () => {
         status: 'needs-input',
         now: 'Waiting on which page to return to.',
         counts: { done: 2, working: 0, queued: 1 },
-        question: 'Should sign-in return to the last page or the dashboard?'
+        question: 'Should sign-in return to the last page or the dashboard?',
+        captures: 0
       }
     ])
   })
@@ -109,7 +116,7 @@ describe('parseWorkbench', () => {
 
   it('falls back to the agent for a section with no heading, and nulls for missing parts', () => {
     expect(parseWorkbench(section('data-agent="claude: bare"', '<p>hi</p>'))).toEqual([
-      { agent: 'claude: bare', title: 'claude: bare', status: 'working', now: null, counts: null, question: null }
+      { agent: 'claude: bare', title: 'claude: bare', status: 'working', now: null, counts: null, question: null, captures: 0 }
     ])
   })
 
@@ -133,6 +140,14 @@ describe('parseWorkbench', () => {
       '<h2>Fish &amp; chips &#8212; &lt;now&gt;</h2><div class="now">one<br/>two\n\nthree</div>'
     )
     expect(parseWorkbench(html)[0]).toMatchObject({ title: 'Fish & chips — <now>', now: 'one two three' })
+  })
+
+  it('counts the screenshots and recordings a section shows', () => {
+    const html = section(
+      'data-agent="claude: a"',
+      '<h2>T</h2><img src=".workbench/before.png"><IMG src=".workbench/after.png"><video src=".workbench/flow.mp4" controls></video>'
+    )
+    expect(parseWorkbench(html)[0].captures).toBe(3)
   })
 
   it('ignores script and style text', () => {
