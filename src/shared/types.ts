@@ -5,7 +5,7 @@
  * no class instances, no Dates, no functions. Epoch milliseconds stand in
  * for timestamps throughout.
  */
-import type { Effort, Feed, FeedLayout } from './relayProtocol'
+import type { Effort, Feed, FeedLayout, FeedWorkbenchTask } from './relayProtocol'
 import type { WorkbenchSection } from './workbench'
 
 /** What a pane runs. `viewer` is a read-only file pane, not a process. */
@@ -299,6 +299,8 @@ export interface HostWorkspace {
   panes: HostPane[]
   /** The canvas as this desktop draws it, for a viewer that can draw it too. */
   layout?: FeedLayout
+  /** The workbench's tasks, when the folder has one. */
+  workbench?: FeedWorkbenchTask[]
 }
 
 /**

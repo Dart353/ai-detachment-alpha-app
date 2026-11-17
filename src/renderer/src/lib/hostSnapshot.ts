@@ -1,4 +1,4 @@
-import type { FeedLayout } from '../../../shared/relayProtocol'
+import type { FeedLayout, FeedWorkbenchTask } from '../../../shared/relayProtocol'
 import type {
   HostPane,
   HostSnapshot,
@@ -6,6 +6,7 @@ import type {
   PaneStatus,
   RecentWorkspace,
   SessionInfo,
+  WorkbenchSnapshot,
   Workspace
 } from '../../../shared/types'
 
@@ -25,6 +26,8 @@ export interface HostSnapshotInputs {
   status: Record<string, PaneStatus>
   sessions: Record<string, SessionInfo>
   lastActivity: Record<string, number>
+  /** Workspace root → its workbench page; optional so callers without one need not say so. */
+  workbench?: Record<string, WorkbenchSnapshot>
   now: number
 }
 
@@ -46,6 +49,7 @@ export function buildHostSnapshot(inputs: HostSnapshotInputs): HostSnapshot {
       name: workspace.name,
       rootDir: workspace.rootDir,
       layout: wireLayout(workspace),
+      ...wireWorkbench(inputs.workbench?.[workspace.rootDir]),
       panes: workspace.panes.map((pane) => {
         const session = inputs.sessions[pane.id]
         const status = wireStatus(pane, inputs.status[pane.id] ?? 'idle', session, inputs.now)
@@ -88,6 +92,32 @@ function wireLayout(workspace: Workspace): FeedLayout {
     ...(workspace.maximizedPaneId && paneIds.has(workspace.maximizedPaneId)
       ? { maximizedPaneId: workspace.maximizedPaneId }
       : {})
+  }
+}
+
+/**
+ * A workspace's workbench as list rows. Nothing from the page goes out but the
+ * parsed text: no markup, no file names of its captures, only how many there are.
+ */
+function wireWorkbench(
+  snapshot: WorkbenchSnapshot | undefined
+): { workbench?: FeedWorkbenchTask[] } {
+  if (!snapshot?.exists) return {}
+  return {
+    workbench: snapshot.sections.map((section) => ({
+      agent: section.agent,
+      title: section.title,
+      status: section.status,
+      now: section.now,
+      question: section.question,
+      progress: section.counts
+        ? {
+            done: section.counts.done,
+            total: section.counts.done + section.counts.working + section.counts.queued
+          }
+        : null,
+      captures: section.captures
+    }))
   }
 }
 

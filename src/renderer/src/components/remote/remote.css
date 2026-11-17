@@ -197,3 +197,44 @@
   font-size: 11.5px;
   color: var(--ada-warn);
 }
+
+/* A task on the watched machine's workbench that is waiting on the user. Text
+   only: the page stays on that machine, so this says who and what, not more. */
+.ada-rm-wb-task {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 8px 5px 10px;
+  border-radius: var(--ada-radius-row);
+  font-size: 12px;
+}
+
+.ada-rm-wb-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--ada-warn);
+}
+
+.ada-rm-wb-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ada-rm-wb-title {
+  overflow: hidden;
+  color: var(--ada-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ada-rm-wb-ask {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ada-warn);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}

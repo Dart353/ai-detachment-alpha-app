@@ -1032,6 +1032,12 @@ function buildSteps(cdp, dirs) {
           if (!pane || !pane.status || feed.host?.name !== 'smoke') {
             throw new StepError('the relay never received the terminal pane', feed)
           }
+          // The workbench set up earlier goes out as text rows, never as the page.
+          const tasks = feed.workspaces.find((ws) => ws.rootDir === dirs.projectA)?.workbench
+          const task = tasks?.find((t) => t.agent === 'claude: smoke')
+          if (!task || task.status !== 'done' || JSON.stringify(tasks).includes('<')) {
+            throw new StepError('the feed did not carry the workbench as text', { tasks: tasks ?? null })
+          }
 
           // Watch the pane as a phone would. The restored shell may still be
           // starting: wait for its prompt on the desktop first, so the screen
@@ -1156,6 +1162,16 @@ function buildSteps(cdp, dirs) {
             `${remote}.setMode('remote')
              ${remote}.select({ hostId: ${json(hostId)}, paneId: 'pR' })
              return true`
+          )
+          // That machine's workbench has a task waiting: the workspace says so,
+          // and the task is listed with its question.
+          await waitFor(
+            cdp,
+            'the remote workbench task to show',
+            `const badge = document.querySelector('.ada-remote-sidebar .ada-wb-badge, .ada-sb-ws .ada-wb-badge')?.textContent ?? null
+             const task = document.querySelector('.ada-rm-wb-task')?.innerText ?? null
+             return { ok: badge === '1' && !!task && task.includes('Remote task') && task.includes('Ship it?'),
+                      badge, task }`
           )
           await waitFor(
             cdp,
@@ -1498,6 +1514,18 @@ function fakeRemoteFeed() {
           fakeRemotePane('pR', 'Remote Agent', 'claude'),
           fakeRemotePane('pS', 'Terminal 1', 'terminal'),
           fakeRemotePane('pT', 'Relay', 'claude')
+        ],
+        workbench: [
+          {
+            agent: 'claude: ship',
+            title: 'Remote task',
+            status: 'needs-input',
+            now: 'Waiting',
+            question: 'Ship it?',
+            progress: { done: 1, total: 2 },
+            captures: 0
+          },
+          { agent: 'claude: old', title: 'Old task', status: 'done', now: 'Done', question: null, progress: null, captures: 0 }
         ],
         layout: {
           zones: Object.entries(FAKE_REMOTE_ZONES).map(([id, zone]) => ({ id: `z-${id}`, ...zone })),

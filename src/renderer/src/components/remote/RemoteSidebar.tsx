@@ -13,6 +13,7 @@ import { Button, ContextMenu, Modal, type MenuItem } from '../ui'
 import { useRemote, waitingCount } from '../../store/remote'
 import type { RemoteMachine } from '../../../../shared/types'
 import type { FeedPane, FeedWorkspace } from '../../../../shared/relayProtocol'
+import { NeedsYouChip } from '../WorkbenchBadge'
 import { dotStatus, kindLabel, machineName } from './remoteHelpers'
 import { RemoteNewAgent } from './RemoteNewAgent'
 import { RemoteOpenWorkspace } from './RemoteOpenWorkspace'
@@ -230,6 +231,10 @@ function WorkspaceNode({ hostId, workspace, onMenu }: WorkspaceNodeProps): JSX.E
   const select = useRemote((state) => state.select)
   const selectWorkspace = useRemote((state) => state.selectWorkspace)
   const waiting = waitingCount(workspace.panes)
+  // The workbench's waiting tasks, when that machine publishes one.
+  const tasksWaiting = (workspace.workbench ?? []).filter(
+    (task) => task.status === 'needs-input' || task.status === 'blocked'
+  )
   const showWaiting = folded && waiting > 0
   const active = selected?.hostId === hostId && selected.workspaceId === workspace.id
 
@@ -256,6 +261,8 @@ function WorkspaceNode({ hostId, workspace, onMenu }: WorkspaceNodeProps): JSX.E
       >
         <FoldChevron folded={folded} noun="workspace" onToggle={() => toggleFold(foldKey)} />
         <span className="ada-sb-ws-name">{workspace.name}</span>
+        {/* Number only: this tree is indented a level deeper than the local one. */}
+        <NeedsYouChip count={tasksWaiting.length} compact />
         {showWaiting ? (
           <span className="ada-sb-count" title="waiting for you">
             {waiting}
@@ -285,6 +292,17 @@ function WorkspaceNode({ hostId, workspace, onMenu }: WorkspaceNodeProps): JSX.E
               active={selected?.hostId === hostId && selected.paneId === pane.id}
               onSelect={() => select({ hostId, workspaceId: workspace.id, paneId: pane.id })}
             />
+          ))}
+          {tasksWaiting.map((task) => (
+            <div key={task.agent} className="ada-rm-wb-task" title={task.question ?? task.title}>
+              <span className="ada-rm-wb-dot" aria-hidden />
+              <span className="ada-rm-wb-text">
+                <span className="ada-rm-wb-title">{task.title}</span>
+                <span className="ada-rm-wb-ask">
+                  {task.question ?? (task.status === 'blocked' ? 'Blocked' : 'Waiting on you')}
+                </span>
+              </span>
+            </div>
           ))}
         </div>
       )}

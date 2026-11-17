@@ -16,6 +16,11 @@ export interface WorkbenchBadgeProps {
 export function WorkbenchBadge({ rootDir, compact }: WorkbenchBadgeProps): JSX.Element | null {
   // A number, so a page rewrite that leaves the count alone re-renders nothing.
   const count = useRuntime((state) => wantingSections(state.workbench[rootDir]).length)
+  return <NeedsYouChip count={count} compact={compact} />
+}
+
+/** The chip itself, for a count from anywhere — a local page or a remote feed. */
+export function NeedsYouChip({ count, compact }: { count: number; compact?: boolean }): JSX.Element | null {
   if (count === 0) return null
   const label = `${count} ${count === 1 ? 'task needs' : 'tasks need'} you on the workbench`
   return (

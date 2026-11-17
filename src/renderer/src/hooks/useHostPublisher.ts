@@ -35,6 +35,7 @@ export function useHostPublisher(): void {
           status: runtime.status,
           sessions: runtime.sessions,
           lastActivity: runtime.lastActivity,
+          workbench: runtime.workbench,
           now: Date.now()
         })
       )
@@ -58,7 +59,8 @@ export function useHostPublisher(): void {
       if (
         state.status !== previous.status ||
         state.sessions !== previous.sessions ||
-        state.lastActivity !== previous.lastActivity
+        state.lastActivity !== previous.lastActivity ||
+        state.workbench !== previous.workbench
       ) {
         schedule()
       }

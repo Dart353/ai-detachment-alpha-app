@@ -76,6 +76,28 @@ export interface FeedWorkspace {
   rootDir: string
   panes: FeedPane[]
   layout?: FeedLayout
+  /**
+   * The tasks on the workspace's workbench page, in page order. Optional: absent
+   * when the folder has no workbench (or the desktop predates it). Text only —
+   * the page itself, and any screenshot on it, never leaves the desktop.
+   */
+  workbench?: FeedWorkbenchTask[]
+}
+
+/** One task on a workbench page, as a list row. */
+export interface FeedWorkbenchTask {
+  /** Stable across rewrites of the page, e.g. `claude: fix-login`. */
+  agent: string
+  title: string
+  status: 'working' | 'needs-input' | 'blocked' | 'done'
+  /** What it is doing right now, or its result once done. */
+  now: string | null
+  /** Its open question for the user. */
+  question: string | null
+  /** Steps done and in total, when the agent keeps a progress list. */
+  progress: { done: number; total: number } | null
+  /** How many screenshots and recordings the task shows on the desktop. */
+  captures: number
 }
 
 /** A folder the desktop has opened before, offered on the phone for reopening. */
