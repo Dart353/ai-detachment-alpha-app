@@ -38,7 +38,10 @@ import type {
   TodoSendRequest,
   TodoTargets,
   UpdateStatus,
-  UsageSnapshot
+  UsageSnapshot,
+  WorkbenchSetupResult,
+  WorkbenchSetupState,
+  WorkbenchSnapshot
 } from './types'
 
 /**
@@ -96,6 +99,13 @@ export const CH = {
   hooksInstalled: 'hooks:installed',
   hooksInstall: 'hooks:install',
   hookEvent: 'hooks:event',
+
+  // workbench (the live page agents keep in a workspace)
+  workbenchState: 'workbench:state',
+  workbenchSetup: 'workbench:setup',
+  workbenchWatch: 'workbench:watch',
+  workbenchUnwatch: 'workbench:unwatch',
+  workbenchChanged: 'workbench:changed',
 
   // filesystem + explorer
   fsPickDir: 'fs:pickDir',
@@ -252,6 +262,16 @@ export interface Api {
   hooksInstalled(): Promise<boolean>
   installHooks(): Promise<{ ok: true; alreadyInstalled: boolean } | { ok: false; error: string }>
   onHookEvent(cb: (event: HookEvent) => void): Unsubscribe
+
+  /* === workbench === */
+  /** What a workspace folder has of the workbench, without changing anything. */
+  workbenchState(rootDir: string): Promise<WorkbenchSetupState>
+  /** Install the rule, the page (if none), the captures folder and the git excludes. */
+  setupWorkbench(rootDir: string, replaceModifiedRules?: boolean): Promise<WorkbenchSetupResult>
+  /** Watch a root's page; every subscriber is sent the page as it stands. Refcounted in main. */
+  watchWorkbench(id: string, rootDir: string): void
+  unwatchWorkbench(id: string, rootDir: string): void
+  onWorkbench(cb: (snapshot: WorkbenchSnapshot) => void): Unsubscribe
 
   /* === filesystem + explorer === */
   pickDir(): Promise<string | null>
@@ -432,6 +452,11 @@ const API_KEY_RECORD: Record<keyof Api, true> = {
   hooksInstalled: true,
   installHooks: true,
   onHookEvent: true,
+  workbenchState: true,
+  setupWorkbench: true,
+  watchWorkbench: true,
+  unwatchWorkbench: true,
+  onWorkbench: true,
   pickDir: true,
   homeDir: true,
   readDir: true,

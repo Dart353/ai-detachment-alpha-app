@@ -6,6 +6,7 @@
  * for timestamps throughout.
  */
 import type { Effort, Feed, FeedLayout } from './relayProtocol'
+import type { WorkbenchSection } from './workbench'
 
 /** What a pane runs. `viewer` is a read-only file pane, not a process. */
 export type PaneKind = 'claude' | 'terminal' | 'ssh' | 'viewer'
@@ -195,6 +196,42 @@ export const DEFAULT_SETTINGS: Settings = {
   },
   relay: { enabled: false, url: '', name: '' },
   customAgents: []
+}
+
+/* === Workbench (the live page agents keep in a workspace) === */
+
+export type { WorkbenchSection, WorkbenchStatus } from './workbench'
+
+/**
+ * The installed rule, as compared with the one this build ships:
+ *   missing  → not installed
+ *   current  → installed and up to date
+ *   outdated → installed by an older ADA, untouched since; safe to replace
+ *   modified → edited by hand (or not ours); replaced only when asked
+ */
+export type WorkbenchRulesState = 'missing' | 'current' | 'outdated' | 'modified'
+
+/** What a workspace folder has of the workbench. */
+export interface WorkbenchSetupState {
+  rules: WorkbenchRulesState
+  /** `workbench.html` exists at the root. */
+  page: boolean
+  /** The page, captures and rule are kept out of git; null when the folder is not in a repo. */
+  excluded: boolean | null
+}
+
+export type WorkbenchSetupResult =
+  | { ok: true; state: WorkbenchSetupState }
+  | { ok: false; error: string }
+
+/** The page as last read from disk, pushed whenever an agent rewrites it. */
+export interface WorkbenchSnapshot {
+  /** The workspace root, in stored form. */
+  rootDir: string
+  exists: boolean
+  sections: WorkbenchSection[]
+  /** epoch ms of the read */
+  readAt: number
 }
 
 /* === Artifacts (pages Claude published, read back from the transcripts) === */

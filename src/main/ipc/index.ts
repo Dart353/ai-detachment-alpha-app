@@ -16,6 +16,7 @@ import { registerSkillsIpc } from './skills'
 import { registerUpdateIpc } from './update'
 import { registerArtifactsIpc } from './artifacts'
 import { registerTodosIpc } from './todos'
+import { registerWorkbenchIpc } from './workbench'
 
 /**
  * What every IPC area gets instead of a module-level reference to the window.
@@ -53,4 +54,5 @@ export function registerAllIpc(ctx: IpcCtx): void {
   registerUpdateIpc(ctx)
   registerArtifactsIpc(ctx)
   registerTodosIpc(ctx)
+  registerWorkbenchIpc(ctx)
 }
