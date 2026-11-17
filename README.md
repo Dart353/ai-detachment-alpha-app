@@ -29,8 +29,16 @@ is read from Claude Code's own transcript rather than guessed at.
   popped out into its own always-on-top window. Tag a todo `@workspace`, make it a
   checklist with Shift+Enter, and send it to a Claude pane: the todo shows that
   pane's status and asks whether to check it off when the turn ends.
+- **Workbench** — a live page per workspace that every Claude session keeps its
+  own section of: what it is doing right now, progress, links to what it made
+  (screenshots and recordings too, when it can capture them) and any question
+  for you. Set it up from a workspace's menu; it opens in a pane, a task waiting
+  on you badges the workspace and rings, and the phone gets the task list as
+  text. Setup writes `.claude/rules/ada-workbench.md`, `workbench.html` and
+  `.workbench/`, all kept out of git via `.git/info/exclude`.
 - **Explorer panel**, clickable links, file drop → shell-quoted path, and a pane
   context menu for everything above.
+  HTML files open rendered in a sandboxed frame with no network.
 - **Windows (with WSL mode), macOS and Linux**, all packaged.
 
 ## Development
