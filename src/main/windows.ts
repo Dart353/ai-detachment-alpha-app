@@ -1,6 +1,32 @@
 import { shell, type BrowserWindow } from 'electron'
 import path from 'node:path'
 import { writeCrashReport } from './log'
+import { hostPathOf } from './protocol'
+
+/**
+ * Files a link in a shown page may hand to their default app. Anything else is
+ * only revealed in the file manager: an agent-written page must not be able to
+ * launch a script or an app by being clicked.
+ */
+const OPENABLE_RE =
+  /\.(png|jpe?g|gif|webp|svg|bmp|ico|mp4|mov|m4v|webm|mp3|wav|m4a|pdf|txt|md|markdown|json|csv|log)$/i
+
+/** A link out of a page shown in a viewer frame: open it beside the app, never inside. */
+function openFromPage(url: string): void {
+  if (/^https?:\/\//i.test(url)) {
+    void shell.openExternal(url)
+    return
+  }
+  if (!/^ada-file:/i.test(url)) return
+  const target = hostPathOf(url)
+  if (OPENABLE_RE.test(target)) void shell.openPath(target)
+  else shell.showItemInFolder(target)
+}
+
+/** Two `ada-file://` URLs name the same file (they may differ in query or fragment). */
+function sameFile(a: string, b: string): boolean {
+  return a.replace(/[?#].*$/s, '') === b.replace(/[?#].*$/s, '')
+}
 
 /**
  * What every app window shares: how it loads the renderer, and the guards that
@@ -33,8 +59,23 @@ export function guardWebContents(win: BrowserWindow): void {
   // navigate. Deny the popup and hand the URL to the OS browser instead.
   const webContents = win.webContents
   webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//i.test(url)) void shell.openExternal(url)
+    openFromPage(url)
     return { action: 'deny' }
+  })
+
+  // A page shown in a viewer frame (a workbench, an HTML file) stays on itself.
+  // The viewer's own loads and reloads are the same file; an in-page #anchor is
+  // too. Any other navigation — a link to a screenshot, a website — is opened
+  // beside the app instead, so the pane never wanders off its page.
+  webContents.on('will-frame-navigate', (details) => {
+    if (details.isMainFrame) return
+    const current = details.frame?.url ?? ''
+    const fresh = current === '' || current === 'about:blank'
+    if (/^ada-file:/i.test(details.url) && (fresh || sameFile(current, details.url))) return
+    // The viewer hands the frame its page as `srcdoc`.
+    if (details.url === 'about:blank' || details.url === 'about:srcdoc') return
+    details.preventDefault()
+    openFromPage(details.url)
   })
 
   // Same reasoning for top-level navigation: following an external link in place

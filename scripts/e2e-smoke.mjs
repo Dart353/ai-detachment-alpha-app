@@ -594,6 +594,51 @@ function buildSteps(cdp, dirs) {
       }
     ],
     [
+      'an HTML file renders sandboxed, shows its relative images, and has no network',
+      async (scratch) => {
+        await mkdir(path.join(dirs.projectA, '.workbench'), { recursive: true })
+        await writeFile(path.join(dirs.projectA, '.workbench', 'dot.png'), PNG_1X1)
+        // The page reports back what it could do: the image's width (0 if the
+        // relative path did not resolve) and whether the CSP stopped a fetch.
+        const page = (marker) => `<!doctype html><html><head><title>p</title></head><body>
+          <h1>${marker}</h1><img id="i" src=".workbench/dot.png">
+          <script>
+            var blocked = false
+            document.addEventListener('securitypolicyviolation', function () { blocked = true })
+            addEventListener('load', function () {
+              fetch('https://example.invalid/x').catch(function () {}).finally(function () {
+                setTimeout(function () {
+                  parent.postMessage({ smoke: ${json(marker)}, img: document.getElementById('i').naturalWidth, blocked: blocked }, '*')
+                }, 50)
+              })
+            })
+          </script></body></html>`
+        const file = path.join(dirs.projectA, 'page.html')
+        await writeFile(file, page('first'))
+        await cdp.evaluate(`window.__smokeFrames = []
+           window.addEventListener('message', (e) => { if (e.data && e.data.smoke) window.__smokeFrames.push(e.data) })
+           return true`)
+        scratch.pagePane = await cdp.evaluate(
+          `return ${store}.addPane(${json(scratch.wsA)}, { kind: 'viewer', filePath: ${json(file)} })`
+        )
+        const report = (marker) => `const hit = window.__smokeFrames.find((m) => m.smoke === ${json(marker)})
+           const frame = document.querySelector('[data-pane-id="' + ${json(scratch.pagePane)} + '"] iframe')
+           let reachable = null
+           try { reachable = frame ? frame.contentDocument !== null : null } catch { reachable = false }
+           return { ok: !!hit && hit.img === 1 && hit.blocked === true && reachable === false,
+                    hit: hit ?? null, sandbox: frame?.getAttribute('sandbox') ?? null, reachable,
+                    frames: window.__smokeFrames }`
+        await waitFor(cdp, 'the page to render and report', report('first'))
+
+        // An agent rewrites the page: the frame swaps documents in place.
+        await sleep(300)
+        await writeFile(file, page('second'))
+        await waitFor(cdp, 'the rewritten page to render', report('second'))
+        await cdp.evaluate(`${store}.closePane(${json(scratch.pagePane)})
+                            return true`)
+      }
+    ],
+    [
       'an empty zone can be closed from its own menu',
       async () => {
         // The workspace ON SCREEN, which an earlier step closed and reopened —
