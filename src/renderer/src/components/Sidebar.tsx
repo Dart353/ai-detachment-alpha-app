@@ -20,6 +20,9 @@ import {
   X
 } from 'lucide-react'
 import SidebarUsage from './SidebarUsage'
+import { WorkbenchBadge } from './WorkbenchBadge'
+import { isWorkbenchPane } from '../lib/workbench'
+import { workbenchMenuItem } from './WorkbenchSetup'
 import { paneColorVars } from './paneColor'
 import { Button, ContextMenu, TextInput, type MenuItem } from './ui'
 import { selectActiveWorkspace, useApp } from '../store/app'
@@ -240,6 +243,7 @@ function SidebarTree(): JSX.Element {
       icon: <Terminal size={ICON} />,
       onClick: () => addPane(workspace.id, { kind: 'terminal' })
     },
+    workbenchMenuItem(workspace, ICON),
     {
       label: 'Rename',
       icon: <Pencil size={ICON} />,
@@ -415,6 +419,7 @@ function SidebarTree(): JSX.Element {
                 ) : (
                   <>
                     <span className="ada-sb-ws-name">{workspace.name}</span>
+                    <WorkbenchBadge rootDir={workspace.rootDir} />
                     <span className="ada-sb-count">{workspace.panes.length}</span>
                   </>
                 )}
@@ -426,6 +431,7 @@ function SidebarTree(): JSX.Element {
                     <PaneRow
                       key={pane.id}
                       pane={pane}
+                      rootDir={workspace.rootDir}
                       dragging={paneDrag?.id === pane.id}
                       dropEdge={paneDropEdge(workspace, paneIndex)}
                       onDragStart={(event) => {
@@ -479,6 +485,8 @@ function SidebarTree(): JSX.Element {
 
 interface PaneRowProps {
   pane: Pane
+  /** Its workspace's folder, so a workbench pane can say what it is. */
+  rootDir: string
   /** This is the focused pane of the active workspace. */
   active: boolean
   renaming: boolean
@@ -501,6 +509,7 @@ interface PaneRowProps {
  */
 function PaneRow({
   pane,
+  rootDir,
   active,
   renaming,
   onSelect,
@@ -560,7 +569,7 @@ function PaneRow({
         <>
           <span className="ada-sb-label">
             <span className="ada-sb-pane-name">{pane.name}</span>
-            <span className="ada-sb-sub">{paneSubtitle(pane, status)}</span>
+            <span className="ada-sb-sub">{paneSubtitle(pane, status, rootDir)}</span>
           </span>
           {pane.kind === 'claude' ? (
             share !== null && <span className="ada-sb-share">{share}%</span>
@@ -709,7 +718,8 @@ function onRowKeyDown(event: ReactKeyboardEvent<HTMLElement>, activate: () => vo
 }
 
 /** The second line of a pane row: what it runs, and how it is doing. */
-function paneSubtitle(pane: Pane, status: PaneStatus): string {
+function paneSubtitle(pane: Pane, status: PaneStatus, rootDir: string): string {
+  if (isWorkbenchPane(pane, rootDir)) return `Workbench · ${STATUS_LABEL[status].toLowerCase()}`
   if (pane.kind === 'viewer') return 'File'
   if (pane.kind === 'ssh') return `ssh · ${pane.sshHost ?? 'host'}`
   const kind = pane.kind === 'claude' ? 'Claude Code' : 'Terminal'

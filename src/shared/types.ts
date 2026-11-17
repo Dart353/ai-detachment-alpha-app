@@ -158,6 +158,12 @@ export interface Settings {
   relay: RelaySettings
   /** Saved roles a Claude pane can be opened as (Settings → Custom agents). */
   customAgents: CustomAgent[]
+  workbench: WorkbenchSettings
+}
+
+export interface WorkbenchSettings {
+  /** Set every newly opened folder up for a workbench without asking. */
+  autoSetup: boolean
 }
 
 /**
@@ -195,7 +201,8 @@ export const DEFAULT_SETTINGS: Settings = {
     done: { banner: true, sound: true }
   },
   relay: { enabled: false, url: '', name: '' },
-  customAgents: []
+  customAgents: [],
+  workbench: { autoSetup: false }
 }
 
 /* === Workbench (the live page agents keep in a workspace) === */

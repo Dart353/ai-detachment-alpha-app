@@ -16,7 +16,13 @@
  *     pane per second) for the parts of the UI that want to re-render on it.
  */
 import { create } from 'zustand'
-import type { ClaudeAccount, PaneStatus, SessionInfo, UsageSnapshot } from '../../../shared/types'
+import type {
+  ClaudeAccount,
+  PaneStatus,
+  SessionInfo,
+  UsageSnapshot,
+  WorkbenchSnapshot
+} from '../../../shared/types'
 
 /** How often at most an activity stamp is published into reactive state. */
 const ACTIVITY_PUBLISH_MS = 1000
@@ -41,6 +47,8 @@ export interface RuntimeState {
   hooksInstalled: boolean
   /** Epoch ms until which notifications are suppressed. */
   notificationsHeldUntil: number
+  /** Workspace root → its workbench page as last read. Roots, not ids: main watches folders. */
+  workbench: Record<string, WorkbenchSnapshot>
 
   noteActivity: (paneId: string, at?: number) => void
   setSessions: (updates: SessionInfo[]) => void
@@ -54,6 +62,8 @@ export interface RuntimeState {
   setAccounts: (accounts: ClaudeAccount[]) => void
   setHooksInstalled: (installed: boolean) => void
   holdNotifications: (ms?: number) => void
+  setWorkbench: (snapshot: WorkbenchSnapshot) => void
+  forgetWorkbench: (rootDir: string) => void
 }
 
 /* === non-reactive registries ================================================ */
@@ -180,6 +190,7 @@ export const useRuntime = create<RuntimeState>()((set, get) => ({
   accounts: [],
   hooksInstalled: false,
   notificationsHeldUntil: 0,
+  workbench: {},
 
   noteActivity: (paneId, at = Date.now()) => {
     activityAt.set(paneId, at)
@@ -249,5 +260,8 @@ export const useRuntime = create<RuntimeState>()((set, get) => ({
   setAccounts: (accounts) => set({ accounts }),
   setHooksInstalled: (hooksInstalled) => set({ hooksInstalled }),
   holdNotifications: (ms = DEFAULT_HOLD_MS) =>
-    set({ notificationsHeldUntil: Date.now() + ms })
+    set({ notificationsHeldUntil: Date.now() + ms }),
+  setWorkbench: (snapshot) =>
+    set((state) => ({ workbench: { ...state.workbench, [snapshot.rootDir]: snapshot } })),
+  forgetWorkbench: (rootDir) => set((state) => ({ workbench: omit(state.workbench, rootDir) }))
 }))

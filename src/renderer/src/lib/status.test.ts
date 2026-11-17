@@ -169,3 +169,26 @@ describe('STATUS_LABEL', () => {
     })
   })
 })
+
+describe('a workbench pane', () => {
+  const base = {
+    kind: 'viewer' as const,
+    exited: false,
+    now: 1_000_000,
+    lastActivityMs: undefined,
+    promptOnScreen: false,
+    unseenDone: false
+  }
+
+  it('wears attention while a task waits on the user', () => {
+    expect(resolveStatus({ ...base, page: 'needs-input' })).toBe('attention')
+    expect(resolveStatus({ ...base, page: 'blocked' })).toBe('attention')
+  })
+
+  it('is working while a task is, and idle otherwise', () => {
+    expect(resolveStatus({ ...base, page: 'working' })).toBe('working')
+    expect(resolveStatus({ ...base, page: 'done' })).toBe('idle')
+    expect(resolveStatus({ ...base, page: null })).toBe('idle')
+    expect(resolveStatus(base)).toBe('idle')
+  })
+})

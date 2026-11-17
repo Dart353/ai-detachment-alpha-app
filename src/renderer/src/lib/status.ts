@@ -38,11 +38,18 @@ export interface StatusInput {
   promptOnScreen: boolean
   /** a turn ended while this pane was unfocused and the user hasn't looked yet */
   unseenDone: boolean
+  /** `viewer` panes showing a workbench: the worst status on the page */
+  page?: 'needs-input' | 'blocked' | 'working' | 'done' | null
 }
 
 export function resolveStatus(input: StatusInput): PaneStatus {
   if (input.exited) return 'exited'
-  if (input.kind === 'viewer') return 'idle'
+  if (input.kind === 'viewer') {
+    // A workbench pane wears what its page says: a task waiting on the user is
+    // the same pill as an agent asking, one still going is working.
+    if (input.page === 'needs-input' || input.page === 'blocked') return 'attention'
+    return input.page === 'working' ? 'working' : 'idle'
+  }
 
   const quietFor = input.now - (input.lastActivityMs ?? 0)
 

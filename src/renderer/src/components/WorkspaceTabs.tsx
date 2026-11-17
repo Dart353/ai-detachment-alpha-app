@@ -1,6 +1,8 @@
 import { useState, type DragEvent as ReactDragEvent, type JSX } from 'react'
 import { ContextMenu, TextInput, type MenuItem } from './ui'
 import { useApp } from '../store/app'
+import { WorkbenchBadge } from './WorkbenchBadge'
+import { workbenchMenuItem } from './WorkbenchSetup'
 import './WorkspaceTabs.css'
 
 /**
@@ -79,6 +81,7 @@ export default function WorkspaceTabs(): JSX.Element {
   const menuItems = (workspaceId: string, name: string, rootDir: string): MenuItem[] => [
     { label: 'Rename', onClick: () => startRename(workspaceId, name) },
     { label: 'Reveal in file manager', onClick: () => void window.api?.revealPath(rootDir) },
+    workbenchMenuItem({ id: workspaceId, rootDir }),
     { label: 'Close workspace', divider: true, onClick: () => closeWorkspace(workspaceId) }
   ]
 
@@ -135,6 +138,7 @@ export default function WorkspaceTabs(): JSX.Element {
             data-dragging={dragFrom === index || undefined}
           >
             <span className="ada-ws-tab-name">{workspace.name}</span>
+            <WorkbenchBadge rootDir={workspace.rootDir} compact />
             <span className="ada-ws-tab-count">{workspace.panes.length}</span>
           </div>
         )

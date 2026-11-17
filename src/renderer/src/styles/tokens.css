@@ -11,6 +11,7 @@
 
   /* Status */
   --ada-warn: #e0784a;
+  --ada-warn-rgb: 224, 120, 74;
   --ada-done: #7ec27a;
 
   /* Surfaces, darkest page shell outward to the popovers that float over it */

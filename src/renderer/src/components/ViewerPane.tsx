@@ -24,6 +24,8 @@ import {
 import { Code, Eye, FolderOpen } from 'lucide-react'
 import type { FileReadResult } from '../../../shared/types'
 import { useApp } from '../store/app'
+import { useRuntime } from '../store/runtime'
+import { isWorkbenchPane } from '../lib/workbench'
 import { baseName } from '../lib/ids'
 import { buildFrameDoc, isFrameScrollMessage } from '../lib/pageFrame'
 import { PaneHeader, type MenuAnchor } from './PaneHeader'
@@ -178,6 +180,8 @@ export function ViewerPane({
 
   const pane = workspace?.panes.find((candidate) => candidate.id === paneId)
   const filePath = pane?.filePath ?? ''
+  // A plain file is always idle; a workbench pane's pill follows its page.
+  const status = useRuntime((state) => state.status[paneId]) ?? 'idle'
 
   const [result, setResult] = useState<FileReadResult | null>(null)
   /** Markdown opens rendered; the toggle flips to the raw source. */
@@ -294,7 +298,8 @@ export function ViewerPane({
         paneId={paneId}
         name={pane.name}
         kind={pane.kind}
-        status="idle"
+        kindLabel={workspace && isWorkbenchPane(pane, workspace.rootDir) ? 'workbench' : undefined}
+        status={status}
         focused={focused}
         maximized={maximized}
         onRename={(next) => renamePane(paneId, next)}

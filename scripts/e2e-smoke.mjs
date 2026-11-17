@@ -14,7 +14,7 @@
  *
  * Run it with `pnpm test:e2e` (which builds first).
  */
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
@@ -635,6 +635,79 @@ function buildSteps(cdp, dirs) {
         await writeFile(file, page('second'))
         await waitFor(cdp, 'the rewritten page to render', report('second'))
         await cdp.evaluate(`${store}.closePane(${json(scratch.pagePane)})
+                            return true`)
+      }
+    ],
+    [
+      'setting up a workbench writes it, opens it, and a waiting task lights the workspace',
+      async (scratch) => {
+        const root = dirs.projectA
+        const run = spawnSync('git', ['init', '-q'], { cwd: root })
+        if (run.status !== 0) throw new StepError('git init failed', { stderr: String(run.stderr) })
+
+        const before = await cdp.evaluate(`return await window.api.workbenchState(${json(root)})`)
+        if (before.rules !== 'missing' || before.page || before.excluded !== false) {
+          throw new StepError('a fresh folder already looked set up', before)
+        }
+
+        // The dialog, clicked the way a person would.
+        await cdp.evaluate(`${store}.askWorkbenchSetup(${json(scratch.wsA)})
+                            return true`)
+        await waitFor(
+          cdp,
+          'the setup dialog to be ready',
+          `const button = [...document.querySelectorAll('button')].find((b) => b.textContent === 'Set up workbench')
+           return { ok: !!button && !button.disabled, found: !!button }`
+        )
+        await cdp.evaluate(`[...document.querySelectorAll('button')].find((b) => b.textContent === 'Set up workbench').click()
+                            return true`)
+
+        const workbench = path.join(root, 'workbench.html')
+        const pane = await waitFor(
+          cdp,
+          'the workbench pane to open on the page',
+          `const ws = ${store}.workspaces.find((w) => w.id === ${json(scratch.wsA)})
+           const pane = ws.panes.find((p) => p.filePath === ${json(workbench)})
+           const page = window.__ada.useRuntime.getState().workbench[${json(root)}]
+           return { ok: !!pane && !!page?.exists && page.sections.length === 1,
+                    paneId: pane?.id ?? null, page: page ?? null }`
+        )
+        scratch.workbenchPane = pane.paneId
+
+        const exclude = await readFile(path.join(root, '.git', 'info', 'exclude'), 'utf8')
+        for (const pattern of ['/workbench.html', '/.workbench/', '/.claude/rules/ada-workbench.md']) {
+          if (!exclude.split('\n').includes(pattern)) throw new StepError(`exclude lacks ${pattern}`, { exclude })
+        }
+        const rule = await readFile(path.join(root, '.claude', 'rules', 'ada-workbench.md'), 'utf8')
+        if (!rule.startsWith('<!-- ada:workbench v')) throw new StepError('the rule has no marker', rule.slice(0, 80))
+        const status = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).stdout
+        if (/workbench|ada-workbench/.test(status)) throw new StepError('git still sees the workbench', { status })
+
+        // An agent asks a question on the page.
+        const section = (state, question) =>
+          `<section data-agent="claude: smoke" data-status="${state}"><h2>Smoke task</h2>` +
+          `<p class="question">${question}</p></section>`
+        await writeFile(workbench, `<!doctype html><html><head></head><body>${section('needs-input', 'Left or right?')}</body></html>`)
+        await waitFor(
+          cdp,
+          'the waiting task to light the workspace',
+          `const page = window.__ada.useRuntime.getState().workbench[${json(root)}]
+           const badge = document.querySelector('.ada-sb-ws .ada-wb-badge')?.textContent ?? null
+           const pill = window.__ada.useRuntime.getState().status[${json(scratch.workbenchPane)}] ?? null
+           return { ok: page?.sections[0]?.question === 'Left or right?' && badge === '1 needs you' && pill === 'attention',
+                    question: page?.sections[0]?.question ?? null, badge, pill }`
+        )
+
+        // It finishes: the badge goes, and the pane settles.
+        await writeFile(workbench, `<!doctype html><html><head></head><body>${section('done', 'None.')}</body></html>`)
+        await waitFor(
+          cdp,
+          'the finished task to clear the badge',
+          `const badge = document.querySelector('.ada-sb-ws .ada-wb-badge')
+           const pill = window.__ada.useRuntime.getState().status[${json(scratch.workbenchPane)}] ?? null
+           return { ok: !badge && pill === 'idle', badge: !!badge, pill }`
+        )
+        await cdp.evaluate(`${store}.closePane(${json(scratch.workbenchPane)})
                             return true`)
       }
     ],

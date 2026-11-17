@@ -12,6 +12,8 @@ import RestorePreview from './components/RestorePreview'
 import RemoteView from './components/remote/RemoteView'
 import { Button, Modal, Toasts } from './components/ui'
 import { useStatusEngine } from './hooks/useStatusEngine'
+import { useWorkbench } from './hooks/useWorkbench'
+import { WorkbenchSetupDialog } from './components/WorkbenchSetup'
 import { useHostPublisher } from './hooks/useHostPublisher'
 import { useRemoteLink } from './hooks/useRemoteLink'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
@@ -56,6 +58,7 @@ export default function App(): JSX.Element {
   useRemoteLink()
   useGlobalShortcuts()
   useTodoAgents()
+  useWorkbench()
   const closeGuard = useCloseGuard()
 
   useEffect(() => {
@@ -163,6 +166,7 @@ export default function App(): JSX.Element {
       </main>
 
       <RestorePreview />
+      <WorkbenchSetupDialog />
       <Toasts toasts={toasts} onDismiss={dismissToast} />
 
       <Modal
