@@ -12,6 +12,21 @@
   overflow: auto;
 }
 
+/* === web pages ============================================================== */
+
+/* The page scrolls itself inside its frame; the box around it must not. */
+.ada-viewer-scroll.is-framed {
+  overflow: hidden;
+}
+
+.ada-viewer-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--ada-bg-window);
+}
+
 /* === text =================================================================== */
 
 .ada-viewer-text {

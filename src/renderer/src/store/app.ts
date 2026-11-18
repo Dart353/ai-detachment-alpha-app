@@ -43,6 +43,7 @@ import {
 } from '../lib/archive'
 import { rememberWorkspace } from '../lib/recents'
 import { baseName, uid } from '../lib/ids'
+import { workbenchPathOf } from '../lib/workbench'
 import {
   applyPresetById,
   dropPaneOnZone,
@@ -118,6 +119,8 @@ export interface AppState {
   hydrated: boolean
   view: AppView
   zoneEditorOpen: boolean
+  /** The workspace whose workbench setup dialog is open, if any. */
+  workbenchSetupFor: string | null
   settings: Settings
   archive: ArchiveEntry[]
   recents: RecentWorkspace[]
@@ -145,6 +148,8 @@ export interface AppState {
 
   /* panes */
   addPane: (wsId: string, init: PaneInit, zoneId?: string, opts?: AddPaneOpts) => string
+  /** Open (or focus) the workspace's workbench page in a viewer pane. */
+  openWorkbench: (wsId: string) => string
   closePane: (paneId: string) => void
   renamePane: (paneId: string, name: string) => void
   setPaneColor: (paneId: string, color: string | undefined) => void
@@ -168,6 +173,7 @@ export interface AppState {
   toggleSidebar: () => void
   setView: (view: AppView) => void
   setZoneEditorOpen: (open: boolean) => void
+  askWorkbenchSetup: (wsId: string | null) => void
 
   /* settings, archive, recents, toasts */
   updateSettings: (partial: Partial<Settings>) => void
@@ -272,6 +278,7 @@ export const useApp = create<AppState>()((set, get) => ({
   hydrated: false,
   view: 'firstRun',
   zoneEditorOpen: false,
+  workbenchSetupFor: null,
   addWorkspaceRoot: null,
   settings: DEFAULT_SETTINGS,
   archive: [],
@@ -566,6 +573,16 @@ export const useApp = create<AppState>()((set, get) => ({
     return pane.id
   },
 
+  openWorkbench: (wsId) => {
+    const workspace = get().workspaces.find((candidate) => candidate.id === wsId)
+    if (!workspace) return ''
+    return get().addPane(wsId, {
+      kind: 'viewer',
+      name: 'Workbench',
+      filePath: workbenchPathOf(workspace.rootDir)
+    })
+  },
+
   closePane: (paneId) => {
     const state = get()
     const workspace = workspaceOfPane(state.workspaces, paneId)
@@ -835,6 +852,7 @@ export const useApp = create<AppState>()((set, get) => ({
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   setView: (view) => set({ view }),
   setZoneEditorOpen: (zoneEditorOpen) => set({ zoneEditorOpen }),
+  askWorkbenchSetup: (workbenchSetupFor) => set({ workbenchSetupFor }),
 
   /* === settings, archive, recents, toasts ================================== */
 

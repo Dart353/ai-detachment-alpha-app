@@ -40,7 +40,10 @@ import type {
   TodoSendRequest,
   TodoTargets,
   UpdateStatus,
-  UsageSnapshot
+  UsageSnapshot,
+  WorkbenchSetupResult,
+  WorkbenchSetupState,
+  WorkbenchSnapshot
 } from '../shared/types'
 
 /**
@@ -126,6 +129,18 @@ const api: Api = {
       { ok: true; alreadyInstalled: boolean } | { ok: false; error: string }
     >,
   onHookEvent: (cb: (event: HookEvent) => void) => sub<HookEvent>(CH.hookEvent, cb),
+
+  /* === workbench === */
+  workbenchState: (rootDir: string) =>
+    ipcRenderer.invoke(CH.workbenchState, rootDir) as Promise<WorkbenchSetupState>,
+  setupWorkbench: (rootDir: string, replaceModifiedRules?: boolean) =>
+    ipcRenderer.invoke(CH.workbenchSetup, { rootDir, replaceModifiedRules }) as Promise<WorkbenchSetupResult>,
+  watchWorkbench: (id: string, rootDir: string) =>
+    ipcRenderer.send(CH.workbenchWatch, { id, rootDir }),
+  unwatchWorkbench: (id: string, rootDir: string) =>
+    ipcRenderer.send(CH.workbenchUnwatch, { id, rootDir }),
+  onWorkbench: (cb: (snapshot: WorkbenchSnapshot) => void) =>
+    sub<WorkbenchSnapshot>(CH.workbenchChanged, cb),
 
   /* === filesystem + explorer === */
   pickDir: () => ipcRenderer.invoke(CH.fsPickDir) as Promise<string | null>,

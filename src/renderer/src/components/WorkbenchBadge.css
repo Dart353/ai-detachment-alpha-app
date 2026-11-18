@@ -1,0 +1,16 @@
+/* The workbench's "needs you" chip, in the warn tone a pane asking for input
+   wears. It sits beside a workspace's name in the sidebar and the tabs. */
+
+.ada-wb-badge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 16px;
+  padding: 0 6px;
+  border-radius: var(--ada-radius-chip);
+  background: rgba(var(--ada-warn-rgb), 0.16);
+  color: var(--ada-warn);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}

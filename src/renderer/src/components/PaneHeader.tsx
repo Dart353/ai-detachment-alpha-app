@@ -24,6 +24,8 @@ export interface PaneHeaderProps {
   kind: PaneKind
   /** The model the transcript last reported, when one is known. */
   modelLabel?: string
+  /** Overrides the kind word when the pane is something more specific (a workbench). */
+  kindLabel?: string
   /** Only set in a multi-account household — a single account is not news. */
   accountLabel?: string
   status: PaneStatus
@@ -65,6 +67,7 @@ export function PaneHeader({
   name,
   kind,
   modelLabel,
+  kindLabel,
   accountLabel,
   status,
   sharePct,
@@ -143,7 +146,7 @@ export function PaneHeader({
         </span>
       )}
       <span className="ada-pane-kind">
-        {modelLabel ? shortModel(modelLabel) : KIND_LABEL[kind]}
+        {modelLabel ? shortModel(modelLabel) : (kindLabel ?? KIND_LABEL[kind])}
       </span>
       {accountLabel && (
         <span className="ada-pane-account" title={`Claude account: ${accountLabel}`}>

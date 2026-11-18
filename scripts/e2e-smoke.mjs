@@ -14,7 +14,7 @@
  *
  * Run it with `pnpm test:e2e` (which builds first).
  */
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
@@ -566,6 +566,152 @@ function buildSteps(cdp, dirs) {
       }
     ],
     [
+      'the explorer renames a file, and a viewer reloads when it changes on disk',
+      async (scratch) => {
+        const from = path.join(dirs.projectA, 'rename-me.txt')
+        const to = path.join(dirs.projectA, 'renamed.txt')
+        await writeFile(from, 'before\n')
+        const renamed = await cdp.evaluate(
+          `return await window.api.renamePath(${json(from)}, 'renamed.txt')`
+        )
+        if (!renamed?.ok) throw new StepError('renamePath did not rename the file', renamed)
+        const onDisk = await readFile(to, 'utf8').catch(() => null)
+        if (onDisk !== 'before\n') throw new StepError('the renamed file is not on disk', { onDisk })
+
+        scratch.viewerPane = await cdp.evaluate(
+          `return ${store}.addPane(${json(scratch.wsA)}, { kind: 'viewer', filePath: ${json(to)} })`
+        )
+        const body = `document.querySelector('[data-pane-id="' + ${json(scratch.viewerPane)} + '"]')?.innerText ?? ''`
+        await waitFor(cdp, 'the viewer to show the file', `const text = ${body}
+           return { ok: text.includes('before'), text: text.slice(0, 200) }`)
+        // Let the watcher arm before the edit it has to notice.
+        await sleep(300)
+        await writeFile(to, 'after an agent edit\n')
+        await waitFor(cdp, 'the viewer to reload the edit', `const text = ${body}
+           return { ok: text.includes('after an agent edit'), text: text.slice(0, 200) }`)
+        await cdp.evaluate(`${store}.closePane(${json(scratch.viewerPane)})
+                            return true`)
+      }
+    ],
+    [
+      'an HTML file renders sandboxed, shows its relative images, and has no network',
+      async (scratch) => {
+        await mkdir(path.join(dirs.projectA, '.workbench'), { recursive: true })
+        await writeFile(path.join(dirs.projectA, '.workbench', 'dot.png'), PNG_1X1)
+        // The page reports back what it could do: the image's width (0 if the
+        // relative path did not resolve) and whether the CSP stopped a fetch.
+        const page = (marker) => `<!doctype html><html><head><title>p</title></head><body>
+          <h1>${marker}</h1><img id="i" src=".workbench/dot.png">
+          <script>
+            var blocked = false
+            document.addEventListener('securitypolicyviolation', function () { blocked = true })
+            addEventListener('load', function () {
+              fetch('https://example.invalid/x').catch(function () {}).finally(function () {
+                setTimeout(function () {
+                  parent.postMessage({ smoke: ${json(marker)}, img: document.getElementById('i').naturalWidth, blocked: blocked }, '*')
+                }, 50)
+              })
+            })
+          </script></body></html>`
+        const file = path.join(dirs.projectA, 'page.html')
+        await writeFile(file, page('first'))
+        await cdp.evaluate(`window.__smokeFrames = []
+           window.addEventListener('message', (e) => { if (e.data && e.data.smoke) window.__smokeFrames.push(e.data) })
+           return true`)
+        scratch.pagePane = await cdp.evaluate(
+          `return ${store}.addPane(${json(scratch.wsA)}, { kind: 'viewer', filePath: ${json(file)} })`
+        )
+        const report = (marker) => `const hit = window.__smokeFrames.find((m) => m.smoke === ${json(marker)})
+           const frame = document.querySelector('[data-pane-id="' + ${json(scratch.pagePane)} + '"] iframe')
+           let reachable = null
+           try { reachable = frame ? frame.contentDocument !== null : null } catch { reachable = false }
+           return { ok: !!hit && hit.img === 1 && hit.blocked === true && reachable === false,
+                    hit: hit ?? null, sandbox: frame?.getAttribute('sandbox') ?? null, reachable,
+                    frames: window.__smokeFrames }`
+        await waitFor(cdp, 'the page to render and report', report('first'))
+
+        // An agent rewrites the page: the frame swaps documents in place.
+        await sleep(300)
+        await writeFile(file, page('second'))
+        await waitFor(cdp, 'the rewritten page to render', report('second'))
+        await cdp.evaluate(`${store}.closePane(${json(scratch.pagePane)})
+                            return true`)
+      }
+    ],
+    [
+      'setting up a workbench writes it, opens it, and a waiting task lights the workspace',
+      async (scratch) => {
+        const root = dirs.projectA
+        const run = spawnSync('git', ['init', '-q'], { cwd: root })
+        if (run.status !== 0) throw new StepError('git init failed', { stderr: String(run.stderr) })
+
+        const before = await cdp.evaluate(`return await window.api.workbenchState(${json(root)})`)
+        if (before.rules !== 'missing' || before.page || before.excluded !== false) {
+          throw new StepError('a fresh folder already looked set up', before)
+        }
+
+        // The dialog, clicked the way a person would.
+        await cdp.evaluate(`${store}.askWorkbenchSetup(${json(scratch.wsA)})
+                            return true`)
+        await waitFor(
+          cdp,
+          'the setup dialog to be ready',
+          `const button = [...document.querySelectorAll('button')].find((b) => b.textContent === 'Set up workbench')
+           return { ok: !!button && !button.disabled, found: !!button }`
+        )
+        await cdp.evaluate(`[...document.querySelectorAll('button')].find((b) => b.textContent === 'Set up workbench').click()
+                            return true`)
+
+        const workbench = path.join(root, 'workbench.html')
+        const pane = await waitFor(
+          cdp,
+          'the workbench pane to open on the page',
+          `const ws = ${store}.workspaces.find((w) => w.id === ${json(scratch.wsA)})
+           const pane = ws.panes.find((p) => p.filePath === ${json(workbench)})
+           const page = window.__ada.useRuntime.getState().workbench[${json(root)}]
+           return { ok: !!pane && !!page?.exists && page.sections.length === 1,
+                    paneId: pane?.id ?? null, page: page ?? null }`
+        )
+        scratch.workbenchPane = pane.paneId
+
+        const exclude = await readFile(path.join(root, '.git', 'info', 'exclude'), 'utf8')
+        for (const pattern of ['/workbench.html', '/.workbench/', '/.claude/rules/ada-workbench.md']) {
+          if (!exclude.split('\n').includes(pattern)) throw new StepError(`exclude lacks ${pattern}`, { exclude })
+        }
+        const rule = await readFile(path.join(root, '.claude', 'rules', 'ada-workbench.md'), 'utf8')
+        if (!rule.startsWith('<!-- ada:workbench v')) throw new StepError('the rule has no marker', rule.slice(0, 80))
+        const status = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).stdout
+        if (/workbench|ada-workbench/.test(status)) throw new StepError('git still sees the workbench', { status })
+
+        // An agent asks a question on the page.
+        const section = (state, question) =>
+          `<section data-agent="claude: smoke" data-status="${state}"><h2>Smoke task</h2>` +
+          `<p class="question">${question}</p></section>`
+        await writeFile(workbench, `<!doctype html><html><head></head><body>${section('needs-input', 'Left or right?')}</body></html>`)
+        await waitFor(
+          cdp,
+          'the waiting task to light the workspace',
+          `const page = window.__ada.useRuntime.getState().workbench[${json(root)}]
+           const badge = document.querySelector('.ada-sb-ws .ada-wb-badge')?.textContent ?? null
+           const pill = window.__ada.useRuntime.getState().status[${json(scratch.workbenchPane)}] ?? null
+           return { ok: page?.sections[0]?.question === 'Left or right?' && badge === '1 needs you' && pill === 'attention',
+                    question: page?.sections[0]?.question ?? null, badge, pill }`
+        )
+
+        // It finishes: the badge goes, and the pane settles.
+        await writeFile(workbench, `<!doctype html><html><head></head><body>${section('done', 'None.')}</body></html>`)
+        await waitFor(
+          cdp,
+          'the finished task to clear the badge',
+          `const badge = document.querySelector('.ada-sb-ws .ada-wb-badge')
+           const pill = window.__ada.useRuntime.getState().status[${json(scratch.workbenchPane)}] ?? null
+           return { ok: !badge && pill === 'idle', badge: !!badge, pill }`
+        )
+        await cdp.evaluate(`${store}.closePane(${json(scratch.workbenchPane)})
+                            return true`)
+      }
+    ],
+    [
       'an empty zone can be closed from its own menu',
       async () => {
         // The workspace ON SCREEN, which an earlier step closed and reopened —
@@ -886,6 +1032,12 @@ function buildSteps(cdp, dirs) {
           if (!pane || !pane.status || feed.host?.name !== 'smoke') {
             throw new StepError('the relay never received the terminal pane', feed)
           }
+          // The workbench set up earlier goes out as text rows, never as the page.
+          const tasks = feed.workspaces.find((ws) => ws.rootDir === dirs.projectA)?.workbench
+          const task = tasks?.find((t) => t.agent === 'claude: smoke')
+          if (!task || task.status !== 'done' || JSON.stringify(tasks).includes('<')) {
+            throw new StepError('the feed did not carry the workbench as text', { tasks: tasks ?? null })
+          }
 
           // Watch the pane as a phone would. The restored shell may still be
           // starting: wait for its prompt on the desktop first, so the screen
@@ -1010,6 +1162,16 @@ function buildSteps(cdp, dirs) {
             `${remote}.setMode('remote')
              ${remote}.select({ hostId: ${json(hostId)}, paneId: 'pR' })
              return true`
+          )
+          // That machine's workbench has a task waiting: the workspace says so,
+          // and the task is listed with its question.
+          await waitFor(
+            cdp,
+            'the remote workbench task to show',
+            `const badge = document.querySelector('.ada-remote-sidebar .ada-wb-badge, .ada-sb-ws .ada-wb-badge')?.textContent ?? null
+             const task = document.querySelector('.ada-rm-wb-task')?.innerText ?? null
+             return { ok: badge === '1' && !!task && task.includes('Remote task') && task.includes('Ship it?'),
+                      badge, task }`
           )
           await waitFor(
             cdp,
@@ -1352,6 +1514,18 @@ function fakeRemoteFeed() {
           fakeRemotePane('pR', 'Remote Agent', 'claude'),
           fakeRemotePane('pS', 'Terminal 1', 'terminal'),
           fakeRemotePane('pT', 'Relay', 'claude')
+        ],
+        workbench: [
+          {
+            agent: 'claude: ship',
+            title: 'Remote task',
+            status: 'needs-input',
+            now: 'Waiting',
+            question: 'Ship it?',
+            progress: { done: 1, total: 2 },
+            captures: 0
+          },
+          { agent: 'claude: old', title: 'Old task', status: 'done', now: 'Done', question: null, progress: null, captures: 0 }
         ],
         layout: {
           zones: Object.entries(FAKE_REMOTE_ZONES).map(([id, zone]) => ({ id: `z-${id}`, ...zone })),

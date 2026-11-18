@@ -194,3 +194,58 @@ describe('buildHostSnapshot', () => {
     expect('tag' in second).toBe(false)
   })
 })
+
+describe('the workbench in the feed', () => {
+  const workspace = {
+    id: 'w1',
+    name: 'api',
+    rootDir: '/home/me/dev/api',
+    layout: { v: 2 as const, snap: { cols: 12, rows: 12 }, zones: [], assign: {} },
+    panes: [],
+    explorer: { open: false, width: 240, expanded: [] }
+  }
+  const inputs = { workspaces: [workspace], recents: [], status: {}, sessions: {}, lastActivity: {}, now: 1 }
+
+  it('sends the tasks as text rows, with progress as done of total', () => {
+    const snapshot = buildHostSnapshot({
+      ...inputs,
+      workbench: {
+        '/home/me/dev/api': {
+          rootDir: '/home/me/dev/api',
+          exists: true,
+          readAt: 0,
+          sections: [
+            {
+              agent: 'claude: login',
+              title: 'Fix login',
+              status: 'needs-input',
+              now: 'Waiting',
+              counts: { done: 2, working: 1, queued: 1 },
+              question: 'Which page?',
+              captures: 2
+            }
+          ]
+        }
+      }
+    })
+    expect(snapshot.workspaces[0].workbench).toEqual([
+      {
+        agent: 'claude: login',
+        title: 'Fix login',
+        status: 'needs-input',
+        now: 'Waiting',
+        question: 'Which page?',
+        progress: { done: 2, total: 4 },
+        captures: 2
+      }
+    ])
+  })
+
+  it('leaves the field out for a folder with no workbench', () => {
+    expect('workbench' in buildHostSnapshot(inputs).workspaces[0]).toBe(false)
+    const missing = { rootDir: workspace.rootDir, exists: false, sections: [], readAt: 0 }
+    expect(
+      'workbench' in buildHostSnapshot({ ...inputs, workbench: { [workspace.rootDir]: missing } }).workspaces[0]
+    ).toBe(false)
+  })
+})

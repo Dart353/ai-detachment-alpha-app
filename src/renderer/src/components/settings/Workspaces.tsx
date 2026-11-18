@@ -1,7 +1,7 @@
 import { useEffect, useState, type JSX } from 'react'
 import { Button, Toggle } from '../ui'
 import { useApp } from '../../store/app'
-import type { LoginItemStatus } from '../../../../shared/types'
+import type { LoginItemStatus, WorkbenchRulesState, WorkbenchSetupState } from '../../../../shared/types'
 import { SettingRow } from './SettingRow'
 import './settings.css'
 
@@ -71,6 +71,8 @@ export default function Workspaces(): JSX.Element {
             />
           </SettingRow>
         </div>
+
+        <WorkbenchCard />
 
         <div className="ada-set-card">
           <div className="ada-set-card-head">
@@ -189,6 +191,96 @@ function OpenAtLogin(): JSX.Element {
           onChange={change}
         />
       </SettingRow>
+    </div>
+  )
+}
+
+/** How each state of a workspace's workbench reads in the list. */
+const RULES_LABEL: Record<WorkbenchRulesState, string> = {
+  missing: 'Not set up',
+  current: 'Set up',
+  outdated: 'Rule from an older version',
+  modified: 'Rule edited by hand'
+}
+
+/**
+ * The workbench: whether new folders get one without asking, and where each
+ * open workspace stands, with the one action that would move it forward.
+ */
+function WorkbenchCard(): JSX.Element {
+  const settings = useApp((state) => state.settings)
+  const updateSettings = useApp((state) => state.updateSettings)
+  const workspaces = useApp((state) => state.workspaces)
+  const askWorkbenchSetup = useApp((state) => state.askWorkbenchSetup)
+  const setupFor = useApp((state) => state.workbenchSetupFor)
+  const [states, setStates] = useState<Record<string, WorkbenchSetupState>>({})
+
+  const roots = workspaces.map((workspace) => workspace.rootDir).join('\n')
+  // Re-read when the folders change and whenever the setup dialog closes.
+  useEffect(() => {
+    if (setupFor) return undefined
+    let live = true
+    const list = roots ? roots.split('\n') : []
+    void Promise.all(
+      list.map(async (root) => [root, await window.api?.workbenchState(root)] as const)
+    ).then((entries) => {
+      if (!live) return
+      const next: Record<string, WorkbenchSetupState> = {}
+      for (const [root, state] of entries) if (state) next[root] = state
+      setStates(next)
+    })
+    return () => {
+      live = false
+    }
+  }, [roots, setupFor])
+
+  const update = (rootDir: string): void => {
+    void window.api?.setupWorkbench(rootDir).then((result) => {
+      if (result?.ok) setStates((current) => ({ ...current, [rootDir]: result.state }))
+    })
+  }
+
+  return (
+    <div className="ada-set-card">
+      <SettingRow
+        label="Set up a workbench in every new folder"
+        description="Claude keeps a live page of its work in each folder you open. Without this, set one up from a workspace's menu."
+      >
+        <Toggle
+          checked={settings.workbench.autoSetup}
+          ariaLabel="Set up a workbench in every new folder"
+          onChange={(checked) => updateSettings({ workbench: { ...settings.workbench, autoSetup: checked } })}
+        />
+      </SettingRow>
+      {workspaces.length > 0 && (
+        <div className="ada-set-list">
+          {workspaces.map((workspace) => {
+            const state = states[workspace.rootDir]
+            return (
+              <div key={workspace.id} className="ada-set-item">
+                <span className="ada-set-item-name">{workspace.name}</span>
+                <span className="ada-set-card-spacer" />
+                <span className="ada-set-item-meta">{state ? RULES_LABEL[state.rules] : '…'}</span>
+                {state?.rules === 'missing' && (
+                  <Button size="sm" variant="ghost" onClick={() => askWorkbenchSetup(workspace.id)}>
+                    Set up…
+                  </Button>
+                )}
+                {state?.rules === 'outdated' && (
+                  <Button size="sm" variant="ghost" onClick={() => update(workspace.rootDir)}>
+                    Update rule
+                  </Button>
+                )}
+                {state?.rules === 'modified' && (
+                  <Button size="sm" variant="ghost" onClick={() => askWorkbenchSetup(workspace.id)}>
+                    Review…
+                  </Button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

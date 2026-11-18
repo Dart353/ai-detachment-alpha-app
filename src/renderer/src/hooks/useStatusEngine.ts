@@ -35,6 +35,7 @@ import {
   type NotifyPaneState
 } from '../lib/notify'
 import { playChime } from '../lib/sound'
+import { isWorkbenchPane, pageStatus, workspaceOfBellTarget } from '../lib/workbench'
 
 /** How often the pills and the notification machine are re-evaluated. */
 const TICK_MS = 1200
@@ -153,6 +154,13 @@ export function useStatusEngine(): void {
       const runtime = useRuntime.getState()
       const panes = app.workspaces.flatMap((workspace) => workspace.panes)
       if (panes.length === 0) return
+      // The workbench pane of each workspace, so its pill can follow the page.
+      const workbenchRoot = new Map<string, string>()
+      for (const workspace of app.workspaces) {
+        for (const pane of workspace.panes) {
+          if (isWorkbenchPane(pane, workspace.rootDir)) workbenchRoot.set(pane.id, workspace.rootDir)
+        }
+      }
 
       // A gesture (a divider drag, a layout change) repaints every TUI, and the
       // launch of the app resumes a screenful of panes: neither is news.
@@ -173,7 +181,10 @@ export function useStatusEngine(): void {
           lastActivityMs: getLastActivity(pane.id),
           session,
           promptOnScreen,
-          unseenDone: runtime.unseenDone[pane.id] ?? false
+          unseenDone: runtime.unseenDone[pane.id] ?? false,
+          page: workbenchRoot.has(pane.id)
+            ? pageStatus(runtime.workbench[workbenchRoot.get(pane.id) ?? ''])
+            : undefined
         })
         status[pane.id] = paneStatus
         if (pane.kind !== 'claude') continue
@@ -330,7 +341,11 @@ export function useStatusEngine(): void {
   /* ---- a clicked banner reveals its pane ---------------------------------- */
   useEffect(() => {
     return window.api?.onNotificationClick((paneId) => {
-      if (paneId) useApp.getState().focusPane(paneId)
+      if (!paneId) return
+      // A workbench bell names its workspace: open the page, even if it had no pane.
+      const workbenchOf = workspaceOfBellTarget(paneId)
+      if (workbenchOf) useApp.getState().openWorkbench(workbenchOf)
+      else useApp.getState().focusPane(paneId)
     })
   }, [])
 }

@@ -24,7 +24,10 @@ import {
 import { Code, Eye, FolderOpen } from 'lucide-react'
 import type { FileReadResult } from '../../../shared/types'
 import { useApp } from '../store/app'
+import { useRuntime } from '../store/runtime'
+import { isWorkbenchPane } from '../lib/workbench'
 import { baseName } from '../lib/ids'
+import { buildFrameDoc, isFrameScrollMessage } from '../lib/pageFrame'
 import { PaneHeader, type MenuAnchor } from './PaneHeader'
 import { paneColorVars } from './paneColor'
 import { PANE_DND_TYPE } from './TerminalPane'
@@ -39,6 +42,7 @@ const MarkdownPreview = lazy(() => import('./MarkdownPreview'))
 
 /** Extensions that get the rendered-preview treatment (case-insensitive). */
 const MARKDOWN_EXTS = new Set(['md', 'markdown', 'mdx'])
+const HTML_EXTS = new Set(['html', 'htm'])
 
 /** How many lines the text view draws before it stops and says so. */
 const MAX_LINES = 5000
@@ -55,10 +59,54 @@ export interface ViewerPaneProps {
   onHeaderDragEnd?: () => void
 }
 
+function extOf(name: string): string {
+  const dot = name.lastIndexOf('.')
+  return dot > 0 ? name.slice(dot + 1).toLowerCase() : ''
+}
+
 /** True when the file's name carries a markdown extension. */
 function isMarkdown(name: string): boolean {
-  const dot = name.lastIndexOf('.')
-  return dot > 0 && MARKDOWN_EXTS.has(name.slice(dot + 1).toLowerCase())
+  return MARKDOWN_EXTS.has(extOf(name))
+}
+
+/** True when the file is a web page, which the preview shows rendered. */
+function isHtml(name: string): boolean {
+  return HTML_EXTS.has(extOf(name))
+}
+
+/**
+ * An HTML file, rendered. The frame is sandboxed with scripts only — no
+ * same-origin, so the page can reach neither the app nor `window.api` — and
+ * gets the page as `srcdoc` (see lib/pageFrame for why, and what is added).
+ * A new version of the file swaps the document in place and puts the reader
+ * back at the scroll the page last reported.
+ */
+function PageFrame({ content, filePath, title }: { content: string; filePath: string; title: string }): JSX.Element {
+  const frameRef = useRef<HTMLIFrameElement>(null)
+  const scrollRef = useRef(0)
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent): void => {
+      if (event.source !== frameRef.current?.contentWindow) return
+      if (isFrameScrollMessage(event.data)) scrollRef.current = event.data.adaFrameScroll
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [])
+
+  // Read at render time on purpose: the scroll to restore is wherever the reader
+  // is when this version of the page arrives.
+  const doc = buildFrameDoc(content, filePath, scrollRef.current)
+  return (
+    <iframe
+      ref={frameRef}
+      className="ada-viewer-frame"
+      title={title}
+      sandbox="allow-scripts"
+      referrerPolicy="no-referrer"
+      srcDoc={doc}
+    />
+  )
 }
 
 /** Containing directory of a stored-form path, tolerant of both separators. */
@@ -132,6 +180,8 @@ export function ViewerPane({
 
   const pane = workspace?.panes.find((candidate) => candidate.id === paneId)
   const filePath = pane?.filePath ?? ''
+  // A plain file is always idle; a workbench pane's pill follows its page.
+  const status = useRuntime((state) => state.status[paneId]) ?? 'idle'
 
   const [result, setResult] = useState<FileReadResult | null>(null)
   /** Markdown opens rendered; the toggle flips to the raw source. */
@@ -189,7 +239,8 @@ export function ViewerPane({
   const focused = workspace?.focusedPaneId === paneId
   const maximized = workspace?.maximizedPaneId === paneId
   const name = baseName(filePath) || pane.name
-  const showToggle = isMarkdown(name) && result?.kind === 'text'
+  const showToggle = (isMarkdown(name) || isHtml(name)) && result?.kind === 'text'
+  const framed = isHtml(name) && mode === 'preview' && result?.kind === 'text'
 
   const classes = ['ada-pane']
   if (focused) classes.push('is-focused')
@@ -201,6 +252,9 @@ export function ViewerPane({
     if (!filePath) return <div className="ada-viewer-quiet">This pane has no file.</div>
     if (result === null) return <div className="ada-viewer-quiet">Reading…</div>
     if (result.kind === 'text') {
+      if (isHtml(name) && mode === 'preview') {
+        return <PageFrame content={result.content} filePath={filePath} title={name} />
+      }
       if (isMarkdown(name) && mode === 'preview') {
         return (
           <Suspense fallback={<div className="ada-viewer-quiet">Rendering…</div>}>
@@ -244,7 +298,8 @@ export function ViewerPane({
         paneId={paneId}
         name={pane.name}
         kind={pane.kind}
-        status="idle"
+        kindLabel={workspace && isWorkbenchPane(pane, workspace.rootDir) ? 'workbench' : undefined}
+        status={status}
         focused={focused}
         maximized={maximized}
         onRename={(next) => renamePane(paneId, next)}
@@ -279,7 +334,7 @@ export function ViewerPane({
             )}
           </button>
         )}
-        <div className="ada-viewer-scroll" ref={scrollRef}>
+        <div className={framed ? 'ada-viewer-scroll is-framed' : 'ada-viewer-scroll'} ref={scrollRef}>
           {renderBody()}
         </div>
       </div>

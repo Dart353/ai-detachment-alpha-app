@@ -149,6 +149,10 @@ function mergeSettings(base: Settings, stored: Record<string, unknown>): Setting
     wsl: { ...base.wsl, ...(isRecord(stored['wsl']) ? stored['wsl'] : {}) },
     cliPaths: { ...base.cliPaths, ...(isRecord(stored['cliPaths']) ? stored['cliPaths'] : {}) },
     relay: { ...base.relay, ...(isRecord(stored['relay']) ? stored['relay'] : {}) },
+    workbench: {
+      ...base.workbench,
+      ...(isRecord(stored['workbench']) ? stored['workbench'] : {})
+    },
     customAgents:
       'customAgents' in stored ? sanitizeCustomAgents(stored['customAgents']) : base.customAgents,
     notifications: {

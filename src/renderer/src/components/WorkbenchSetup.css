@@ -1,0 +1,97 @@
+/* The workbench setup dialog: what gets written, where git stands, two switches. */
+
+.ada-wbs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ada-text-secondary);
+}
+
+.ada-wbs-lede {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--ada-text-tertiary);
+}
+
+.ada-wbs-label {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ada-text-muted);
+}
+
+.ada-wbs-files {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ada-wbs-files li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--ada-line-08);
+  border-radius: var(--ada-radius-row);
+  background: var(--ada-bg-pane-header);
+  color: var(--ada-text-muted);
+}
+
+.ada-wbs-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--ada-font-mono);
+  color: var(--ada-text-primary);
+}
+
+.ada-wbs-why {
+  flex: none;
+  color: var(--ada-text-muted);
+}
+
+.ada-wbs-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  line-height: 1.5;
+  color: var(--ada-text-tertiary);
+}
+
+.ada-wbs-note code {
+  font-family: var(--ada-font-mono);
+  color: var(--ada-text-secondary);
+}
+
+.ada-wbs-ok {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ada-done);
+}
+
+.ada-wbs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.ada-wbs-row strong {
+  font-family: var(--ada-font-mono);
+  font-weight: 400;
+  color: var(--ada-text-primary);
+}
+
+.ada-wbs-error {
+  margin: 0;
+  color: var(--ada-warn);
+}

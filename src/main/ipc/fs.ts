@@ -43,19 +43,27 @@ export function registerFsIpc(ctx: IpcCtx): void {
   ipcMain.handle(CH.fsReadDir, (_event, dir: string) => readDir(dir))
   ipcMain.handle(CH.fsReadFile, (_event, filePath: string) => readFile(filePath))
 
-  ipcMain.on(CH.fsWatchDir, (_event, id: string, dir: string) => watcher.watch(id, dir))
-  ipcMain.on(CH.fsUnwatchDir, (_event, id: string, dir: string) => watcher.unwatch(id, dir))
+  // The two-argument calls arrive as one named object — the preload's shape for
+  // them since the first commit. Taking them positionally here left `name` and
+  // `dir` undefined, so rename, new file/folder, move and every watch failed.
 
-  ipcMain.handle(CH.fsRename, (_event, oldPath: string, newName: string) =>
+  ipcMain.on(CH.fsWatchDir, (_event, { id, dir }: { id: string; dir: string }) =>
+    watcher.watch(id, dir)
+  )
+  ipcMain.on(CH.fsUnwatchDir, (_event, { id, dir }: { id: string; dir: string }) =>
+    watcher.unwatch(id, dir)
+  )
+
+  ipcMain.handle(CH.fsRename, (_event, { oldPath, newName }: { oldPath: string; newName: string }) =>
     renamePath(oldPath, newName)
   )
-  ipcMain.handle(CH.fsCreateFile, (_event, parentDir: string, name: string) =>
+  ipcMain.handle(CH.fsCreateFile, (_event, { parentDir, name }: { parentDir: string; name: string }) =>
     createFile(parentDir, name)
   )
-  ipcMain.handle(CH.fsCreateDir, (_event, parentDir: string, name: string) =>
+  ipcMain.handle(CH.fsCreateDir, (_event, { parentDir, name }: { parentDir: string; name: string }) =>
     createDir(parentDir, name)
   )
-  ipcMain.handle(CH.fsMove, (_event, srcPath: string, destDir: string) =>
+  ipcMain.handle(CH.fsMove, (_event, { srcPath, destDir }: { srcPath: string; destDir: string }) =>
     movePath(srcPath, destDir)
   )
 

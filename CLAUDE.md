@@ -26,6 +26,8 @@ this app ports with their reasoning comments and neutral vocabulary.
   JSON: no classes, no `Date`, no functions.
 - `ipc.ts` — every channel name (`CH`) plus the full `Api` interface the preload
   exposes. **Change this first**, then main and renderer follow it.
+- `workbench.ts` — the workbench contract: the page skeleton, the rule Claude is
+  given, and the tolerant parser main reads the page with.
 
 ### `src/main` — one module per concern
 
@@ -44,10 +46,11 @@ this app ports with their reasoning comments and neutral vocabulary.
 | `protocol.ts` | the `ada-file://` scheme the sandboxed renderer reads files through |
 | `relay.ts` / `paneTap.ts` | Remote: the outbound socket.io link to the relay a phone watches, and the tap on every PTY (recent output, size, live stream, input) it serves panes from |
 | `artifacts.ts` | the claude.ai pages Claude published, read back out of every account's transcripts |
+| `workbench.ts` | setting a folder up for a workbench (rule, page, captures, `.git/info/exclude`) and watching its page |
 | `log.ts` | `logs/ada.log`, the ring buffer, and crash reports |
 
 `src/main/ipc/*.ts` is **one file per area** (`pty`, `sessions`, `store`, `fs`,
-`git`, `ssh`, `hooks`, `usage`, `accounts`, `window`, `misc`, `relay`, `artifacts`), all registered
+`git`, `ssh`, `hooks`, `usage`, `accounts`, `window`, `misc`, `relay`, `artifacts`, `workbench`), all registered
 once by `ipc/index.ts` before the window exists. Handlers reach the window only
 through the `IpcCtx` they are given, never through a captured reference.
 
@@ -64,10 +67,12 @@ through the `IpcCtx` they are given, never through a captured reference.
   turns a hand-edited state file into a working app rather than a crash.
 - `lib/*` — the pure, unit-tested logic: `zones` (the layout model), `status`,
   `notify`, `completionGate`, `archive`, `recents`, `usageMath`, `launch`,
-  `termLinks`, `savedLayouts`, `shellQuote`, `explorerTreeCache`.
+  `termLinks`, `savedLayouts`, `shellQuote`, `explorerTreeCache`, `workbench`
+  (bells and badges from a page) and `pageFrame` (the sandboxed HTML viewer).
 - `hooks/*` — `useTerminalPane` (xterm + fit + PTY wiring), `useStatusEngine`
   (the one place that decides what a pane is doing and whether to notify),
-  `useGlobalShortcuts`, `useUsage`, `useGitStatus`.
+  `useGlobalShortcuts`, `useUsage`, `useGitStatus`, `useWorkbench` (watches each
+  workspace's page and rings when a task starts waiting on the user).
 - `components/*` — one `.css` beside each component, tokens from
   `styles/tokens.css`. `Grid.tsx` owns the canvas gestures, `TerminalPane.tsx`
   one live pane, `paneMenu.tsx` the two context menus as pure builders.
