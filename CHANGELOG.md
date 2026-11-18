@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.7.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.6.0...v2.7.0) (2026-11-18)
+
+
+### Features
+
+* **remote:** a machine's workbench tasks go out with its pane list ([db8d6bc](https://github.com/Dart353/ai-detachment-alpha-app/commit/db8d6bcc4aed95686a97f64932c12e1464d0004e))
+* **viewer:** render HTML files, sandboxed and without network ([125721c](https://github.com/Dart353/ai-detachment-alpha-app/commit/125721c65d93032446529ba395fa7f15f2ce6dfa))
+* workbench — a live page of what every agent is doing and what it needs from you ([ea8bdcd](https://github.com/Dart353/ai-detachment-alpha-app/commit/ea8bdcd392e93c3fd49ce60241564675d7f51b95))
+* **workbench:** agents show visual changes with screenshots and recordings ([7cf3d7c](https://github.com/Dart353/ai-detachment-alpha-app/commit/7cf3d7c53ab443fa137b4653fe70452a30206f1a))
+* **workbench:** set a workspace up for a workbench and watch its page ([b14213e](https://github.com/Dart353/ai-detachment-alpha-app/commit/b14213e8b9b1f8f55dd05c8cdddf1515ef4831be))
+* **workbench:** set it up from a workspace, see it in a pane, hear when a task needs you ([f0a8153](https://github.com/Dart353/ai-detachment-alpha-app/commit/f0a8153455855470c509f9ab0a7add09cd6b661f))
+* **workbench:** the page contract agents follow and the parser that reads it ([ae08285](https://github.com/Dart353/ai-detachment-alpha-app/commit/ae08285b3a4f3d80921ffe7747aa02359cccb954))
+
+
+### Bug Fixes
+
+* **explorer:** rename, new file, new folder, move and live reload work again ([63f8946](https://github.com/Dart353/ai-detachment-alpha-app/commit/63f89465de9aa6f8b12cadce1c3303a97b034c88))
+
 ## [2.6.0](https://github.com/Dart353/ai-detachment-alpha-app/compare/v2.5.2...v2.6.0) (2026-11-16)
 
 
